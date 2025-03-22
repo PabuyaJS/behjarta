@@ -50,27 +50,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
   setTimeout(() => {
     welcome.style.transition = 'transform 0.3s ease-out';
-    welcome.style.transform = 'scaleY(1)';
+    welcome.style.transform = 'scaleX(1)';
 
     setTimeout(() => {
       welcome.style.transition = 'transform 0.3s ease-out';
-      welcome.style.transform = 'scaleY(0)';
-    }, 15000);
+      welcome.style.transform = 'scaleX(0)';
+      welcome.style.transformOrigin = 'right';
+    }, 5000);
   }, 250);
 
-  // Step 1: Animate the bars growing up
-  const bar1 = document.querySelector('.bar1');
-  const bar2 = document.querySelector('.bar2');
+  // Step 1: video-overlay disapearing
+  const vOverlay = document.querySelector('.video-overlay');
   
   setTimeout(() => {
-    bar1.style.transition = 'transform 0.8s ease-out';
-    bar1.style.transform = 'scaleY(1)';
-    
-    setTimeout(() => {
-      bar2.style.transition = 'transform 0.8s ease-out';
-      bar2.style.transform = 'scaleY(1)';
-    }, 100);
-  }, 250);
+    vOverlay.style.transition = 'transform 0.8s ease-out';
+    vOverlay.style.transform = 'scaleY(0)';
+  }, 5200);
   
   // Step 2: Animate the ring chart rolling out
   const ringPaths = document.querySelectorAll('.ring-path');
