@@ -1,17 +1,14 @@
+body {
+  max-width: 100%;
+}
+
+
 nav {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     z-index: 1000; /* Keeps navbar on top */
-}
-
-/* Push #app down to prevent overlap */
-#app {
-    height: 30vmax;
-    position: relative;
-    font-family: lexend, sans-serif;
-    margin-top: 64px; /* Adjust to navbar height */
 }
 
 /* Make sure the WebGL canvas does not cover everything */
@@ -23,17 +20,6 @@ nav {
     left: 0;
     overflow: hidden;
     z-index: 1; /* Moves the canvas behind other elements */
-}
-
-.welcome {
-    padding-top: 5%;
-    position: relative;
-    z-index: 2;
-    font-size: 6vw; /* Responsive font size */
-    font-weight: 700;
-    text-align: center;
-    max-width: 100%; /* Ensure it doesn't overflow */
-    word-wrap: break-word; /* Prevents breaking */
 }
 
 .header {
@@ -86,6 +72,7 @@ nav {
 .parallax {
   
     /* Set a specific height */
+    width: 100vw;
     min-height: 500px;
   
     /* Create the parallax scrolling effect */
@@ -96,23 +83,23 @@ nav {
 }
 
 .a{/* The image used */
-    background-image: url("img/microsoft_office.jpg");
+    background-image: url("img/google_sheets.webp");
+    max-width: 100%;
 }
 
 .b{/* The image used */
-    background-image: url("img/dashboard.jpg");
-}
-
-.c{/* The image used */
-    background-image: url("img/scott-graham-5fNmWej4tAA-unsplash.jpg");
+    background-image: url("img/dashboard.webp");
+    max-width: 100%;
 }
 
 .d{/* The image used */
-    background-image: url("img/webdesign.jpg");
+    background-image: url("img/webdesign.webp");
+    max-width: 100%;
 }
 
 .e{/* The image used */
-    background-image: url("img/chatbot texting.jpg");
+    background-image: url("img/Chatbot_texting.webp");
+    max-width: 100%;
 }
 
 .footer-bg {
@@ -121,61 +108,6 @@ nav {
 
 .hero-bg {
     background: linear-gradient(to bottom, #01579b, #e0f2f1);
-}
-
-/* The laptop with borders */
-.laptop {
-  -webkit-transform-origin: 0 0;
-  transform-origin: 0 0;
-  -webkit-transform: scale(.6) translate(-50%); /* Scaled down for a better Try-it experience (change to 1 for full scale) */
-  transform: scale(.6) translate(-50%); /* Scaled down for a better Try-it experience (change to 1 for full scale) */
-  left: 50%;
-  position: absolute;
-  width: 1366px;
-  height: 800px;
-  border-radius: 6px;
-  border-style: solid;
-  border-color: black;
-  border-width: 24px 24px 80px;
-  background-color: black;
-
-}
-
-/* The keyboard of the laptop */
-.laptop:after {
-  content: '';
-  display: block;
-  position: absolute;
-  width: 1600px;
-  height: 60px;
-  margin: 80px 0 0 -110px;
-  background: black;
-  border-radius: 6px;
-}
-
-/* The top of the keyboard */
-.laptop:before {
-  content: '';
-  display: block;
-  position: absolute;
-  width: 250px;
-  height: 30px;
-  bottom: -110px;
-  left: 50%;
-  -webkit-transform: translate(-50%);
-  transform: translate(-50%);
-  background: #f1f1f1;
-  border-bottom-left-radius: 5px;
-  border-bottom-right-radius: 5px;
-  z-index: 1;
-}
-
-/* The screen (or content) of the device */
-.laptop .content {
-  width: 1366px;
-  height: 800px;
-  overflow: hidden;
-  border: none;
 }
 
 /* width */
@@ -268,3 +200,38 @@ nav {
     opacity: 1;
     transform: translatey(0);
 }
+  .heading {
+    transform: scaleY(0);
+    transform-origin: left;
+    color: #01579b;
+    font-weight: 700;
+  }
+  
+  /* SVG Animation Styles */
+  #svg-container {
+    width: auto;
+    height: auto;
+    align-items: left;
+    z-index: 1;
+  }
+  
+  /* Initial hiding styles */
+  .bar1, .bar2 {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+  
+  .ring-path {
+    transform:rotateX(0deg);
+    transform-origin: center;
+    opacity: 0;
+  }
+  
+  .bubble {
+    opacity: 0;
+    transform: scale(0);
+  }
+  
+  .text-part {
+    opacity: 0;
+  }

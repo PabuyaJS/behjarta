@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <title>Welcome to Behjärta</title>
+  <style>
+    body {
+      font-family: 'Lexend', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f5f5f5;
+    }
+    
+    .welcome-container {
+      text-align: center;
+    }
+    
+    .heading {
+      font-size: 4rem;
+      margin-top: 30px;
+      position: relative;
+      display: flex;
+      color: #01579b;
+    }
+    
+    /* SVG Animation Styles */
+    #svg-container {
+      width: 100%;
+      height: auto;
+      display: flex;
+      margin-bottom: 30px;
+      align-items: center;
+    }
+    
+    /* Initial hiding styles */
+    .bar1, .bar2 {
+      transform: scaleY(0);
+      transform-origin: bottom;
+    }
+    
+    .ring-path {
+      transform:rotateX(0deg);
+      transform-origin: center;
+      opacity: 0;
+    }
+    
+    .bubble {
+      opacity: 0;
+      transform: scale(0);
+    }
+    
+    .text-part {
+      opacity: 0;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="welcome-container">
+    <h1 class=" heading">Welcome to</h1>
+    <div id="svg-container">
+      <svg width="100%" height="100%" style="padding: 10%;" version="1.1" id="logo-svg">
+        <!-- First bar (teal) - animated to grow up -->
+        <rect class="bar1" style="fill:#80cbc4;fill-opacity:1;stroke-width:0.346468" id="rect8-2-8" width="9.0842457" height="45.409039" x="1.3138953e-06" y="22.70451" />
+        
+        <!-- Second bar (dark blue) - animated to grow up -->
+        <rect class="bar2" style="fill:#01579b;fill-opacity:1;stroke-width:0.424334" id="rect8-3" width="9.0842457" height="68.113556" x="13.010015" y="-9.0573428e-07" />
+        
+        <!-- Ring chart (dark blue) - animated to roll out -->
+        <path class="ring-path" id="path14-3" style="fill:#01579b;fill-opacity:1;stroke-width:0.52702" d="m 49.638882,22.704438 a 22.710615,22.704519 0 0 0 -22.710613,22.70452 22.710615,22.704519 0 0 0 1.79e-4,0.0034 l 11.354772,0.02588 a 11.355307,11.35226 0 0 0 0.194815,1.946025 11.355307,11.35226 0 0 1 -0.194458,-1.975291 11.355307,11.35226 0 0 1 11.355305,-11.35226 11.355307,11.35226 0 0 1 11.355307,11.35226 11.355307,11.35226 0 0 1 -11.355307,11.352257 11.355307,11.35226 0 0 1 -6.083961,-1.792946 11.355307,11.35226 0 0 0 0.407907,0.272101 l -5.674994,9.77518 A 22.710615,22.704519 0 0 0 49.638882,68.113523 22.710615,22.704519 0 0 0 72.349497,45.409006 22.710615,22.704519 0 0 0 49.638882,22.704486 Z" />
+        
+        <!-- Ring chart piece (teal) - animated with the ring -->
+        <path class="ring-path" id="path9-6" style="fill:#80cbc4;fill-opacity:1;stroke-width:0.52702" d="m 36.321068,66.089629 5.674993,-9.77518 a 11.355307,11.35226 0 0 1 -0.407907,-0.272101 11.355307,11.35226 0 0 1 -0.420144,-0.280613 11.355307,11.35226 0 0 1 -1.520371,-1.247331 11.355307,11.35226 0 0 1 -0.02448,-0.02784 11.355307,11.35226 0 0 1 -1.231518,-1.500096 11.355307,11.35226 0 0 1 -0.278027,-0.41471 11.355307,11.35226 0 0 1 -0.928653,-1.737072 11.355307,11.35226 0 0 1 -0.01507,-0.04399 11.355307,11.35226 0 0 1 -0.561734,-1.851659 11.355307,11.35226 0 0 1 -0.09687,-0.4807 11.355307,11.35226 0 0 1 -0.194816,-1.946025 l -11.354772,-0.02588 a 22.710615,22.704519 0 0 0 0.204748,2.862717 22.710615,22.704519 0 0 0 0.104328,0.724596 22.710615,22.704519 0 0 0 0.60343,2.773675 22.710615,22.704519 0 0 0 0.02503,0.08053 22.710615,22.704519 0 0 0 0.981346,2.630001 22.710615,22.704519 0 0 0 0.314755,0.689293 22.710615,22.704519 0 0 0 1.3433,2.45954 22.710615,22.704519 0 0 0 0.09084,0.135161 22.710615,22.704519 0 0 0 1.639954,2.190099 22.710615,22.704519 0 0 0 0.517378,0.597591 22.710615,22.704519 0 0 0 1.94903,1.94851 22.710615,22.704519 0 0 0 0.192154,0.159817 22.710615,22.704519 0 0 0 2.135506,1.598186 22.710615,22.704519 0 0 0 0.683627,0.440077 22.710615,22.704519 0 0 0 0.573975,0.313428 z" />
+        
+        <!-- Small ring path parts (also animate with the ring) -->
+        <path class="ring-path" id="path13-7" style="fill:#01579b;fill-opacity:1;stroke-width:0.52702" d="m 50.308943,68.065657 a 22.710615,22.704519 0 0 1 -1.681653,-0.02447 22.710615,22.704519 0 0 0 1.011512,0.07237 22.710615,22.704519 0 0 0 0.670141,-0.04789 z" />
+        <path class="ring-path" id="path12-8" style="fill:#01579b;fill-opacity:1;stroke-width:0.52702" d="m 72.345157,45.349789 a 22.710615,22.704519 0 0 1 6.86e-4,0.112458 22.710615,22.704519 0 0 0 0.0037,-0.05321 22.710615,22.704519 0 0 0 -0.0043,-0.05924 z" />
+        <path class="ring-path" id="path10-4" style="fill:#01579b;fill-opacity:1;stroke-width:0.52702" d="m 49.638802,22.704513 a 22.710615,22.704519 0 0 0 -1.377188,0.09845 22.710615,22.704519 0 0 1 1.710751,-0.07468 22.710615,22.704519 0 0 0 -0.333563,-0.02379 z" />
+        
+        <!-- Bubbles - animated to fade in -->
+        <path class="bubble" style="fill:#01579b;fill-opacity:1;stroke-width:0.0444046" id="path32" sodipodi:type="arc" sodipodi:cx="29.081387" sodipodi:cy="8.5862942" sodipodi:rx="2.7252736" sodipodi:ry="2.7245421" sodipodi:start="0.082759149" sodipodi:end="0.082062776" sodipodi:open="true" sodipodi:arc-type="arc" d="m 31.797333,8.8115177 a 2.7252736,2.7245421 0 0 1 -2.940758,2.4900333 2.7252736,2.7245421 0 0 1 -2.491213,-2.9395349 2.7252736,2.7245421 0 0 1 2.93989,-2.4910564 2.7252736,2.7245421 0 0 1 2.492237,2.9386671" />
+        
+        <path class="bubble" style="fill:#80cbc4;fill-opacity:1;stroke-width:0.0666069" id="path32-2" sodipodi:type="arc" sodipodi:cx="31.19659" sodipodi:cy="22.003933" sodipodi:rx="4.0879107" sodipodi:ry="4.0868134" sodipodi:start="0.082759149" sodipodi:end="0.082062776" sodipodi:open="true" sodipodi:arc-type="arc" d="m 35.27051,22.341768 a 4.0879107,4.0868134 0 0 1 -4.411136,3.73505 4.0879107,4.0868134 0 0 1 -3.73682,-4.409302 4.0879107,4.0868134 0 0 1 4.409835,-3.736585 4.0879107,4.0868134 0 0 1 3.738355,4.408001" />
+        
+        <path class="bubble" style="fill:#01579b;fill-opacity:1;stroke-width:0.155416" id="path32-2-9" sodipodi:type="arc" sodipodi:cx="43.908504" sodipodi:cy="9.5358963" sodipodi:rx="9.5384579" sodipodi:ry="9.5358973" sodipodi:start="0.082759149" sodipodi:end="0.082062776" sodipodi:open="true" sodipodi:arc-type="arc" d="M 53.414316,10.324178 A 9.5384579,9.5358973 0 0 1 43.121666,19.039293 9.5384579,9.5358973 0 0 1 34.402419,8.7509231 9.5384579,9.5358973 0 0 1 44.692034,0.03222605 9.5384579,9.5358973 0 0 1 53.414863,10.31756" />
+        
+        <path class="bubble" style="fill:#80cbc4;fill-opacity:1;stroke-width:0.0906794" id="path32-2-0" sodipodi:type="arc" sodipodi:cx="120" sodipodi:cy="22.55372" sodipodi:rx="5" sodipodi:ry="5.5638289" sodipodi:start="0.082759149" sodipodi:end="0.082062776" sodipodi:open="true" sodipodi:arc-type="arc" d="m 187.23098,23.013653 a 5.5653229,5.5638289 0 0 1 -6.00536,5.084934 5.5653229,5.5638289 0 0 1 -5.08735,-6.002868 5.5653229,5.5638289 0 0 1 6.0036,-5.087024 5.5653229,5.5638289 0 0 1 5.08943,6.001096" />
+        
+        <path class="bubble" style="fill:#80cbc4;fill-opacity:1;stroke-width:0.0906794" id="path32-2-0-1" sodipodi:type="arc" sodipodi:cx="150" sodipodi:cy="22.55372" sodipodi:rx="5" sodipodi:ry="5.5638289" sodipodi:start="0.082759149" sodipodi:end="0.082062776" sodipodi:open="true" sodipodi:arc-type="arc" d="m 201.6611,23.013653 a 5.5653229,5.5638289 0 0 1 -6.00537,5.084934 5.5653229,5.5638289 0 0 1 -5.08734,-6.002868 5.5653229,5.5638289 0 0 1 6.00359,-5.087024 5.5653229,5.5638289 0 0 1 5.08944,6.001096" />
+        
+        <!-- Text part - animated to fade in -->
+        <text class="text-part" transform="matrix(1.2901111,0,0,1.2897648,2413.0705,-7889.1634)" id="text32" style="font-size:48px; white-space:pre;display:inline;fill:#01579b;fill-opacity:1;stroke-width:5.66929">
+          <tspan x="-1987" y="6168.4" id="tspan3">
+            <tspan style="font-weight:600;font-family:Lexend, sans-serif;-inkscape-font-specification:'Lexend Semi-Bold'" id="tspan1">ehjarta</tspan>
+          </tspan>
+        </text>
+      </svg>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Animation sequence
+      
+      // Step 1: Animate the bars growing up
+      const bar1 = document.querySelector('.bar1');
+      const bar2 = document.querySelector('.bar2');
+      
+      setTimeout(() => {
+        bar1.style.transition = 'transform 0.8s ease-out';
+        bar1.style.transform = 'scaleY(1)';
+        
+        setTimeout(() => {
+          bar2.style.transition = 'transform 0.8s ease-out';
+          bar2.style.transform = 'scaleY(1)';
+        }, 100);
+      }, 250);
+      
+      // Step 2: Animate the ring chart rolling out
+      const ringPaths = document.querySelectorAll('.ring-path');
+      
+      setTimeout(() => {
+        ringPaths.forEach(path => {
+          path.style.transition = 'transform 1s ease-out, opacity 1s ease-out';
+          path.style.transform = 'rotateX(360deg)';
+          path.style.opacity = '1';
+        });
+      }, 600);
+      
+      // Step 3: Animate the bubbles fading in
+      const bubbles = document.querySelectorAll('.bubble');
+      
+      setTimeout(() => {
+        bubbles.forEach((bubble, index) => {
+          setTimeout(() => {
+            bubble.style.transition = 'transform 0.6s ease-out, opacity 0.6s ease-out';
+            bubble.style.transform = 'scale(1)';
+            bubble.style.opacity = '1';
+          }, index * 100);
+        });
+      }, 600);
+      
+      // Step 4: Animate the text fading in
+      const textPart = document.querySelector('.text-part');
+      
+      setTimeout(() => {
+        textPart.style.transition = 'opacity 1s ease-out';
+        textPart.style.opacity = '1';
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

@@ -41,3 +41,66 @@ document.addEventListener('DOMContentLoaded', function() {
     observer.observe(element);
 });
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Animation sequence
+  // Step 0: Aimate heading
+
+  const welcome = document.querySelector('.heading');
+
+  setTimeout(() => {
+    welcome.style.transition = 'transform 0.3s ease-out';
+    welcome.style.transform = 'scaleY(1)';
+
+    setTimeout(() => {
+      welcome.style.transition = 'transform 0.3s ease-out';
+      welcome.style.transform = 'scaleY(0)';
+    }, 15000);
+  }, 250);
+
+  // Step 1: Animate the bars growing up
+  const bar1 = document.querySelector('.bar1');
+  const bar2 = document.querySelector('.bar2');
+  
+  setTimeout(() => {
+    bar1.style.transition = 'transform 0.8s ease-out';
+    bar1.style.transform = 'scaleY(1)';
+    
+    setTimeout(() => {
+      bar2.style.transition = 'transform 0.8s ease-out';
+      bar2.style.transform = 'scaleY(1)';
+    }, 100);
+  }, 250);
+  
+  // Step 2: Animate the ring chart rolling out
+  const ringPaths = document.querySelectorAll('.ring-path');
+  
+  setTimeout(() => {
+    ringPaths.forEach(path => {
+      path.style.transition = 'transform 1s ease-out, opacity 1s ease-out';
+      path.style.transform = 'rotateX(360deg)';
+      path.style.opacity = '1';
+    });
+  }, 600);
+  
+  // Step 3: Animate the bubbles fading in
+  const bubbles = document.querySelectorAll('.bubble');
+  
+  setTimeout(() => {
+    bubbles.forEach((bubble, index) => {
+      setTimeout(() => {
+        bubble.style.transition = 'transform 0.6s ease-out, opacity 0.6s ease-out';
+        bubble.style.transform = 'scale(1)';
+        bubble.style.opacity = '1';
+      }, index * 100);
+    });
+  }, 600);
+  
+  // Step 4: Animate the text fading in
+  const textPart = document.querySelector('.text-part');
+  
+  setTimeout(() => {
+    textPart.style.transition = 'opacity 1s ease-out';
+    textPart.style.opacity = '1';
+  }, 1000);
+});
