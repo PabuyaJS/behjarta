@@ -51,21 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
   setTimeout(() => {
     welcome.style.transition = 'transform 0.3s ease-out';
     welcome.style.transform = 'scaleX(1)';
-
-    setTimeout(() => {
-      welcome.style.transition = 'transform 0.3s ease-out';
-      welcome.style.transform = 'scaleX(0)';
-      welcome.style.transformOrigin = 'right';
-    }, 5000);
   }, 250);
-
-  // Step 1: video-overlay disapearing
-  const vOverlay = document.querySelector('.video-overlay');
-  
-  setTimeout(() => {
-    vOverlay.style.transition = 'transform 0.8s ease-out';
-    vOverlay.style.transform = 'scaleY(0)';
-  }, 5200);
   
   // Step 2: Animate the ring chart rolling out
   const ringPaths = document.querySelectorAll('.ring-path');
@@ -98,4 +84,9 @@ document.addEventListener('DOMContentLoaded', function() {
     textPart.style.transition = 'opacity 1s ease-out';
     textPart.style.opacity = '1';
   }, 1000);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const video = document.getElementById('background-video');
+  video.playbackRate = 0.7; // This slows down the video to 50% of its original speed
 });
