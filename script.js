@@ -86,14 +86,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }, 1000);
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  const video = document.getElementById('background-video');
-  video.playbackRate = 0.7; // This slows down the video to 50% of its original speed
-});
-
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize
-  let currentLang = localStorage.getItem('language') || 'en';
+  let currentLang = localStorage.getItem('language') || 'sv';
   
   // Create language toggle button
   const navUl = document.querySelector('nav .nav-wrapper ul.right');
@@ -127,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
   addTranslationAttributes();
   
   // Apply saved language
-  if (currentLang === 'sv') {
+  if (currentLang === 'en') {
     applyTranslations();
   }
   
@@ -234,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function toggleLanguage(e) {
     e.preventDefault();
-    currentLang = currentLang === 'en' ? 'sv' : 'en';
+    currentLang = currentLang === 'sv' ? 'en' : 'sv';
     localStorage.setItem('language', currentLang);
     
     // Update language button text
