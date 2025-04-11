@@ -52,48 +52,10 @@ document.addEventListener('DOMContentLoaded', function() {
     welcome.style.transition = 'transform 0.3s ease-out';
     welcome.style.transform = 'scaleX(1)';
   }, 250);
-  
-  // Step 2: Animate the ring chart rolling out
-  const ringPaths = document.querySelectorAll('.ring-path');
-  
-  setTimeout(() => {
-    ringPaths.forEach(path => {
-      path.style.transition = 'transform 1s ease-out, opacity 1s ease-out';
-      path.style.transform = 'rotateX(360deg)';
-      path.style.opacity = '1';
-    });
-  }, 600);
-  
-  // Step 3: Animate the bubbles fading in
-  const bubbles = document.querySelectorAll('.bubble');
-  
-  setTimeout(() => {
-    bubbles.forEach((bubble, index) => {
-      setTimeout(() => {
-        bubble.style.transition = 'transform 0.6s ease-out, opacity 0.6s ease-out';
-        bubble.style.transform = 'scale(1)';
-        bubble.style.opacity = '1';
-      }, index * 100);
-    });
-  }, 600);
-  
-  // Step 4: Animate the text fading in
-  const textPart = document.querySelector('.text-part');
-  
-  setTimeout(() => {
-    textPart.style.transition = 'opacity 1s ease-out';
-    textPart.style.opacity = '1';
-  }, 1000);
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  const video = document.getElementById('background-video');
-  video.playbackRate = 0.7; // This slows down the video to 50% of its original speed
-});
 
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize
-  let currentLang = localStorage.getItem('language') || 'en';
+  let currentLang = localStorage.getItem('language') || 'sv';
   
   // Create language toggle button
   const navUl = document.querySelector('nav .nav-wrapper ul.right');
@@ -127,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
   addTranslationAttributes();
   
   // Apply saved language
-  if (currentLang === 'sv') {
+  if (currentLang === 'en') {
     applyTranslations();
   }
   
@@ -234,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function toggleLanguage(e) {
     e.preventDefault();
-    currentLang = currentLang === 'en' ? 'sv' : 'en';
+    currentLang = currentLang === 'sv' ? 'en' : 'sv';
     localStorage.setItem('language', currentLang);
     
     // Update language button text
