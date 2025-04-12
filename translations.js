@@ -44,7 +44,7 @@ const translations = {
     "rights-reserved": "© 2025 MS Secure solutions AB all rights reserved",
     
     // Language selector
-    "language-button": "&#x1f1f8;&#x1f1ea;"
+    "language-button": "🇸🇪"
   },
   sv: {
     // Navigation
@@ -91,6 +91,6 @@ const translations = {
     "rights-reserved": "© 2025 MS Secure solutions AB alla rättigheter förbehållna",
     
     // Language selector
-    "language-button": "&#x1f1ec;&#x1f1e7;"
+    "language-button": "🇬🇧"
   }
 };
