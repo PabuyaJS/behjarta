@@ -275,3 +275,203 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize
+  let currentLang = localStorage.getItem('language') || 'sv';
+  
+  // Create language toggle button
+  const navUl = document.querySelector('nav .nav-wrapper ul.right');
+  const mobileSidenav = document.querySelector('.sidenav');
+  
+  if (navUl) {
+    const langLi = document.createElement('li');
+    const langButton = document.createElement('a');
+    langButton.id = 'lang-toggle';
+    langButton.className = 'light-blue-text text-darken-4';
+    langButton.textContent = translations[currentLang]['language-button'];
+    langButton.href = '#';
+    langButton.addEventListener('click', toggleLanguage);
+    langLi.appendChild(langButton);
+    navUl.appendChild(langLi);
+  }
+  
+  if (mobileSidenav) {
+    const langLi = document.createElement('li');
+    const langButton = document.createElement('a');
+    langButton.id = 'mobile-lang-toggle';
+    langButton.className = 'light-blue-text text-darken-4';
+    langButton.textContent = translations[currentLang]['language-button'];
+    langButton.href = '#';
+    langButton.addEventListener('click', toggleLanguage);
+    langLi.appendChild(langButton);
+    mobileSidenav.appendChild(langLi);
+  }
+  
+  // Add data-i18n attributes to all elements
+  addTranslationAttributes();
+  
+  // Apply saved language
+  if (currentLang === 'en') {
+    applyTranslations();
+  }
+  
+  function addTranslationAttributes() {
+    // Navigation
+    document.querySelectorAll('nav ul li a').forEach(el => {
+      if (el.textContent.trim() === 'Home') el.setAttribute('data-i18n', 'nav-home');
+      if (el.textContent.trim() === 'Pricing') el.setAttribute('data-i18n', 'nav-pricing');
+      if (el.textContent.trim() === 'About') el.setAttribute('data-i18n', 'nav-about');
+      if (el.textContent.trim() === 'Book a Demo') el.setAttribute('data-i18n', 'nav-book-demo');
+    });
+    
+    document.querySelectorAll('.sidenav li a').forEach(el => {
+      if (el.textContent.trim() === 'Home') el.setAttribute('data-i18n', 'nav-home');
+      if (el.textContent.trim() === 'Pricing') el.setAttribute('data-i18n', 'nav-pricing');
+      if (el.textContent.trim() === 'About') el.setAttribute('data-i18n', 'nav-about');
+      if (el.textContent.trim() === 'Book a Demo') el.setAttribute('data-i18n', 'nav-book-demo');
+    });
+    
+    // Pricing page specific
+    const pricingTitle = document.querySelector('h2.light-blue-text');
+    if (pricingTitle) pricingTitle.setAttribute('data-i18n', 'pricing-title');
+    
+    const thankYouText = document.querySelector('.teal.lighten-5 h3.light-blue-text');
+    if (thankYouText) thankYouText.setAttribute('data-i18n', 'pricing-thank-you');
+    
+    // Pricing columns
+    const priceHeaders = document.querySelectorAll('.price .header');
+    if (priceHeaders[0]) priceHeaders[0].setAttribute('data-i18n', 'design-header');
+    if (priceHeaders[1]) priceHeaders[1].setAttribute('data-i18n', 'automations-header');
+    if (priceHeaders[2]) priceHeaders[2].setAttribute('data-i18n', 'business-plus-header');
+    
+    // Design column
+    const designPrice = document.querySelectorAll('.price')[0]?.querySelectorAll('li')[1];
+    if (designPrice) designPrice.setAttribute('data-i18n', 'design-price');
+    
+    const designItems = document.querySelectorAll('.price')[0]?.querySelectorAll('li');
+    if (designItems && designItems.length >= 9) {
+      for (let i = 2; i < 9; i++) {
+        designItems[i].setAttribute('data-i18n', `design-item-${i-1}`);
+      }
+    }
+    
+    // Automations column
+    const autoPrice = document.querySelectorAll('.price')[1]?.querySelectorAll('li')[1];
+    if (autoPrice) autoPrice.setAttribute('data-i18n', 'auto-price');
+    
+    const autoItems = document.querySelectorAll('.price')[1]?.querySelectorAll('li');
+    if (autoItems && autoItems.length >= 9) {
+      for (let i = 2; i < 9; i++) {
+        autoItems[i].setAttribute('data-i18n', `auto-item-${i-1}`);
+      }
+    }
+    
+    // Business+ column
+    const businessPrice = document.querySelectorAll('.price')[2]?.querySelectorAll('li')[1];
+    if (businessPrice) businessPrice.setAttribute('data-i18n', 'business-price');
+    
+    const businessItems = document.querySelectorAll('.price')[2]?.querySelectorAll('li');
+    if (businessItems && businessItems.length >= 6) {
+      for (let i = 2; i < 7; i++) {
+        businessItems[i].setAttribute('data-i18n', `business-item-${i-1}`);
+      }
+    }
+    
+    // Contact button
+    const contactButton = document.querySelector('.btn.light-blue.darken-4');
+    if (contactButton) contactButton.setAttribute('data-i18n', 'contact-us');
+    
+    // Footnotes
+    const footnotes = document.querySelector('.teal.lighten-5 p.left-align').innerHTML.split('<br><br>');
+    if (footnotes.length >= 3) {
+      const footnoteParent = document.querySelector('.teal.lighten-5 p.left-align');
+      footnoteParent.innerHTML = '';
+      
+      const footnote1 = document.createElement('span');
+      footnote1.setAttribute('data-i18n', 'footnote-1');
+      footnoteParent.appendChild(footnote1);
+      
+      footnoteParent.appendChild(document.createElement('br'));
+      footnoteParent.appendChild(document.createElement('br'));
+      
+      const footnote2 = document.createElement('span');
+      footnote2.setAttribute('data-i18n', 'footnote-2');
+      footnoteParent.appendChild(footnote2);
+      
+      footnoteParent.appendChild(document.createElement('br'));
+      footnoteParent.appendChild(document.createElement('br'));
+      
+      const footnote3 = document.createElement('span');
+      footnote3.setAttribute('data-i18n', 'footnote-3');
+      footnoteParent.appendChild(footnote3);
+    }
+    
+    // Footer
+    const companyTitle = document.querySelector('.footer-bg h5:nth-of-type(1)');
+    if (companyTitle) companyTitle.setAttribute('data-i18n', 'company');
+    
+    const legalTitle = document.querySelector('.footer-bg h5:nth-of-type(2)');
+    if (legalTitle) legalTitle.setAttribute('data-i18n', 'legal');
+    
+    const footerLinks = document.querySelectorAll('.footer-bg a');
+    footerLinks.forEach(link => {
+      if (link.textContent.trim() === 'About') link.setAttribute('data-i18n', 'nav-about');
+      if (link.textContent.trim() === 'Book a Demo') link.setAttribute('data-i18n', 'nav-book-demo');
+      if (link.textContent.trim() === 'FAQ') link.setAttribute('data-i18n', 'faq');
+      if (link.textContent.trim() === 'Privacy Policy') link.setAttribute('data-i18n', 'privacy-policy');
+      if (link.textContent.trim() === 'Cookie Policy') link.setAttribute('data-i18n', 'cookie-policy');
+    });
+    
+    const copyright = document.querySelector('.footer-copyright .container');
+    if (copyright) copyright.setAttribute('data-i18n', 'rights-reserved');
+  }
+  
+  function toggleLanguage(e) {
+    e.preventDefault();
+    currentLang = currentLang === 'sv' ? 'en' : 'sv';
+    localStorage.setItem('language', currentLang);
+    
+    // Update language button text
+    const langToggle = document.getElementById('lang-toggle');
+    const mobileLangToggle = document.getElementById('mobile-lang-toggle');
+    
+    if (langToggle) langToggle.textContent = translations[currentLang]['language-button'];
+    if (mobileLangToggle) mobileLangToggle.textContent = translations[currentLang]['language-button'];
+    
+    applyTranslations();
+  }
+  
+  function applyTranslations() {
+    // Update all elements with data-i18n attribute
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+      const key = element.getAttribute('data-i18n');
+      if (translations[currentLang][key]) {
+        element.textContent = translations[currentLang][key];
+      }
+    });
+    
+    // Special handling for elements that need to preserve HTML like icons
+    document.querySelectorAll('[data-i18n-html]').forEach(element => {
+      const key = element.getAttribute('data-i18n-html');
+      if (translations[currentLang][key]) {
+        // This preserves the icon
+        const icon = element.querySelector('i');
+        element.innerHTML = '';
+        if (icon) element.appendChild(icon);
+        element.innerHTML += ' ' + translations[currentLang][key];
+      }
+    });
+    
+    // Update HTML lang attribute
+    document.documentElement.lang = currentLang;
+    
+    // Update meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription && currentLang === 'sv') {
+      metaDescription.content = "Behjärta är mer än bara en tjänsteleverantör. Det representerar en uppriktig hängivenhet till att se våra kunder lyckas i varje strävan. Vi förstår de utmaningar företag möter, och vårt mål är att göra deras resa åtminstone lite enklare. Vår strategi handlar inte bara om att tillhandahålla lösningar; det handlar om att bygga ett partnerskap grundat i förståelse, stöd och en genuin önskan att bidra till din framgång.";
+    } else if (metaDescription) {
+      metaDescription.content = "Behjärta embodies more than just a service provider. It represents a sincere dedication to seeing our clients succeed in every endeavor. We understand the challenges businesses encounter, and our goal is to make their journey at least a bit easier. Our approach is not just about providing solutions; it's about fostering a partnership rooted in understanding, support, and a genuine desire to contribute to your success.";
+    }
+  }
+});
