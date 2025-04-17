@@ -126,6 +126,46 @@ document.addEventListener('DOMContentLoaded', function() {
     applyTranslations();
   }
   
+ document.addEventListener('DOMContentLoaded', function() {
+  // Initialize
+  let currentLang = localStorage.getItem('language') || 'en';
+  
+  // Create language toggle button
+  const navUl = document.querySelector('nav .nav-wrapper ul.right');
+  const mobileSidenav = document.querySelector('.sidenav');
+  
+  if (navUl) {
+    const langLi = document.createElement('li');
+    const langButton = document.createElement('a');
+    langButton.id = 'lang-toggle';
+    langButton.className = 'light-blue-text text-darken-4';
+    langButton.textContent = translations[currentLang]['language-button'];
+    langButton.href = '#';
+    langButton.addEventListener('click', toggleLanguage);
+    langLi.appendChild(langButton);
+    navUl.appendChild(langLi);
+  }
+  
+  if (mobileSidenav) {
+    const langLi = document.createElement('li');
+    const langButton = document.createElement('a');
+    langButton.id = 'mobile-lang-toggle';
+    langButton.className = 'light-blue-text text-darken-4';
+    langButton.textContent = translations[currentLang]['language-button'];
+    langButton.href = '#';
+    langButton.addEventListener('click', toggleLanguage);
+    langLi.appendChild(langButton);
+    mobileSidenav.appendChild(langLi);
+  }
+  
+  // Add data-i18n attributes to all elements
+  addTranslationAttributes();
+  
+  // Apply saved language
+  if (currentLang === 'sv') {
+    applyTranslations();
+  }
+  
   function addTranslationAttributes() {
     // Navigation
     document.querySelectorAll('nav ul li a').forEach(el => {
@@ -142,80 +182,70 @@ document.addEventListener('DOMContentLoaded', function() {
       if (el.textContent.trim() === 'Book a Demo') el.setAttribute('data-i18n', 'nav-book-demo');
     });
     
-    // Pricing page specific
-    const pricingTitle = document.querySelector('h2.light-blue-text');
-    if (pricingTitle) pricingTitle.setAttribute('data-i18n', 'pricing-title');
+    // Hero section
+    const heroTitle = document.querySelector('.container h1.teal-text');
+    if (heroTitle) heroTitle.setAttribute('data-i18n', 'hero-title');
     
-    const thankYouText = document.querySelector('.teal.lighten-5 h3.light-blue-text');
-    if (thankYouText) thankYouText.setAttribute('data-i18n', 'pricing-thank-you');
+    const heroSubtitle = document.querySelector('.container h5 .light-blue-text');
+    if (heroSubtitle) heroSubtitle.setAttribute('data-i18n', 'hero-subtitle');
     
-    // Pricing columns
-    const priceHeaders = document.querySelectorAll('.price .header');
-    if (priceHeaders[0]) priceHeaders[0].setAttribute('data-i18n', 'design-header');
-    if (priceHeaders[1]) priceHeaders[1].setAttribute('data-i18n', 'automations-header');
-    if (priceHeaders[2]) priceHeaders[2].setAttribute('data-i18n', 'business-plus-header');
+    const introText = document.querySelector('.container > p');
+    if (introText) introText.setAttribute('data-i18n', 'intro-text');
     
-    // Design column
-    const designPrice = document.querySelectorAll('.price')[0]?.querySelectorAll('li')[1];
-    if (designPrice) designPrice.setAttribute('data-i18n', 'design-price');
+    const ctaButton = document.querySelector('a.btn.light-blue');
+    if (ctaButton) ctaButton.setAttribute('data-i18n', 'cta-button');
     
-    const designItems = document.querySelectorAll('.price')[0]?.querySelectorAll('li');
-    if (designItems && designItems.length >= 9) {
-      for (let i = 2; i < 9; i++) {
-        designItems[i].setAttribute('data-i18n', `design-item-${i-1}`);
+    // Why Choose section
+    const whyChooseTitle = document.querySelector('h2.light-blue-text');
+    if (whyChooseTitle) whyChooseTitle.setAttribute('data-i18n', 'why-choose-title');
+    
+    const accordions = document.querySelectorAll('.accordion');
+    accordions.forEach(accordion => {
+      if (accordion.textContent.includes('Tailored Solutions')) {
+        accordion.setAttribute('data-i18n-html', 'tailored-title');
+        accordion.nextElementSibling.querySelector('p').setAttribute('data-i18n', 'tailored-desc');
       }
-    }
-    
-    // Automations column
-    const autoPrice = document.querySelectorAll('.price')[1]?.querySelectorAll('li')[1];
-    if (autoPrice) autoPrice.setAttribute('data-i18n', 'auto-price');
-    
-    const autoItems = document.querySelectorAll('.price')[1]?.querySelectorAll('li');
-    if (autoItems && autoItems.length >= 9) {
-      for (let i = 2; i < 9; i++) {
-        autoItems[i].setAttribute('data-i18n', `auto-item-${i-1}`);
+      if (accordion.textContent.includes('Efficiency Redefined')) {
+        accordion.setAttribute('data-i18n-html', 'efficiency-title');
+        accordion.nextElementSibling.querySelector('p').setAttribute('data-i18n', 'efficiency-desc');
       }
-    }
-    
-    // Business+ column
-    const businessPrice = document.querySelectorAll('.price')[2]?.querySelectorAll('li')[1];
-    if (businessPrice) businessPrice.setAttribute('data-i18n', 'business-price');
-    
-    const businessItems = document.querySelectorAll('.price')[2]?.querySelectorAll('li');
-    if (businessItems && businessItems.length >= 6) {
-      for (let i = 2; i < 7; i++) {
-        businessItems[i].setAttribute('data-i18n', `business-item-${i-1}`);
+      if (accordion.textContent.includes('Focus on SMBs')) {
+        accordion.setAttribute('data-i18n-html', 'focus-title');
+        accordion.nextElementSibling.querySelector('p').setAttribute('data-i18n', 'focus-desc');
       }
-    }
+    });
     
-    // Contact button
-    const contactButton = document.querySelector('.btn.light-blue.darken-4');
-    if (contactButton) contactButton.setAttribute('data-i18n', 'contact-us');
+    // Expertise section
+    const expertiseTitle = document.querySelectorAll('h2.light-blue-text')[1];
+    if (expertiseTitle) expertiseTitle.setAttribute('data-i18n', 'expertise-title');
     
-    // Footnotes
-    const footnotes = document.querySelector('.teal.lighten-5 p.left-align').innerHTML.split('<br><br>');
-    if (footnotes.length >= 3) {
-      const footnoteParent = document.querySelector('.teal.lighten-5 p.left-align');
-      footnoteParent.innerHTML = '';
+    // Sections with parallax
+    const sections = document.querySelectorAll('.section.light-blue');
+    sections.forEach((section, index) => {
+      const h3 = section.querySelector('h3');
+      const p = section.querySelector('p');
       
-      const footnote1 = document.createElement('span');
-      footnote1.setAttribute('data-i18n', 'footnote-1');
-      footnoteParent.appendChild(footnote1);
-      
-      footnoteParent.appendChild(document.createElement('br'));
-      footnoteParent.appendChild(document.createElement('br'));
-      
-      const footnote2 = document.createElement('span');
-      footnote2.setAttribute('data-i18n', 'footnote-2');
-      footnoteParent.appendChild(footnote2);
-      
-      footnoteParent.appendChild(document.createElement('br'));
-      footnoteParent.appendChild(document.createElement('br'));
-      
-      const footnote3 = document.createElement('span');
-      footnote3.setAttribute('data-i18n', 'footnote-3');
-      footnoteParent.appendChild(footnote3);
-    }
+      if (index === 0) {
+        h3.setAttribute('data-i18n', 'workflow-title');
+        p.setAttribute('data-i18n', 'workflow-desc');
+      } else if (index === 1) {
+        h3.setAttribute('data-i18n', 'data-viz-title');
+        p.setAttribute('data-i18n', 'data-viz-desc');
+      } else if (index === 2) {
+        h3.setAttribute('data-i18n', 'design-title');
+        p.setAttribute('data-i18n', 'design-desc');
+      } else if (index === 3) {
+        h3.setAttribute('data-i18n', 'chatbot-title');
+        p.setAttribute('data-i18n', 'chatbot-desc');
+      }
+    });
+    
+    // Contact section
+    const contactText = document.querySelector('.teal.lighten-5 h5');
+    if (contactText) contactText.setAttribute('data-i18n', 'contact-text');
+    
+    const contactButton = document.querySelector('.teal.lighten-5 a.btn-flat');
+    if (contactButton) contactButton.setAttribute('data-i18n', 'cta-button');
     
     // Footer
     const companyTitle = document.querySelector('.footer-bg h5:nth-of-type(1)');
@@ -239,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function toggleLanguage(e) {
     e.preventDefault();
-    currentLang = currentLang === 'sv' ? 'en' : 'sv';
+    currentLang = currentLang === 'en' ? 'sv' : 'en';
     localStorage.setItem('language', currentLang);
     
     // Update language button text
@@ -279,9 +309,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update meta description
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription && currentLang === 'sv') {
-      metaDescription.content = "Behjärta är mer än bara en tjänsteleverantör. Det representerar en uppriktig hängivenhet till att se våra kunder lyckas i varje strävan. Vi förstår de utmaningar företag möter, och vårt mål är att göra deras resa åtminstone lite enklare. Vår strategi handlar inte bara om att tillhandahålla lösningar; det handlar om att bygga ett partnerskap grundat i förståelse, stöd och en genuin önskan att bidra till din framgång.";
+      metaDescription.content = "Din pålitliga partner för effektivisering av arbetsprocesser! Frigör din verksamhets fulla potential med Behjärta, en ledande expert inom automatisering av Google Workspace och Microsoft Office. Vi specialiserar oss på att stärka små och medelstora företag genom att erbjuda tjänster som revolutionerar hur du hanterar data, automatiserar uppgifter och designar effektiva arbetsflöden.";
     } else if (metaDescription) {
-      metaDescription.content = "Behjärta embodies more than just a service provider. It represents a sincere dedication to seeing our clients succeed in every endeavor. We understand the challenges businesses encounter, and our goal is to make their journey at least a bit easier. Our approach is not just about providing solutions; it's about fostering a partnership rooted in understanding, support, and a genuine desire to contribute to your success.";
+      metaDescription.content = "Your Trusted Partner in Streamlining Work Processes! Unlock the true potential of your business with Behjärta, a leading expert in Google Workspace and Microsoft Office automation. We specialize in empowering small and medium-sized businesses by offering a suite of services that revolutionize the way you handle data, automate tasks, and design efficient workflows.";
     }
   }
 });
