@@ -86,47 +86,12 @@ document.addEventListener('DOMContentLoaded', function() {
   }, 1000);
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  const video = document.getElementById('background-video');
+  video.playbackRate = 0.7; // This slows down the video to 50% of its original speed
+});
+
 document.addEventListener('DOMContentLoaded', function() {
-  // Initialize
-  let currentLang = localStorage.getItem('language') || 'sv';
-  
-  // Create language toggle button
-  const navUl = document.querySelector('nav .nav-wrapper ul.right');
-  const mobileSidenav = document.querySelector('.sidenav');
-  
-  if (navUl) {
-    const langLi = document.createElement('li');
-    const langButton = document.createElement('a');
-    langButton.id = 'lang-toggle';
-    langButton.className = 'light-blue-text text-darken-4';
-    langButton.textContent = translations[currentLang]['language-button'];
-    langButton.href = '#';
-    langButton.addEventListener('click', toggleLanguage);
-    langLi.appendChild(langButton);
-    navUl.appendChild(langLi);
-  }
-  
-  if (mobileSidenav) {
-    const langLi = document.createElement('li');
-    const langButton = document.createElement('a');
-    langButton.id = 'mobile-lang-toggle';
-    langButton.className = 'light-blue-text text-darken-4';
-    langButton.textContent = translations[currentLang]['language-button'];
-    langButton.href = '#';
-    langButton.addEventListener('click', toggleLanguage);
-    langLi.appendChild(langButton);
-    mobileSidenav.appendChild(langLi);
-  }
-  
-  // Add data-i18n attributes to all elements
-  addTranslationAttributes();
-  
-  // Apply saved language
-  if (currentLang === 'en') {
-    applyTranslations();
-  }
-  
- document.addEventListener('DOMContentLoaded', function() {
   // Initialize
   let currentLang = localStorage.getItem('language') || 'en';
   
