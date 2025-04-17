@@ -34,49 +34,6 @@ const translations = {
     
     // Contact section
     "contact-text": "Ready to transform the way you work? Contact Behjärta today and let us streamline your business processes, making your journey to success smoother and more efficient than ever before.",
-
-    // Pricing page specific
-    'pricing-title': 'Pricing',
-    'pricing-thank-you': 'Thank you for considering Behjärta as your trusted partner in simplifying and enhancing your business operations',
-    
-    // Pricing columns
-    'design-header': 'Design',
-    'automations-header': 'Automations',
-    'business-plus-header': 'Business +',
-    
-    // Design column
-    'design-price': '800 SEK/hour + VAT',
-    'design-item-1': 'One free domain*',
-    'design-item-2': 'Static website (in house code: HTML, CSS, JS, React)',
-    'design-item-3': 'Google Sites',
-    'design-item-4': 'Wix**',
-    'design-item-5': 'Squarespace**',
-    'design-item-6': 'Shopify**',
-    'design-item-7': 'Graphic design for banners, ads, products, merchandise, etc',
-    
-    // Automations column
-    'auto-price': '1200 SEK/hour + VAT',
-    'auto-item-1': 'Automate your sheets to meet your needs effortlessly',
-    'auto-item-2': 'Precision planning, from detailed to bulk options',
-    'auto-item-3': 'Algorithm-driven forecasting at SKU/warehouse levels',
-    'auto-item-4': 'Reliable stock optimization recommendations',
-    'auto-item-5': 'Customizable dashboards for your unique needs',
-    'auto-item-6': 'Free onboarding and first month free Technical support***',
-    'auto-item-7': '24/7 Customer support',
-    
-    // Business+ column
-    'business-price': 'Contact us for more details',
-    'business-item-1': 'All included from Design and Automations, plus:',
-    'business-item-2': 'Scale up your projects',
-    'business-item-3': 'Free domains for all your pages',
-    'business-item-4': 'Seamless integration to services such as BigQuery, DocuSign, Fortnox, Klarna, etc.',
-    'business-item-5': 'AI Chatbots and assistants',
-    
-    // CTA and footnotes
-    'contact-us': 'Contact us',
-    'footnote-1': '*Applicable in case if you or your company does not possess any domain currently.',
-    'footnote-2': '**Additional fees may apply for hosting services from providers such as Loopia, WIX, Shopify, etc.',
-    'footnote-3': '***Technical Support: Updates, uploads of files, bug solving, permissions, additional changes - free of charge for the first month. €49/h starting from the second month onwards.',
     
     // Footer
     "company": "Company",
