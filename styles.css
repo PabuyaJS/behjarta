@@ -1,0 +1,486 @@
+/* Mobile overflow fixes */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  body {
+    font-family: "Noto Sans", sans-serif;
+    font-size: medium;
+    background-color: #e0f2f1;
+  }
+  
+  /* Ensure all containers don't exceed viewport width */
+  .container {
+    max-width: 100%;
+  }
+  
+  /* Fix mobile columns */
+  @media only screen and (max-width: 360px) {
+    .col {
+      padding: 0 0.75rem;
+    }
+    
+    .section {
+      padding: 2rem 1rem;
+    }
+    
+    .hero {
+      padding: 4rem 1rem;
+    }
+  }
+  
+  nav {
+    background-color: #01579b;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+  }
+  
+  .hero {
+    position: relative;
+    color: white;
+    padding: 6rem 3rem;
+    text-align: center;
+    overflow: hidden;
+    height: auto;
+  }
+  
+  .hero video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -2;
+  }
+  
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, #03a9f4, #e0f2f1);
+    opacity: 0.45;
+    z-index: -1;
+  }
+  
+  .section {
+    padding: 4rem 2rem;
+  }
+  
+  footer {
+    padding: 2rem 1rem;
+  }
+  
+  .logo-img {
+    height: 50px;
+    vertical-align: middle;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+  .card .card-image img {
+    height: 300px;
+    object-fit: cover;
+    width: 100%;
+  }
+
+  .card .card-image-m {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80px;
+  }
+
+  .card .card-image-m img {
+    height: 150px;
+    object-fit: fill;
+    width: 100%;
+  }
+
+  #card-image-1 {
+    background-color: white;
+  }
+
+  #card-image-1:hover {
+    background-color: #26a69a;
+  }
+
+  #card-image-2 {
+    background-color: white;
+  }
+
+  #card-image-2:hover {
+    background-color: #03a9f4;
+  }
+  
+  #card-image-3 {
+    background-color: white;
+  }
+
+  #card-image-3:hover {
+    background-color: #01579b;
+  }
+
+  .card:hover {
+    background-color: #e0f2f1;
+    transform: scale(1.03);
+    transition: transform 0.3s ease;
+  }
+
+  .gradiant {
+    background: linear-gradient(to right, #e0f2f1, #03a9f4);
+    overflow-x: hidden;
+  }
+
+  .fade-in-up {
+    opacity: 0;
+    transform: translatey(50px);
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  }
+  
+  .fade-in-up.visible {
+      opacity: 1;
+      transform: translatey(0);
+  }
+
+  .fab {
+    text-align: center;
+    justify-content: space-around;
+  }
+  
+  /* Mobile specific fixes */
+  @media only screen and (max-width: 480px) {
+    .hero {
+      height: auto;
+      min-height: 60vh;
+      padding: 8rem 1rem 4rem 1rem;
+    }
+    
+    .hero .card {
+      width: 95% !important;
+      margin: 20px auto;
+    }
+    
+    .hero a.btn-large {
+      width: 90% !important;
+      font-size: 1rem;
+    }
+    
+    .fixed-action-btn {
+      display: none !important;
+    }
+    
+    .brand-logo img {
+      height: 40px;
+    }
+
+    .section h2 {
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
+    }
+    
+    /* Ensure cards don't overflow */
+    .card-content {
+      padding: 16px;
+    }
+    
+    .card-title {
+      font-size: 1.2rem !important;
+      line-height: 1.3;
+    }
+    
+    /* Fix RUT section image */
+    .section img {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    /* Adjust form spacing */
+    .input-field {
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    /* Fix navbar on mobile */
+    .nav-wrapper {
+      padding: 0 10px;
+    }
+  }
+  
+  /* Additional overflow prevention */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Prevent text overflow */
+  p, h1, h2, h3, h4, h5, h6 {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .booking-option {
+    color: #26a69a;
+    border: 2px solid #26a69a;
+    border-radius: 15px;
+    padding: 9px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 50px;
+    font-weight: 500;
+}
+
+.booking-option:hover {
+    background-color: #26a69a;
+    border-color: #26a69a;
+    color: #e0f2f1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.booking-option.selected {
+    background-color: #26a69a;
+    color: #e0f2f1;
+    border-color: #00695c;
+}
+
+.date-picker-container, .time-picker-container {
+  border-radius: 15px;
+  border: solid 2px #26a69a;
+  padding: 20px;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.date-picker-container2, .time-picker-container2 {
+  border-radius: 15px;
+  border: solid 2px #03a9f4;
+  padding: 20px;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.date-picker-container3, .time-picker-container3 {
+  border-radius: 15px;
+  border: solid 2px #01579b;
+  padding: 20px;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.input-field input[type=text]:focus + label {
+    color: #26a69a !important;
+}
+
+.input-field input[type=text]:focus {
+    border-bottom: 1px solid #26a69a !important;
+    box-shadow: 0 1px 0 0 #26a69a !important;
+}
+
+.btn-floating {
+    background-color: #26a69a;
+}
+
+.btn-floating:hover {
+    background-color: #00695c;
+}
+
+.section-title {
+    font-family: 'Poetsen One', cursive;
+    color: #4db6ac !important;
+    margin-bottom: 10px;
+}
+
+.section-title2 {
+    font-family: 'Poetsen One', cursive;
+    color: #03a9f4 !important;
+    margin-bottom: 10px;
+}
+
+.section-title3 {
+    font-family: 'Poetsen One', cursive;
+    color: #01579b  !important;
+    margin-bottom: 10px;
+}
+
+.main-container {
+    border: 1px solid #26a69a;
+    border-radius: 15px;
+    padding: 20px;
+}
+
+.submit-btn {
+    background-color: #26a69a;
+    margin-top: 20px;
+    border-radius: 25px;
+    padding: 0 30px;
+}
+
+.submit-btn:hover {
+    background-color: #00695c;
+}
+
+.time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.time-slot {
+    background-color: #26a69a;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.time-slot:hover {
+    background-color: #26a69a;
+    border-color: #26a69a;
+}
+
+.time-slot.selected {
+    background-color: #26a69a;
+    color: #e0f2f1;
+    border-color: #00695c;
+}
+
+.recommendation-text {
+  font-size: 0.9rem;
+  margin-left: 8px;
+  display: inline-block;
+}
+
+.section-img {
+  position: relative;
+  background-image: url('rum.webp');
+}
+
+.section-img::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, #e0f2f1);
+  z-index: 1; /* Places overlay above background but below content */
+  pointer-events: none; /* Allows clicking through the overlay */
+}
+
+/* Ensure content stays above the overlay */
+.section-img > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* If you want gradient from transparent to color */
+.section-img-fade::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent, #e0f2f1);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.cont {
+  position: relative;
+  
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  height: 430px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.flowing-text-glow {
+    background: linear-gradient(
+        90deg,
+        #e0f2f1 0%,
+        #26a69a 25%,
+        #03a9f4 50%,
+        #01579b 75%,
+        #e0f2f1 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: slideColors 6s linear infinite;
+    filter: drop-shadow(0 0 10px rgba(3, 169, 244, 0.5));
+    margin-top: 50px;
+}
+
+@keyframes slideColors {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Custom styles for better text formatting */
+      .terms-content {
+        line-height: 1.6;
+        font-family: 'Noto Sans', sans-serif;
+      }
+      .terms-content h2 {
+        color: #01579b;
+        font-size: 1.8rem;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 500;
+      }
+      .terms-content h3 {
+        color: #0277bd;
+        font-size: 1.4rem;
+        margin-top: 1.5rem;
+        margin-bottom: 0.8rem;
+        font-weight: 500;
+      }
+      .terms-content p {
+        margin-bottom: 1rem;
+        text-align: justify;
+      }
+      .terms-content strong {
+        color: #01579b;
+      }
+
+      .no-point {
+        list-style-type: none;
+      }
