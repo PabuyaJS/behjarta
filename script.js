@@ -1,7 +1,133 @@
 // Add this to the beginning of your script.js to debug
 console.log('Script.js loaded successfully');
 
-// Modified initialization with debugging
+// Wait for both DOM and Materialize to be ready
+document.addEventListener('DOMContentLoaded', function() {
+  // Ensure Materialize is loaded
+  if (typeof M === 'undefined') {
+    console.error('Materialize not loaded!');
+    return;
+  }
+  
+  initializeAllComponents();
+});
+
+// Centralized initialization function
+function initializeAllComponents() {
+  console.log('Initializing all Materialize components...');
+  
+  // Initialize Sidenav
+  const sidenavElems = document.querySelectorAll('.sidenav');
+  if (sidenavElems.length > 0) {
+    M.Sidenav.init(sidenavElems);
+    console.log('Sidenav initialized:', sidenavElems.length);
+  }
+  
+  // Initialize Dropdown with better options
+  const dropdownElems = document.querySelectorAll('.dropdown-trigger');
+  if (dropdownElems.length > 0) {
+    M.Dropdown.init(dropdownElems, {
+      coverTrigger: false,
+      constrainWidth: false,
+      alignment: 'left',
+      hover: false,
+      closeOnClick: true,
+      inDuration: 300,
+      outDuration: 225
+    });
+    console.log('Dropdowns initialized:', dropdownElems.length);
+  }
+  
+  // Initialize Collapsibles (Accordions)
+  const collapsibleElems = document.querySelectorAll('.collapsible');
+  if (collapsibleElems.length > 0) {
+    M.Collapsible.init(collapsibleElems, {
+      accordion: false, // Set to false to allow multiple sections open
+      inDuration: 300,
+      outDuration: 300
+    });
+    console.log('Collapsibles initialized:', collapsibleElems.length);
+  }
+  
+  // Initialize Carousel for mobile hero section
+  const carouselElems = document.querySelectorAll('.carousel');
+  if (carouselElems.length > 0) {
+    const carouselInstances = M.Carousel.init(carouselElems, {
+      fullWidth: false,
+      indicators: true,
+      shift: 100,
+      duration: 300,
+      numVisible: 3,
+    });
+    
+    // Auto-cycle through images every 5 seconds
+    if (carouselInstances.length > 0) {
+      setInterval(function() {
+        carouselInstances.forEach(function(instance) {
+          instance.next();
+        });
+      }, 5000);
+    }
+    console.log('Carousels initialized:', carouselElems.length);
+  }
+  
+  // Initialize Fixed Action Button
+  const fabElems = document.querySelectorAll('.fixed-action-btn');
+  if (fabElems.length > 0) {
+    M.FloatingActionButton.init(fabElems, {
+      direction: 'left'
+    });
+    console.log('FABs initialized:', fabElems.length);
+  }
+  
+  // Initialize fade-in animations
+  initializeFadeInAnimations();
+  
+  // Initialize smooth scroll
+  initializeSmoothScroll();
+  
+  // Initialize cookie banner
+  initializeCookieBanner();
+}
+
+// Fade-in effect for cards
+function initializeFadeInAnimations() {
+  const cards = document.querySelectorAll('.fade-in-up');
+  if (cards.length === 0) return;
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.9 });
+
+  cards.forEach(card => {
+    observer.observe(card);
+  });
+}
+
+// Smooth scroll for anchor links 
+function initializeSmoothScroll() {
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      const href = this.getAttribute('href');
+      if (href === '#' || href === '#!') return;
+      
+      const target = document.querySelector(href);
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({
+          behavior: 'smooth'
+        });
+      }
+    });
+  });
+}
+
+// Cookie Banner Functions
 function initializeCookieBanner() {
   console.log('Initializing cookie banner...');
   
@@ -13,14 +139,12 @@ function initializeCookieBanner() {
   
   if (!consent) {
     console.log('No consent found, showing banner in 1.5 seconds...');
-    // Show banner after a short delay to ensure page is loaded
     setTimeout(() => {
       console.log('Attempting to show banner now');
       showCookieBanner();
     }, 1500);
   } else {
     console.log('Consent already given:', consent);
-    // Initialize based on previous consent
     if (consent === 'accepted') {
       console.log('Cookies tidigare accepterade - laddar alla tjänster');
     } else if (consent === 'declined') {
@@ -29,7 +153,6 @@ function initializeCookieBanner() {
   }
 }
 
-// Modified showCookieBanner with debugging
 function showCookieBanner() {
   console.log('showCookieBanner() called');
   const banner = document.getElementById('cookieBanner');
@@ -42,96 +165,18 @@ function showCookieBanner() {
   }
 }
 
-// Test function - run this in console to manually test
-function testCookieBanner() {
-  // Clear any existing consent
-  document.cookie = 'behjarta_cookie_consent=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-  console.log('Cleared consent cookie');
-  
-  // Show banner immediately
-  showCookieBanner();
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  var elems = document.querySelectorAll('.sidenav');
-  M.Sidenav.init(elems);
-});
-
-// Initialize carousel for mobile hero section
-document.addEventListener('DOMContentLoaded', function() {
-  var elems = document.querySelectorAll('.carousel');
-  var instances = M.Carousel.init(elems, {
-    fullWidth: false,
-    indicators: true,
-    shift: 100,
-    duration: 300,
-    numVisible: 3,
-  });
-
-  // Auto-cycle through images every 5 seconds
-  if (instances.length > 0) {
-    setInterval(function() {
-      instances.forEach(function(instance) {
-        instance.next();
-      });
-    }, 5000);
-  }
-});
-
-// Fade-in effect for cards
-document.addEventListener('DOMContentLoaded', function() {
-  const cards = document.querySelectorAll('.fade-in-up');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.9});
-
-  cards.forEach(card => {
-    observer.observe(card);
-  });
-});
-
-// Smooth scroll for anchor links 
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function(e) {
-    e.preventDefault();
-    document.querySelector(this.getAttribute('href')).scrollIntoView({
-      behavior: 'smooth'
-    });
-  });
-});
-
-// Fixed action button
-document.addEventListener('DOMContentLoaded', function() {
-  var elems = document.querySelectorAll('.fixed-action-btn');
-  var instances = M.FloatingActionButton.init(elems, {
-    direction: 'left'
-  });
-});
-
-// colapse initialization
-document.addEventListener('DOMContentLoaded', function() {
-  var elems = document.querySelectorAll('.collapsible');
-  var instances = M.Collapsible.init(elems, {
-    accordion: true, // Allow multiple collapsibles to be open at the same time
-    inDuration: 300, // Animation duration
-    outDuration: 300 // Animation duration
-  });
-});
-
-// Initialize dropdown
-document.addEventListener('DOMContentLoaded', function() {
-    var elems = document.querySelectorAll('.dropdown-trigger');
-    var instances = M.Dropdown.init(elems, {
-        coverTrigger: false, // Display dropdown below the button
-        constrainWidth: false, // Do not constrain width to the button
-        alignment: 'center' // Align dropdown to the center
-    });
-  });
+// Test function - run this in console to manually test
+function testCookieBanner() {
+  document.cookie = 'behjarta_cookie_consent=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  console.log('Cleared consent cookie');
+  showCookieBanner();
+}
 
 // Submit contact function
 function clearContactFields() {
@@ -148,32 +193,32 @@ function submitContact() {
   const contactMessage = document.getElementById('contactMessage').value;
 
   if (!contactName || !contactPhone || !contactEmail) {
-      M.toast({html: 'Vänligen fyll i alla obligatoriska fält', classes: 'red'});
-      return;
+    M.toast({html: 'Vänligen fyll i alla obligatoriska fält', classes: 'red'});
+    return;
   }
 
   const formData = new URLSearchParams({
-      contactName, contactPhone, contactEmail, contactMessage
+    contactName, contactPhone, contactEmail, contactMessage
   });
 
-  const preloade2 = document.getElementById('preloader2');
-  preloade2.style.display = 'block';
+  const preloader2 = document.getElementById('preloader2');
+  preloader2.style.display = 'block';
 
   fetch('https://script.google.com/macros/s/AKfycbye8mABJhmmym5IiHzphwqYb65QMfA-kTd8LGZ03ft_L62m5Y_w06ZMkPOUGL1_FBpR/exec', {
-      method: 'POST',
-      body: formData
+    method: 'POST',
+    body: formData
   })
   .then(response => {
-      preloade2.style.display = 'none';
-      if (response.ok) {
+    preloader2.style.display = 'none';
+    if (response.ok) {
       M.toast({html: 'Tack! 😊 Vi hör av oss inom 24 timmar!👍', classes: 'green'});
       clearContactFields();
-      } else {
+    } else {
       throw new Error('Network response was not ok');
-      }
+    }
   })
   .catch(error => {
-    preloader.style.display = 'none';
+    preloader2.style.display = 'none';
     M.toast({html: 'Något gick fel. Försök igen.', classes: 'red'});
     console.error('Error!', error.message);
   });
@@ -194,87 +239,81 @@ function submitComplain() {
   const complainMessage = document.getElementById('complainMessage').value;
 
   if (!customerNumber || !serviceNumber || !cleaningDate || !complainMessage) {
-      M.toast({html: 'Vänligen fyll i alla obligatoriska fält', classes: 'red'});
-      return;
+    M.toast({html: 'Vänligen fyll i alla obligatoriska fält', classes: 'red'});
+    return;
   }
 
   const formData = new URLSearchParams({
-      customerNumber, serviceNumber, cleaningDate, complainMessage
+    customerNumber, serviceNumber, cleaningDate, complainMessage
   });
 
-  const preloade3 = document.getElementById('preloader3');
-  preloade3.style.display = 'block';
+  const preloader3 = document.getElementById('preloader3');
+  preloader3.style.display = 'block';
 
   fetch('https://script.google.com/macros/s/AKfycbxD3IrA9k3AzMWfOX1tuupCz9vwDzhUS4NyPYYy1BX9pNPJ0wXASoMiG6VwxclnCd9S/exec', {
-      method: 'POST',
-      body: formData
+    method: 'POST',
+    body: formData
   })
   .then(response => {
-      preloade3.style.display = 'none';
-      if (response.ok) {
+    preloader3.style.display = 'none';
+    if (response.ok) {
       M.toast({html: 'Tack! 😊 Vi hör av oss inom 30 minuter!👍', classes: 'green'});
       clearComplainFields();
-      } else {
+    } else {
       throw new Error('Network response was not ok');
-      }
+    }
   })
   .catch(error => {
-    preloader.style.display = 'none';
+    preloader3.style.display = 'none';
     M.toast({html: 'Något gick fel. Försök igen.', classes: 'red'});
     console.error('Error!', error.message);
   });
 }
 
-let sortDirections = [false, false, true, true, true]; // true = ascending, false = descending
+// Table sorting function
+let sortDirections = [false, false, true, true, true];
 
-  function sortTable(columnIndex) {
-      const table = document.getElementById('priceTable');
-      const tbody = document.getElementById('tableBody');
-      const rows = Array.from(tbody.rows);
-      
-      // Toggle sort direction
-      sortDirections[columnIndex] = !sortDirections[columnIndex];
-      const ascending = sortDirections[columnIndex];
-      
-      // Update arrow indicators
-      const headers = table.querySelectorAll('th .sort-arrow');
-      headers.forEach((arrow, index) => {
-          if (index === columnIndex) {
-              arrow.textContent = ascending ? '▲' : '▼';
-          } else {
-              arrow.textContent = '▲';
-          }
-      });
-      
-      rows.sort((a, b) => {
-          let aVal = a.cells[columnIndex].textContent.trim();
-          let bVal = b.cells[columnIndex].textContent.trim();
-          
-          // For price columns, extract numeric value
-          if (columnIndex > 0) {
-              aVal = parseFloat(aVal.replace(/[^\d]/g, ''));
-              bVal = parseFloat(bVal.replace(/[^\d]/g, ''));
-              return ascending ? aVal - bVal : bVal - aVal;
-          } else {
-              // For company names, use string comparison
-              return ascending ? aVal.localeCompare(bVal, 'sv') : bVal.localeCompare(aVal, 'sv');
-          }
-      });
-      
-      // Clear tbody and add sorted rows
-      tbody.innerHTML = '';
-      rows.forEach(row => tbody.appendChild(row));
-  }
+function sortTable(columnIndex) {
+  const table = document.getElementById('priceTable');
+  if (!table) return;
   
-  // Initial sort by company name
-  sortTable(1);
+  const tbody = document.getElementById('tableBody');
+  const rows = Array.from(tbody.rows);
+  
+  sortDirections[columnIndex] = !sortDirections[columnIndex];
+  const ascending = sortDirections[columnIndex];
+  
+  const headers = table.querySelectorAll('th .sort-arrow');
+  headers.forEach((arrow, index) => {
+    if (index === columnIndex) {
+      arrow.textContent = ascending ? '▲' : '▼';
+    } else {
+      arrow.textContent = '▲';
+    }
+  });
+  
+  rows.sort((a, b) => {
+    let aVal = a.cells[columnIndex].textContent.trim();
+    let bVal = b.cells[columnIndex].textContent.trim();
+    
+    if (columnIndex > 0) {
+      aVal = parseFloat(aVal.replace(/[^\d]/g, ''));
+      bVal = parseFloat(bVal.replace(/[^\d]/g, ''));
+      return ascending ? aVal - bVal : bVal - aVal;
+    } else {
+      return ascending ? aVal.localeCompare(bVal, 'sv') : bVal.localeCompare(aVal, 'sv');
+    }
+  });
+  
+  tbody.innerHTML = '';
+  rows.forEach(row => tbody.appendChild(row));
+}
 
 // Submit affiliate function
 function clearAffiliateFields() {
   document.getElementById('affiliateName').value = '';
   document.getElementById('affiliatePhone').value = '';
   document.getElementById('affiliateEmail').value = '';
-  // Clear radio button selections
   document.getElementById('paypalRadio').checked = false;
   document.getElementById('swishRadio').checked = false;
 }
@@ -284,7 +323,6 @@ function submitAffiliate() {
   const affiliatePhone = document.getElementById('affiliatePhone').value;
   const affiliateEmail = document.getElementById('affiliateEmail').value;
   
-  // Check which payment method is selected
   const paypalSelected = document.getElementById('paypalRadio').checked;
   const swishSelected = document.getElementById('swishRadio').checked;
   let paymentMethod = '';
@@ -295,7 +333,6 @@ function submitAffiliate() {
     paymentMethod = 'Swish';
   }
 
-  // Validation
   if (!affiliateName || !affiliatePhone || !affiliateEmail) {
     M.toast({html: 'Vänligen fyll i alla obligatoriska fält', classes: 'red'});
     return;
@@ -313,13 +350,6 @@ function submitAffiliate() {
     paymentMethod
   });
 
-  console.log('Sending data:', {
-    affiliateName, 
-    affiliatePhone, 
-    affiliateEmail, 
-    paymentMethod
-  });
-
   const preloader8 = document.getElementById('preloader8');
   preloader8.style.display = 'block';
 
@@ -330,13 +360,8 @@ function submitAffiliate() {
     },
     body: formData
   })
-  .then(response => {
-    console.log('Response status:', response.status);
-    console.log('Response ok:', response.ok);
-    return response.text();
-  })
+  .then(response => response.text())
   .then(data => {
-    console.log('Response data:', data);
     preloader8.style.display = 'none';
     
     if (data.includes('Success') || data === 'Success') {
@@ -387,7 +412,6 @@ function submitApplication() {
   const jobDL = document.getElementById('jobDL').value;
   const jobPersona = document.getElementById('jobPersona').value;
 
-  // Validation
   if (!jobName || !jobPhone || !jobEmail || !jobPN || !jobAddress1 || !jobCity || !jobPostalCode || !jobStartDate || !jobExperience || !jobPrevious || !jobAvailability || !jobLanguage || !jobDL || !jobPersona) {
     M.toast({html: 'Vänligen fyll i alla obligatoriska fält', classes: 'red'});
     return;
@@ -410,23 +434,6 @@ function submitApplication() {
     jobPersona 
   });
 
-  console.log('Sending data:', {
-    jobName,
-    jobPhone,
-    jobEmail,
-    jobPN,
-    jobAddress1,
-    jobCity,
-    jobPostalCode,
-    jobStartDate,
-    jobExperience,
-    jobPrevious,
-    jobAvailability,
-    jobLanguage,
-    jobDL,
-    jobPersona
-  });
-
   const preloader9 = document.getElementById('preloader9');
   preloader9.style.display = 'block';
 
@@ -437,13 +444,8 @@ function submitApplication() {
     },
     body: formData2
   })
-  .then(response => {
-    console.log('Response status:', response.status);
-    console.log('Response ok:', response.ok);
-    return response.text();
-  })
+  .then(response => response.text())
   .then(data => {
-    console.log('Response data:', data);
     preloader9.style.display = 'none';
     
     if (data.includes('Success') || data === 'Success') {
@@ -477,7 +479,7 @@ function submitCV(event) {
   const reader = new FileReader();
 
   reader.onload = function(e) {
-    const base64Data = e.target.result.split(',')[1]; // strip metadata
+    const base64Data = e.target.result.split(',')[1];
     const payload = {
       filename: file.name,
       mimeType: file.type,
