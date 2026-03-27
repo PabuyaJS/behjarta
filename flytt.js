@@ -101,11 +101,23 @@ function submitBooking() {
         code: document.getElementById('codeMove').value
     };
 
+    // Fields that are truly optional / auto-filled
+    const optionalFields = ['duration', 'frequency', 'cleaningSuply', 'ironing1', 'fridge', 'windows', 'deepClean', 'comments', 'code'];
+
+    // Check required fields
     for (let key in formValues) {
-        if (!formValues[key] && !['duration', 'frequency', 'cleaningSuply', 'ironing1', 'fridge', 'windows', 'deepClean', 'comments'].includes(key)) {
+        if (optionalFields.includes(key)) continue;
+        if (formValues[key] === '' || formValues[key] === null || formValues[key] === undefined) {
             M.toast({ html: 'Vänligen fyll i alla obligatoriska fält', classes: 'red' });
             return;
         }
+    }
+
+    // Check terms checkbox separately
+    const termsCheckbox = document.querySelector('input[data-frequency="true"]');
+    if (!termsCheckbox || !termsCheckbox.checked) {
+        M.toast({ html: 'Du måste godkänna villkoren för att fortsätta', classes: 'red' });
+        return;
     }
 
     const preloader4 = document.getElementById('preloader4');
@@ -126,5 +138,9 @@ function submitBooking() {
             M.toast({ html: 'Något gick fel med servern. Försök igen senare.', classes: 'red' });
         }
     })
-    
+    .catch(error => {
+        preloader4.style.display = 'none';
+        console.error('Fetch Error:', error);
+        M.toast({ html: 'Nätverksfel. Kontrollera din anslutning.', classes: 'red' });
+    });
 }
