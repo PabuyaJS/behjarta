@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Anställningsavtal – Behjärta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>
+
+/* ── Reset & Variables ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:       #1A3C6E;
+  --blue-mid:   #2755a0;
+  --blue-light: #D6E4F7;
+  --blue-pale:  #EFF5FD;
+  --ink:        #1C1C2E;
+  --ink-mid:    #3D3D55;
+  --ink-light:  #7A7A9A;
+  --rule:       #D0DAEA;
+  --paper:      #FCFCFF;
+  --bg:         #EEF2F8;
+  --red:        #C0392B;
+  --green:      #1A7A4A;
+  --radius:     6px;
+  --shadow:     0 4px 32px rgba(26,60,110,0.10), 0 1px 4px rgba(26,60,110,0.06);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Page shell ─────────────────────────────────────────────────────────── */
+.page-shell {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 32px 16px 80px;
+}
+
+/* ── Status screens ─────────────────────────────────────────────────────── */
+.status-screen {
+  text-align: center;
+  padding: 100px 32px;
+}
+.status-icon { font-size: 52px; margin-bottom: 20px; }
+.status-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 28px;
+  color: var(--blue);
+  margin-bottom: 12px;
+}
+.status-body { font-size: 15px; color: var(--ink-mid); line-height: 1.6; }
+.spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--blue-light);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 24px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Document card ──────────────────────────────────────────────────────── */
+.doc-card {
+  background: var(--paper);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 52px 56px;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+/* Watermark stripe */
+.doc-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--blue) 60%, var(--blue-mid) 100%);
+  border-radius: 12px 12px 0 0;
+}
+
+/* ── Document header ────────────────────────────────────────────────────── */
+.doc-header { text-align: center; margin-bottom: 36px; }
+.doc-company-name {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--blue);
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.doc-company-meta {
+  font-size: 11px;
+  color: var(--ink-light);
+  letter-spacing: 0.02em;
+  margin-bottom: 24px;
+}
+.doc-title-band {
+  border-top: 2px solid var(--blue);
+  border-bottom: 1px solid var(--blue-light);
+  padding: 14px 0 10px;
+  margin-bottom: 6px;
+}
+.doc-title-main {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--blue);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.doc-title-en {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 16px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink-light);
+}
+.doc-subtitle {
+  font-size: 12.5px;
+  color: var(--ink-light);
+  font-style: italic;
+  margin-top: 6px;
+}
+
+/* ── Section ────────────────────────────────────────────────────────────── */
+.section { margin-bottom: 28px; }
+.section-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--blue);
+  padding-bottom: 7px;
+  border-bottom: 1.5px solid var(--blue-light);
+  margin-bottom: 14px;
+  letter-spacing: 0.02em;
+}
+.section-title .en {
+  font-style: italic;
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--ink-light);
+}
+
+/* ── Bilingual paragraph ────────────────────────────────────────────────── */
+.bi { margin-bottom: 14px; }
+.bi-sv {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink-mid);
+  text-align: justify;
+  margin-bottom: 3px;
+}
+.bi-en {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink-light);
+  font-style: italic;
+  text-align: justify;
+}
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.data-table th {
+  background: var(--blue-pale);
+  color: var(--blue);
+  font-weight: 600;
+  padding: 9px 12px;
+  border: 1px solid var(--rule);
+  font-size: 12px;
+  text-align: left;
+}
+.data-table td {
+  padding: 8px 12px;
+  border: 1px solid var(--rule);
+  color: var(--ink-mid);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.data-table td.en {
+  color: var(--ink-light);
+  font-style: italic;
+}
+.data-table tr:nth-child(even) td { background: var(--blue-pale); }
+.data-table .field-key {
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+  width: 1%;
+}
+
+/* ── Bullets ────────────────────────────────────────────────────────────── */
+.bi-list { padding-left: 0; list-style: none; margin: 10px 0 16px; }
+.bi-list li {
+  font-size: 13.5px;
+  color: var(--ink-mid);
+  padding: 4px 0 4px 22px;
+  position: relative;
+  line-height: 1.55;
+}
+.bi-list li::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 11px;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--blue-mid);
+}
+.bi-list li .li-en {
+  color: var(--ink-light);
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* ── Signature section ──────────────────────────────────────────────────── */
+.sig-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 20px;
+}
+.sig-block { }
+.sig-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+}
+.sig-label-en {
+  font-size: 11px;
+  color: var(--ink-light);
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.sig-prefill {
+  font-family: 'Dancing Script', cursive;
+  font-size: 36px;
+  color: var(--ink);
+  line-height: 1.2;
+  margin: 8px 0 4px;
+}
+.sig-name-sub {
+  font-size: 11.5px;
+  color: var(--ink-light);
+  border-top: 1px solid var(--rule);
+  padding-top: 6px;
+  margin-top: 6px;
+}
+.sig-place-date {
+  grid-column: 1 / -1;
+  font-size: 13.5px;
+  color: var(--ink-mid);
+  padding: 10px 14px;
+  background: var(--blue-pale);
+  border-radius: var(--radius);
+  border: 1px solid var(--rule);
+}
+.sig-place-date strong { color: var(--blue); }
+
+/* canvas pad */
+.pad-wrap { position: relative; }
+.sig-canvas {
+  width: 100%;
+  height: 130px;
+  border: 1.5px dashed var(--rule);
+  border-radius: var(--radius);
+  background: var(--blue-pale);
+  cursor: crosshair;
+  touch-action: none;
+  display: block;
+  transition: border-color 0.2s;
+}
+.sig-canvas.touched { border-color: var(--blue-mid); border-style: solid; }
+.pad-hint {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  color: var(--ink-light);
+  pointer-events: none;
+  text-align: center;
+  transition: opacity 0.2s;
+  user-select: none;
+}
+.pad-hint.hidden { opacity: 0; }
+.pad-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+.btn-clear {
+  font-size: 11.5px;
+  color: var(--ink-light);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+.btn-clear:hover { color: var(--red); }
+.pad-status { font-size: 11px; color: var(--green); font-weight: 500; }
+
+/* Name input */
+.name-input-wrap { margin-top: 14px; }
+.name-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 5px;
+  display: block;
+}
+.name-label .req { color: var(--red); margin-left: 2px; }
+.name-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1.5px solid var(--rule);
+  background: transparent;
+  padding: 7px 2px;
+  font-size: 14.5px;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.name-input:focus { border-bottom-color: var(--blue); }
+.name-input::placeholder { color: var(--ink-light); font-style: italic; }
+
+/* ── Arrow indicator ────────────────────────────────────────────────────── */
+.arrow-cue {
+  display: none;
+  text-align: center;
+  padding: 28px 0;
+  animation: cue-bounce 0.9s ease-in-out infinite;
+}
+.arrow-cue.visible { display: block; }
+.arrow-cue-inner {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--blue);
+  background: var(--blue-pale);
+  border: 1.5px solid var(--blue-light);
+  border-radius: 50px;
+  padding: 12px 28px;
+}
+.arrow-cue-inner svg { width: 22px; height: 22px; }
+.arrow-cue-text { font-size: 13px; font-weight: 500; }
+@keyframes cue-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(8px); }
+}
+
+/* ── Submit section ─────────────────────────────────────────────────────── */
+.submit-section {
+  display: none;
+  text-align: center;
+  padding: 40px 24px;
+  background: var(--paper);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+.submit-section.visible { display: block; }
+.submit-note {
+  font-size: 13.5px;
+  color: var(--ink-mid);
+  margin-bottom: 6px;
+}
+.submit-note-en {
+  font-size: 12px;
+  color: var(--ink-light);
+  font-style: italic;
+  margin-bottom: 28px;
+}
+.btn-submit {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  padding: 16px 56px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  border-radius: 50px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(26,60,110,0.25);
+}
+.btn-submit:hover:not(:disabled) {
+  background: #0f2a50;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(26,60,110,0.32);
+}
+.btn-submit:active:not(:disabled) { transform: translateY(0); }
+.btn-submit:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.submit-progress {
+  font-size: 13px;
+  color: var(--ink-light);
+  margin-top: 14px;
+  min-height: 20px;
+}
+
+/* ── Success screen ─────────────────────────────────────────────────────── */
+.success-screen {
+  text-align: center;
+  padding: 60px 32px;
+  background: var(--paper);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+.success-check {
+  width: 64px; height: 64px;
+  background: #E6F4EE;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 32px;
+}
+.success-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 28px;
+  color: var(--blue);
+  margin-bottom: 10px;
+}
+.success-body { font-size: 14px; color: var(--ink-mid); line-height: 1.6; }
+.success-body em { color: var(--ink-light); font-style: italic; }
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .doc-card { padding: 32px 20px; }
+  .sig-grid { grid-template-columns: 1fr; }
+  .doc-title-main { font-size: 18px; }
+  .data-table { font-size: 12px; }
+  .data-table td, .data-table th { padding: 7px 8px; }
+}
+
+@media print {
+  body { background: white; }
+  .doc-card { box-shadow: none; }
+  .pad-hint, .btn-clear, .pad-actions, .arrow-cue,
+  .submit-section, .pad-status { display: none !important; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="page-shell">
+
+  <!-- Loading -->
+  <div id="stateLoading" class="status-screen">
+    <div class="spinner"></div>
+    <div class="status-title">Laddar avtal…</div>
+    <div class="status-body" style="font-style:italic;color:var(--ink-light)">Loading contract…</div>
+  </div>
+
+  <!-- Error -->
+  <div id="stateError" class="status-screen" style="display:none">
+    <div class="status-icon">⚠️</div>
+    <div class="status-title" id="errorTitle">Något gick fel</div>
+    <div class="status-body" id="errorBody"></div>
+  </div>
+
+  <!-- Contract wrapper (injected by JS) -->
+  <div id="contractWrap" style="display:none"></div>
+
+  <!-- Arrow cue (between the two docs) -->
+  <div class="arrow-cue" id="arrowCue">
+    <div class="arrow-cue-inner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M12 5v14M5 12l7 7 7-7"/>
+      </svg>
+      <span class="arrow-cue-text">Signera även Uppförandekoden nedan<br><em style="font-style:italic;font-weight:300;font-size:11px">Also sign the Code of Conduct below</em></span>
+    </div>
+  </div>
+
+  <!-- Code of conduct wrapper -->
+  <div id="conductWrap" style="display:none"></div>
+
+  <!-- Submit -->
+  <div class="submit-section" id="submitSection">
+    <p class="submit-note">✅ Båda dokumenten är signerade.</p>
+    <p class="submit-note-en">Both documents have been signed.</p>
+    <button class="btn-submit" id="submitBtn" onclick="submitContract()">
+      Skicka in &amp; signera &nbsp;/&nbsp; Submit &amp; Sign
+    </button>
+    <div class="submit-progress" id="submitProgress"></div>
+  </div>
+
+  <!-- Success (replaces everything) -->
+  <div id="stateSuccess" style="display:none">
+    <div class="success-screen">
+      <div class="success-check">✅</div>
+      <div class="success-title" id="successTitle">Tack!</div>
+      <div class="success-body" id="successBody"></div>
+    </div>
+  </div>
+
+</div><!-- /page-shell -->
+
+<!-- html2pdf.js -->
+<script src="https://script.google.com/macros/s/AKfycbx4Tb4dqFOnXECVe0BL25GyL07xK_-9INotY0sBpasbvivqLOTPDcnXCmBhJqtPH6KQ/exec"></script>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqc3sJVDfuau9ItahhOk3kZcjsa_PkIbzjJr42QlKCzIytDVgbQo4L-gAHaryRZXQ/exec';
+
+// ── State ────────────────────────────────────────────────────────────────────
+let contractData = null;
+let sig1Signed   = false;
+let sig2Signed   = false;
+let nameEntered  = false;
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  const params     = new URLSearchParams(window.location.search);
+  const contractId = params.get('id');
+
+  if (!contractId) { return showError('Inget avtals-ID angivet.', 'No contract ID in the URL. Please use the link sent to you.'); }
+
+  try {
+    const res  = await fetch(`${APPS_SCRIPT_URL}?action=getContract&id=${encodeURIComponent(contractId)}`);
+    const data = await res.json();
+
+    if (data.error) {
+      if (data.error === 'Contract already submitted') {
+        return showError('Avtalet är redan signerat.', 'This contract has already been signed and submitted.');
+      }
+      return showError('Avtalet hittades inte.', data.error);
+    }
+
+    contractData = data;
+    renderDocuments(data);
+
+    document.getElementById('stateLoading').style.display = 'none';
+    document.getElementById('contractWrap').style.display  = 'block';
+    document.getElementById('conductWrap').style.display   = 'block';
+
+    initPad('pad1', 1);
+    initPad('pad2', 2);
+
+  } catch (err) {
+    showError('Kunde inte ladda avtalet.', 'Could not load the contract. Please try refreshing the page. (' + err.message + ')');
+  }
+});
+
+// ── Error helper ─────────────────────────────────────────────────────────────
+function showError(sv, en) {
+  document.getElementById('stateLoading').style.display = 'none';
+  document.getElementById('stateError').style.display   = 'flex';
+  document.getElementById('stateError').style.flexDirection = 'column';
+  document.getElementById('errorTitle').textContent = sv;
+  document.getElementById('errorBody').innerHTML    = `<em>${en}</em>`;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════════════════════════════════
+function renderDocuments(d) {
+  const { employee, salary, date } = d;
+  const placeDate = `Stockholm, ${date}`;
+
+  document.getElementById('contractWrap').innerHTML  = buildEmploymentAgreement(employee, salary, date, placeDate);
+  document.getElementById('conductWrap').innerHTML   = buildCodeOfConduct(placeDate);
+}
+
+// ── Company doc header ────────────────────────────────────────────────────────
+function docHeader(titleSv, titleEn, subtitle) {
+  return `
+  <div class="doc-header">
+    <div class="doc-company-name">MS Secure Solutions AB (Behjärta)</div>
+    <div class="doc-company-meta">Org.nr: 559189-2806 &nbsp;|&nbsp; Ekebergabacken 58, 123 63 Farsta &nbsp;|&nbsp; www.behjarta.com &nbsp;|&nbsp; hej@behjarta.com</div>
+    <div class="doc-title-band">
+      <div class="doc-title-main">${titleSv}</div>
+      <div class="doc-title-en">${titleEn}</div>
+    </div>
+    <div class="doc-subtitle">${subtitle}</div>
+  </div>`;
+}
+
+function sec(num, sv, en, body) {
+  return `<div class="section">
+    <div class="section-title">${num}. ${sv} <span class="en">/&nbsp;${en}</span></div>
+    ${body}
+  </div>`;
+}
+
+function bi(sv, en) {
+  return `<div class="bi"><p class="bi-sv">${sv}</p><p class="bi-en">${en}</p></div>`;
+}
+
+function bul(items) {
+  return '<ul class="bi-list">' + items.map(([sv,en]) =>
+    `<li>${sv} <span class="li-en">/ ${en}</span></li>`).join('') + '</ul>';
+}
+
+function twoCol(rows, headers) {
+  const hdr = headers ? `<tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr>` : '';
+  const body = rows.map(cells =>
+    `<tr>${cells.map((c,i)=>`<td${i>0?' class="en"':''}>${c}</td>`).join('')}</tr>`
+  ).join('');
+  return `<table class="data-table">${hdr}${body}</table>`;
+}
+
+function sigBlock(placeDate, padId, showName) {
+  return `
+  <div class="sig-place-date"><strong>Ort och datum / Place and Date:</strong> &nbsp;${placeDate}</div>
+  <div class="sig-grid" style="margin-top:20px">
+
+    <div class="sig-block">
+      <div class="sig-label">Arbetsgivarens underskrift <span class="sig-label-en">/ Employer's Signature</span></div>
+      <div class="sig-prefill">Jovan Senicanin</div>
+      <div class="sig-name-sub">MS Secure Solutions AB (Behjärta)</div>
+    </div>
+
+    <div class="sig-block">
+      <div class="sig-label">Arbetstagarens underskrift <span class="sig-label-en">/ Employee's Signature</span> <span style="color:var(--red)">*</span></div>
+      <div class="pad-wrap">
+        <canvas id="${padId}" class="sig-canvas"></canvas>
+        <div class="pad-hint" id="${padId}Hint">✍️ Rita din signatur här<br><em style="font-size:11px">Draw your signature here</em></div>
+      </div>
+      <div class="pad-actions">
+        <button class="btn-clear" onclick="clearPad('${padId}', ${padId==='pad1'?1:2})">Rensa / Clear</button>
+        <span class="pad-status" id="${padId}Status"></span>
+      </div>
+      ${showName ? `
+      <div class="name-input-wrap">
+        <label class="name-label" for="nameInPrint">
+          Namnförtydligande / Name in print <span class="req">*</span>
+        </label>
+        <input type="text" id="nameInPrint" class="name-input"
+          placeholder="Skriv ditt fullständiga namn / Type your full name"
+          oninput="onNameInput()" autocomplete="name" inputmode="text">
+      </div>` : ''}
+    </div>
+
+  </div>`;
+}
+
+// ── Employment Agreement ──────────────────────────────────────────────────────
+function buildEmploymentAgreement(e, s, date, placeDate) {
+  return `<div class="doc-card" id="docEA">
+    ${docHeader('ANSTÄLLNINGSAVTAL', 'EMPLOYMENT AGREEMENT', 'Tidsbegränsad anställning – Lokalvårdare &nbsp;/&nbsp; Fixed-Term Employment – Cleaner')}
+
+    ${sec(1,'Arbetsgivare','Employer', twoCol([
+      ['Företag / Company', 'MS Secure Solutions AB (Behjärta)'],
+      ['Org.nr / Reg. No.', '559189-2806'],
+      ['Adress / Address', 'Ekebergabacken 58, 123 63 Farsta'],
+      ['Webbplats / Website', 'www.behjarta.com'],
+      ['E-post / Email', 'hej@behjarta.com']
+    ], ['Uppgift / Field', 'Värde / Value']))}
+
+    ${sec(2,'Arbetstagare','Employee', twoCol([
+      ['Namn / Full Name', escHtml(e.name)],
+      ['Personnummer / Personal ID No.', escHtml(e.personalId)],
+      ['Adress / Address', escHtml(e.address)],
+      ['Telefon / Phone', escHtml(e.phone)],
+      ['E-post / Email', escHtml(e.email)]
+    ], ['Uppgift / Field', 'Värde / Value']))}
+
+    ${sec(3,'Anställningens form och period','Employment Type and Period', `
+      ${bi('Anställningsform: Tidsbegränsad anställning vid behov (timanställning), i enlighet med Lag (1982:80) om anställningsskydd (LAS) och dess bestämmelser om allmän visstidsanställning (ALVA).',
+           'Employment type: Fixed-term employment on demand (hourly), in accordance with the Employment Protection Act (LAS) and its provisions on general fixed-term employment (ALVA).')}
+      ${bi('Anställningen gäller initialt i tre (3) månader från tillträdesdatum och förnyas automatiskt med ytterligare tremånadersperioder, förutsatt att båda parter är överens och arbete kan erbjudas.',
+           'The employment is initially valid for three (3) months from the start date and is renewed automatically for additional three-month periods, provided both parties agree and work is available.')}
+      ${bi('I enlighet med LAS § 5a omvandlas anställningen till tillsvidareanställning om arbetstagaren haft tidsbegränsad anställning (ALVA) hos samma arbetsgivare i sammanlagt mer än tolv (12) månader under en femårsperiod. Arbetsgivaren åtar sig att erbjuda tillsvidareanställning vid uppnådd kvalifikationstid.',
+           'In accordance with LAS § 5a, the employment converts to a permanent contract if the employee has held fixed-term employment (ALVA) with the same employer for more than twelve (12) months within a five-year period. The employer undertakes to offer permanent employment upon reaching the qualifying period.')}
+      ${twoCol([
+        ['Tillträdesdatum / Start Date', escHtml(date)],
+        ['Anställningsperiod / Period', '3 månader / 3 months from start date'],
+        ['Förnyelse / Renewal', 'Var 3:e månad / Every 3 months'],
+        ['Omvandling / Conversion', 'Efter 12 månaders kvalificerad tid / After 12 months']
+      ], ['Svenska', 'English'])}
+    `)}
+
+    ${sec(4,'Arbetsuppgifter och arbetsplats','Duties and Workplace', `
+      ${bi('Arbetstagaren utför städ- och lokalvårdstjänster i enlighet med arbetsgivarens instruktioner och aktuell uppdragsbeskrivning. Arbetsuppgifterna inkluderar, men är inte begränsade till:',
+           'The employee performs cleaning and facility maintenance services in accordance with the employer\'s instructions and the current assignment description. Duties include, but are not limited to:')}
+      ${bul([
+        ['Hemstädning (ordinarie städning)', 'Home cleaning (regular cleaning)'],
+        ['Storstädning', 'Deep cleaning'],
+        ['Flyttstädning', 'Move-out / move-in cleaning'],
+        ['Kontorsstädning', 'Office cleaning'],
+        ['Städning av trapphus och gemensamma utrymmen', 'Stairwell and common area cleaning']
+      ])}
+      ${bi('Arbetsplatsen är hos arbetsgivarens kunder. Adresser meddelas inför varje enskilt uppdrag. Arbetstagaren förväntas ta sig till respektive uppdragsadress på egen hand.',
+           'The workplace is at the employer\'s clients\' premises. Addresses are communicated prior to each assignment. The employee is expected to travel independently to each assignment address.')}
+    `)}
+
+    ${sec(5,'Arbetstid','Working Hours', `
+      ${bi('Inga garanterade minimitimmar. Arbete erbjuds vid behov och arbetstagaren kallas in när uppdrag finns tillgängliga. Arbetstagaren har rätt att tacka nej till erbjudet arbete utan att detta påverkar framtida erbjudanden negativt, förutsatt att avböjandet sker i god tid.',
+           'No guaranteed minimum hours. Work is offered as needed and the employee is called in when assignments are available. The employee has the right to decline offered work without this negatively affecting future offers, provided the refusal is given with reasonable notice.')}
+      ${bi('Arbetsgivaren åtar sig att, i den mån det är möjligt, meddela arbetstagaren om kommande uppdrag minst 48 timmar i förväg.',
+           'The employer undertakes to notify the employee of upcoming assignments at least 48 hours in advance where possible.')}
+    `)}
+
+    ${sec(6,'Lön och ersättning','Salary and Compensation', `
+      ${twoCol([
+        ['Timlön / Hourly Rate', `${s.hourlyRate} kr per timme (exkl. semesterersättning) / ${s.hourlyRate} SEK per hour (excl. holiday pay)`],
+        ['Semesterersättning / Holiday Pay', '12 % på intjänad lön, utbetalas löpande / 12% on earned wages, paid continuously'],
+        ['Total ersättning per timme / Total per hour', `${s.totalRate} kr (inkl. semesterersättning) / ${s.totalRate} SEK (incl. holiday pay)`]
+      ], ['Svenska', 'English'])}
+      ${bi('Utbetalning: Lön betalas en månad i efterskott, senast den 25:e. Om den 25:e infaller på en lördag, söndag eller allmän helgdag, sker utbetalningen närmast föregående bankdag (dock lägst den 23:e).',
+           'Payment: Salary is paid one month in arrears, no later than the 25th. If the 25th falls on a Saturday, Sunday, or public holiday, payment is made on the nearest preceding banking day (but no earlier than the 23rd).')}
+      ${bi('Lön utbetalas via banköverföring till av arbetstagaren angivet konto. Bankuppgifter ska lämnas senast den första arbetsdagen.',
+           'Salary is paid by bank transfer to the account specified by the employee. Bank details must be provided no later than the first working day.')}
+    `)}
+
+    ${sec(7,'Semester','Annual Leave',
+      bi('Semesterrätten regleras av Semesterlagen (SemL, 1977:480). Eftersom semesterersättning om 12 % utbetalas löpande på intjänad lön, har arbetstagaren inte rätt till ytterligare betald semester utöver vad som redan betalats ut som semesterersättning.',
+         'Annual leave is governed by the Annual Leave Act (SemL, 1977:480). Since holiday pay of 12% is paid continuously on earned wages, the employee is not entitled to additional paid leave beyond what has already been paid as holiday compensation.')
+    )}
+
+    ${sec(8,'Sjukdom och frånvaro','Illness and Absence', `
+      ${bi('Vid sjukdom eller annan frånvaro som hindrar arbetstagaren från att utföra ett planerat uppdrag ska arbetsgivaren meddelas snarast möjligt, dock senast 60 minuter före uppdragets planerade start.',
+           'In case of illness or other absence, the employer must be notified as soon as possible, and no later than 60 minutes before the scheduled start of the assignment.')}
+      ${bi('Sjuklön regleras enligt Sjuklönelagen (SjLL, 1991:1047). Karensdag tillämpas enligt lag. Sjukintyg kan krävas från och med den 8:e sjukdagen.',
+           'Sick pay is governed by the Sick Pay Act (SjLL, 1991:1047). A qualifying day (karensdag) applies as required by law. A medical certificate may be required from the 8th day of illness.')}
+    `)}
+
+    ${sec(9,'Uppsägningstid','Notice Period', `
+      ${bi('För tidsbegränsad anställning upphör anställningen normalt vid periodens slut utan föregående uppsägning. Om någon part önskar avsluta anställningen i förtid gäller följande uppsägningstider enligt LAS:',
+           'Fixed-term employment normally ends at the expiry of the period without prior notice. If either party wishes to terminate before period end, the following notice periods apply under LAS:')}
+      ${twoCol([
+        ['Kortare än 2 år / Less than 2 years', '1 månad / 1 month'],
+        ['2–4 år / 2–4 years', '2 månader / 2 months'],
+        ['4–6 år / 4–6 years', '3 månader / 3 months'],
+        ['6 år eller mer / 6 years or more', '4–6 månader beroende på ålder / 4–6 months depending on age']
+      ], ['Anställningstid / Length', 'Uppsägningstid / Notice'])}
+    `)}
+
+    ${sec(10,'Sekretess','Confidentiality', `
+      ${bi('Arbetstagaren förbinder sig att inte – under eller efter anställningstiden – röja, utnyttja eller vidarebefordra konfidentiell information om arbetsgivarens kunder, uppdrag, prissättning eller interna affärsförhållanden till tredje part.',
+           'The employee undertakes not to – during or after employment – disclose, exploit, or forward confidential information about the employer\'s clients, assignments, pricing, or internal business matters to third parties.')}
+      ${bi('Det är strängt förbjudet att erbjuda eller utföra städtjänster privat åt arbetsgivarens kunder utanför Behjärtas verksamhet, såväl under anställningen som under en period av tolv (12) månader efter anställningens upphörande.',
+           'It is strictly prohibited to offer or perform cleaning services privately to the employer\'s clients outside of Behjärta\'s operations, both during employment and during twelve (12) months after termination.')}
+    `)}
+
+    ${sec(11,'Personuppgifter (GDPR)','Personal Data (GDPR)',
+      bi('Arbetsgivarens behandling av personuppgifter sker i enlighet med GDPR (2016/679) och tillämplig svensk dataskyddslagstiftning. Personuppgifter behandlas uteslutande i syfte att administrera anställningsförhållandet.',
+         'The employer\'s processing of personal data is carried out in accordance with GDPR (2016/679) and applicable Swedish data protection legislation. Personal data is processed solely to administer the employment relationship.')
+    )}
+
+    ${sec(12,'Tillämplig lag','Applicable Law',
+      bi('Detta avtal regleras av svensk rätt. Relevanta lagar: LAS (1982:80), SemL (1977:480), SjLL (1991:1047), Diskrimineringslagen (2008:567), AML (1977:1160) och GDPR (2016/679).',
+         'This agreement is governed by Swedish law. Relevant legislation: LAS (1982:80), SemL (1977:480), SjLL (1991:1047), Discrimination Act (2008:567), AML (1977:1160), and GDPR (2016/679).')
+    )}
+
+    ${sec(13,'Övrigt','Other Terms',
+      bi('Ändringar av detta avtal är endast giltiga om de görs skriftligen och undertecknas av båda parter. Detta avtal utgör parternas fullständiga överenskommelse och ersätter alla tidigare muntliga eller skriftliga överenskommelser.',
+         'Amendments are only valid if made in writing and signed by both parties. This agreement constitutes the parties\' complete understanding and supersedes all prior oral or written agreements.')
+    )}
+
+    ${sec(14,'Underskrifter','Signatures', `
+      ${bi('Genom underskrift bekräftar parterna att de har läst, förstått och accepterar samtliga villkor i detta anställningsavtal.',
+           'By signing, the parties confirm that they have read, understood, and accept all terms of this employment agreement.')}
+      ${sigBlock(placeDate, 'pad1', true)}
+    `)}
+  </div>`;
+}
+
+// ── Code of Conduct ───────────────────────────────────────────────────────────
+function buildCodeOfConduct(placeDate) {
+  return `<div class="doc-card" id="docCC">
+    ${docHeader('UPPFÖRANDEKOD', 'CODE OF CONDUCT', 'MS Secure Solutions AB (Behjärta)')}
+
+    ${sec(1,'Inledning','Introduction',
+      bi('Denna uppförandekod definierar de etiska standarder som Behjärta förväntar sig av samtliga anställda. Den grundar sig på vårt engagemang för integritet, respekt och professionell excellens i allt vi gör.',
+         'This code of conduct defines the ethical standards that Behjärta expects from all employees. It is grounded in our commitment to integrity, respect, and professional excellence in everything we do.')
+    )}
+
+    ${sec(2,'Respekt och inkludering','Respect and Inclusion',
+      bi('Alla anställda, kunder och samarbetspartners ska behandlas med respekt och värdighet, oavsett kön, ålder, etnisk bakgrund, religion, sexuell läggning, funktionsnedsättning eller annan skyddad egenskap enligt Diskrimineringslagen (DL, 2008:567). Diskriminering och trakasserier tolereras inte under några omständigheter.',
+         'All employees, clients, and partners must be treated with respect and dignity, regardless of gender, age, ethnicity, religion, sexual orientation, disability, or any other protected characteristic under the Discrimination Act (DL, 2008:567). Discrimination and harassment are not tolerated under any circumstances.')
+    )}
+
+    ${sec(3,'Ärlighet och transparens','Honesty and Transparency',
+      bi('Arbetstagaren ska alltid handla ärligt och transparent gentemot arbetsgivaren, kunder och kollegor. Detta inkluderar korrekt tidrapportering, ärlig kommunikation om uppdragets utförande och omedelbar rapportering av misstag, skador eller avvikelser.',
+         'The employee must always act honestly and transparently toward the employer, clients, and colleagues. This includes accurate time reporting, honest communication about assignment performance, and immediate reporting of mistakes, damage, or irregularities.')
+    )}
+
+    ${sec(4,'Professionellt uppförande','Professional Conduct', `
+      ${bul([
+        ['Anländ till varje uppdrag i ren och lämplig klädsel', 'Arrive at each assignment in clean and appropriate attire'],
+        ['Undvik personliga telefonsamtal under pågående uppdrag', 'Avoid personal phone calls during active assignments'],
+        ['Hantera kundens tillhörigheter med yttersta försiktighet', 'Handle client belongings with utmost care'],
+        ['Rapportera skador eller avvikelser omedelbart till arbetsgivaren', 'Report damage or irregularities immediately to the employer'],
+        ['Lämna kunden nöjd – vid tveksamhet, dubbelkolla', 'Leave the client satisfied – when in doubt, double-check']
+      ])}
+    `)}
+
+    ${sec(5,'Sociala medier','Social Media',
+      bi('Arbetstagaren får inte publicera information, bilder eller kommentarer om kunder, kollegor eller uppdrag på sociala medier eller offentliga plattformar utan uttryckligt skriftligt godkännande från arbetsgivaren.',
+         'The employee may not post information, images, or comments about clients, colleagues, or assignments on social media or public platforms without the explicit written approval of the employer.')
+    )}
+
+    ${sec(6,'Intressekonflikter','Conflicts of Interest',
+      bi('Det är förbjudet att erbjuda eller utföra städtjänster privat åt arbetsgivarens kunder, såväl under anställningen som under tolv (12) månader efter anställningens upphörande. Vid potentiell intressekonflikt av annat slag ska detta omgående rapporteras till arbetsgivaren.',
+         'It is prohibited to offer or perform cleaning services privately to the employer\'s clients, both during employment and during twelve (12) months after termination. Any other potential conflict of interest must be immediately reported to the employer.')
+    )}
+
+    ${sec(7,'Hantering av nycklar och tillträde','Key and Access Management',
+      bi('Om arbetstagaren anförtros nycklar, kod eller annan tillgång till kundens fastighet medför detta ett särskilt ansvar. Nycklar och koder ska förvaras säkert, aldrig kopieras, och returneras omedelbart om anställningen avslutas eller uppdraget upphör. Förlust av nyckel ska rapporteras till arbetsgivaren omedelbart.',
+         'If the employee is entrusted with keys, codes, or other access to a client\'s property, this carries a special responsibility. Keys and codes must be stored securely, never copied, and returned immediately upon termination of the assignment. Loss of a key must be reported to the employer immediately.')
+    )}
+
+    ${sec(8,'Miljöansvar','Environmental Responsibility',
+      bi('Arbetstagaren förväntas använda rengöringsmedel och resurser effektivt och miljömedvetet, sortera avfall korrekt och använda miljövänliga produkter där sådana tillhandahålls av arbetsgivaren.',
+         'The employee is expected to use cleaning products and resources efficiently and with environmental awareness, sort waste correctly, and use eco-friendly products where provided by the employer.')
+    )}
+
+    ${sec(9,'Rapportering av överträdelser','Reporting Violations',
+      bi('Arbetstagare som bevittnar eller misstänker brott mot denna uppförandekod uppmanas att rapportera detta till arbetsgivaren. Alla rapporter behandlas konfidentiellt och hanteras skyndsamt. Ingen arbetstagare ska utsättas för repressalier för att i god tro ha rapporterat en överträdelse.',
+         'Employees who witness or suspect a violation are encouraged to report it to the employer. All reports are treated confidentially and handled promptly. No employee shall be subject to retaliation for having reported a violation in good faith.')
+    )}
+
+    ${sec(10,'Bekräftelse','Acknowledgement', `
+      ${bi('Arbetstagaren bekräftar genom sin underskrift nedan att hen har mottagit, läst och förstår denna uppförandekod och förbinder sig att följa den under hela anställningstiden.',
+           'The employee confirms by their signature below that they have received, read, and understood this code of conduct and commits to adhering to it throughout their employment.')}
+      ${sigBlock(placeDate, 'pad2', false)}
+    `)}
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  SIGNATURE PAD
+// ════════════════════════════════════════════════════════════════════════════
+function initPad(canvasId, padNum) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx  = canvas.getContext('2d');
+  let drawing = false;
+  let lastX = 0, lastY = 0;
+
+  function resize() {
+    const dpr  = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const w    = rect.width  * dpr;
+    const h    = rect.height * dpr;
+    // Preserve existing drawing if re-sizing
+    const imgData = canvas.width > 0 ? ctx.getImageData(0, 0, canvas.width, canvas.height) : null;
+    canvas.width  = w;
+    canvas.height = h;
+    ctx.scale(dpr, dpr);
+    ctx.strokeStyle = '#1C1C2E';
+    ctx.lineWidth   = 2.2;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+    if (imgData) ctx.putImageData(imgData, 0, 0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function xy(e) {
+    const r = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: src.clientX - r.left, y: src.clientY - r.top };
+  }
+
+  function start(e) {
+    e.preventDefault();
+    drawing = true;
+    const p = xy(e);
+    lastX = p.x; lastY = p.y;
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    // Hide hint
+    const hint = document.getElementById(canvasId + 'Hint');
+    if (hint) hint.classList.add('hidden');
+    canvas.classList.add('touched');
+  }
+
+  function move(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    const p = xy(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastX = p.x; lastY = p.y;
+  }
+
+  function end() {
+    if (!drawing) return;
+    drawing = false;
+    markSigned(canvasId, padNum);
+  }
+
+  canvas.addEventListener('mousedown',  start);
+  canvas.addEventListener('mousemove',  move);
+  canvas.addEventListener('mouseup',    end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove',  move,  { passive: false });
+  canvas.addEventListener('touchend',   end);
+}
+
+function markSigned(canvasId, padNum) {
+  const statusEl = document.getElementById(canvasId + 'Status');
+  if (statusEl) statusEl.textContent = '✓ Signerad / Signed';
+
+  if (padNum === 1) {
+    sig1Signed = true;
+    // Show arrow cue
+    document.getElementById('arrowCue').classList.add('visible');
+    document.getElementById('arrowCue').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  if (padNum === 2) {
+    sig2Signed = true;
+    document.getElementById('arrowCue').classList.remove('visible');
+  }
+  checkAllSigned();
+}
+
+function clearPad(canvasId, padNum) {
+  const canvas = document.getElementById(canvasId);
+  const ctx    = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  canvas.classList.remove('touched');
+
+  const hint = document.getElementById(canvasId + 'Hint');
+  if (hint) hint.classList.remove('hidden');
+
+  const statusEl = document.getElementById(canvasId + 'Status');
+  if (statusEl) statusEl.textContent = '';
+
+  if (padNum === 1) { sig1Signed = false; document.getElementById('arrowCue').classList.remove('visible'); }
+  if (padNum === 2) sig2Signed = false;
+  checkAllSigned();
+}
+
+function onNameInput() {
+  const val = (document.getElementById('nameInPrint')?.value || '').trim();
+  nameEntered = val.length >= 2;
+  checkAllSigned();
+}
+
+function checkAllSigned() {
+  const ready = sig1Signed && sig2Signed && nameEntered;
+  const section = document.getElementById('submitSection');
+  if (ready && !section.classList.contains('visible')) {
+    section.classList.add('visible');
+    setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+  } else if (!ready) {
+    section.classList.remove('visible');
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  SUBMIT
+// ════════════════════════════════════════════════════════════════════════════
+async function submitContract() {
+  const btn      = document.getElementById('submitBtn');
+  const progress = document.getElementById('submitProgress');
+  btn.disabled   = true;
+
+  try {
+    const nameInPrint = document.getElementById('nameInPrint').value.trim();
+    const sig1 = document.getElementById('pad1').toDataURL('image/png');
+    const sig2 = document.getElementById('pad2').toDataURL('image/png');
+
+    // Hide UI chrome before PDF capture
+    document.querySelectorAll('.pad-hint, .pad-actions, .btn-clear').forEach(el => el.style.visibility = 'hidden');
+    document.getElementById('arrowCue').style.display = 'none';
+    document.getElementById('submitSection').style.display = 'none';
+
+    progress.textContent = 'Genererar PDF… / Generating PDF…';
+
+    // Generate PDF from both documents
+    const pdfContent = document.createElement('div');
+    pdfContent.appendChild(document.getElementById('docEA').cloneNode(true));
+    const pb = document.createElement('div'); pb.style.pageBreakAfter = 'always'; pdfContent.appendChild(pb);
+    pdfContent.appendChild(document.getElementById('docCC').cloneNode(true));
+    document.body.appendChild(pdfContent);
+
+    const pdfBlob = await html2pdf().set({
+      margin:      [10, 12],
+      filename:    `Anstallningsavtal_${contractData.employee.name.replace(/\s+/g,'_')}.pdf`,
+      image:       { type: 'jpeg', quality: 0.96 },
+      html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
+      jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak:   { mode: ['css', 'legacy'] }
+    }).from(pdfContent).outputPdf('blob');
+
+    document.body.removeChild(pdfContent);
+
+    // Restore UI
+    document.querySelectorAll('.pad-hint, .pad-actions, .btn-clear').forEach(el => el.style.visibility = '');
+    document.getElementById('submitSection').style.display = 'block';
+
+    progress.textContent = 'Skickar… / Sending…';
+
+    // Base64 encode
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
+      reader.onerror   = reject;
+      reader.readAsDataURL(pdfBlob);
+    });
+
+    const payload = {
+      action:       'submit',
+      contractId:   contractData.contractId,
+      sig1,
+      sig2,
+      nameInPrint,
+      pdfBase64:    base64
+    };
+
+    const res    = await fetch(APPS_SCRIPT_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'text/plain' }, // avoid CORS preflight
+      body:    JSON.stringify(payload)
+    });
+    const result = await res.json();
+
+    if (result.success) {
+      // Show success
+      document.getElementById('contractWrap').style.display  = 'none';
+      document.getElementById('conductWrap').style.display   = 'none';
+      document.getElementById('arrowCue').style.display      = 'none';
+      document.getElementById('submitSection').style.display = 'none';
+
+      const successEl = document.getElementById('stateSuccess');
+      successEl.style.display = 'block';
+      document.getElementById('successTitle').textContent = `Tack, ${contractData.employee.name}!`;
+      document.getElementById('successBody').innerHTML    =
+        `Ditt avtal har signerats och en kopia har skickats till <strong>${contractData.employee.email}</strong>.<br>
+         <em>Your agreement has been signed and a copy has been sent to <strong>${contractData.employee.email}</strong>.</em>`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } else {
+      throw new Error(result.error || 'Unknown server error');
+    }
+
+  } catch (err) {
+    btn.disabled = false;
+    progress.textContent = '';
+    document.querySelectorAll('.pad-hint, .pad-actions, .btn-clear').forEach(el => el.style.visibility = '');
+    document.getElementById('submitSection').style.display = 'block';
+    alert('Ett fel uppstod. Försök igen.\nAn error occurred. Please try again.\n\n' + err.message);
+  }
+}
+
+// ── Utility ───────────────────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
+</body>
+</html>
