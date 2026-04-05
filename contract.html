@@ -1010,27 +1010,17 @@ async function submitContract() {
     const sig1 = document.getElementById('pad1').toDataURL('image/png');
     const sig2 = document.getElementById('pad2').toDataURL('image/png');
 
-    // Hide UI chrome before PDF capture
-    document.querySelectorAll('.pad-hint, .pad-actions, .btn-clear').forEach(el => el.style.visibility = 'hidden');
-    document.getElementById('arrowCue').style.display = 'none';
-    document.getElementById('submitSection').style.display = 'none';
-
     progress.textContent = 'Genererar PDF… / Generating PDF…';
 
-    // Build isolated off-screen container so html2pdf doesn't pick up page scroll offset
+    // Build the PDF source element
     const pdfWrap = document.createElement('div');
-    pdfWrap.style.cssText = [
-      'position:fixed', 'top:0', 'left:0', 'width:794px',
-      'background:#fff', 'z-index:-9999', 'opacity:0',
-      'pointer-events:none', 'overflow:visible'
-    ].join(';');
+    pdfWrap.style.cssText = 'width:100%;background:#fff;padding:20px 0;';
 
     const ea = document.getElementById('docEA').cloneNode(true);
     const pb = document.createElement('div');
-    pb.style.cssText = 'page-break-after:always;height:0;';
+    pb.style.cssText = 'page-break-after:always;';
     const cc = document.getElementById('docCC').cloneNode(true);
 
-    // Remove border-radius and box-shadow from clones for cleaner PDF
     [ea, cc].forEach(el => {
       el.style.borderRadius = '0';
       el.style.boxShadow = 'none';
@@ -1040,7 +1030,19 @@ async function submitContract() {
     pdfWrap.appendChild(ea);
     pdfWrap.appendChild(pb);
     pdfWrap.appendChild(cc);
-    document.body.appendChild(pdfWrap);
+
+    // Hide page content, show only pdfWrap for capture
+    const shell = document.getElementById('contractWrap').closest('.page-shell') || document.querySelector('.page-shell');
+    const arrowEl = document.getElementById('arrowCue');
+    const submitEl = document.getElementById('submitSection');
+    const conductEl = document.getElementById('conductWrap');
+    const contractEl = document.getElementById('contractWrap');
+
+    [shell, arrowEl, submitEl].forEach(el => { if(el) el.style.display = 'none'; });
+    document.body.style.background = '#fff';
+    document.body.prepend(pdfWrap);
+
+    await new Promise(r => setTimeout(r, 300)); // let browser paint
 
     const pdfBlob = await html2pdf().set({
       margin:      [12, 14],
@@ -1051,11 +1053,11 @@ async function submitContract() {
       pagebreak:   { mode: ['css', 'legacy'] }
     }).from(pdfWrap).outputPdf('blob');
 
+    // Restore page
     document.body.removeChild(pdfWrap);
-
-    // Restore UI
-    document.querySelectorAll('.pad-hint, .pad-actions, .btn-clear').forEach(el => el.style.visibility = '');
-    document.getElementById('submitSection').style.display = 'block';
+    document.body.style.background = '';
+    [shell, arrowEl, submitEl].forEach(el => { if(el) el.style.display = ''; });
+    submitEl.style.display = 'block';
 
     progress.textContent = 'Skickar… / Sending…';
 
