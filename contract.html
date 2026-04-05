@@ -523,11 +523,13 @@ body {
 
 </div><!-- /page-shell -->
 
-<!-- html2pdf.js -->
-<script src="https://script.google.com/macros/s/AKfycbx4Tb4dqFOnXECVe0BL25GyL07xK_-9INotY0sBpasbvivqLOTPDcnXCmBhJqtPH6KQ/exec"></script>
+<!-- html2pdf loaded dynamically at submit time -->
 
 <script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqc3sJVDfuau9ItahhOk3kZcjsa_PkIbzjJr42QlKCzIytDVgbQo4L-gAHaryRZXQ/exec';
+// ════════════════════════════════════════════════════════════════════════════
+//  CONFIG  –  replace with your deployed Apps Script Web App URL
+// ════════════════════════════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
 
 // ── State ────────────────────────────────────────────────────────────────────
 let contractData = null;
@@ -969,6 +971,31 @@ function checkAllSigned() {
   }
 }
 
+// ── Dynamic library loader ────────────────────────────────────────────────────
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload  = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function ensureHtml2Pdf() {
+  if (typeof html2pdf !== 'undefined') return;
+  const cdns = [
+    'https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js',
+    'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'
+  ];
+  for (const cdn of cdns) {
+    try { await loadScript(cdn); if (typeof html2pdf !== 'undefined') return; } catch(e) {}
+  }
+  throw new Error('Could not load PDF library. Please check your internet connection and try again.');
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 //  SUBMIT
 // ════════════════════════════════════════════════════════════════════════════
@@ -978,7 +1005,8 @@ async function submitContract() {
   btn.disabled   = true;
 
   try {
-    const nameInPrint = document.getElementById('nameInPrint').value.trim();
+    progress.textContent = 'Laddar PDF-bibliotek… / Loading PDF library…';
+    await ensureHtml2Pdf();
     const sig1 = document.getElementById('pad1').toDataURL('image/png');
     const sig2 = document.getElementById('pad2').toDataURL('image/png');
 
