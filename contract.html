@@ -1017,23 +1017,41 @@ async function submitContract() {
 
     progress.textContent = 'Genererar PDF… / Generating PDF…';
 
-    // Generate PDF from both documents
-    const pdfContent = document.createElement('div');
-    pdfContent.appendChild(document.getElementById('docEA').cloneNode(true));
-    const pb = document.createElement('div'); pb.style.pageBreakAfter = 'always'; pdfContent.appendChild(pb);
-    pdfContent.appendChild(document.getElementById('docCC').cloneNode(true));
-    document.body.appendChild(pdfContent);
+    // Build isolated off-screen container so html2pdf doesn't pick up page scroll offset
+    const pdfWrap = document.createElement('div');
+    pdfWrap.style.cssText = [
+      'position:fixed', 'top:0', 'left:0', 'width:794px',
+      'background:#fff', 'z-index:-9999', 'opacity:0',
+      'pointer-events:none', 'overflow:visible'
+    ].join(';');
+
+    const ea = document.getElementById('docEA').cloneNode(true);
+    const pb = document.createElement('div');
+    pb.style.cssText = 'page-break-after:always;height:0;';
+    const cc = document.getElementById('docCC').cloneNode(true);
+
+    // Remove border-radius and box-shadow from clones for cleaner PDF
+    [ea, cc].forEach(el => {
+      el.style.borderRadius = '0';
+      el.style.boxShadow = 'none';
+      el.style.marginBottom = '0';
+    });
+
+    pdfWrap.appendChild(ea);
+    pdfWrap.appendChild(pb);
+    pdfWrap.appendChild(cc);
+    document.body.appendChild(pdfWrap);
 
     const pdfBlob = await html2pdf().set({
-      margin:      [10, 12],
+      margin:      [12, 14],
       filename:    `Anstallningsavtal_${contractData.employee.name.replace(/\s+/g,'_')}.pdf`,
-      image:       { type: 'jpeg', quality: 0.96 },
-      html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
+      image:       { type: 'jpeg', quality: 0.97 },
+      html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false, backgroundColor: '#ffffff' },
       jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak:   { mode: ['css', 'legacy'] }
-    }).from(pdfContent).outputPdf('blob');
+    }).from(pdfWrap).outputPdf('blob');
 
-    document.body.removeChild(pdfContent);
+    document.body.removeChild(pdfWrap);
 
     // Restore UI
     document.querySelectorAll('.pad-hint, .pad-actions, .btn-clear').forEach(el => el.style.visibility = '');
