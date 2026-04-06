@@ -466,6 +466,24 @@ body {
   .submit-section, .pad-status { display: none !important; }
 }
 
+  @media print {
+    .doc-card {
+      page-break-inside: avoid;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+    }
+  
+    .section {
+      page-break-inside: avoid;
+    }
+  }
+
+  .section,
+  .sig-block,
+  .data-table {
+    break-inside: avoid;
+  }
+
 </style>
 </head>
 <body>
@@ -983,30 +1001,68 @@ async function submitContract() {
     const sig2 = document.getElementById('pad2').toDataURL('image/png');
 
     // Hide UI chrome before PDF capture
-    document.querySelectorAll('.pad-hint, .pad-actions, .btn-clear').forEach(el => el.style.visibility = 'none');
+    document.querySelectorAll('.pad-hint, .pad-actions, .btn-clear').forEach(el => el.style.visibility = 'hidden');
     document.getElementById('arrowCue').style.display = 'none';
     document.getElementById('submitSection').style.display = 'none';
-
+    
     progress.textContent = 'Genererar PDF… / Generating PDF…';
-
-    // Generate PDF from both documents
+    
+    // ✅ Create controlled A4 container
     const pdfContent = document.createElement('div');
-    pdfContent.appendChild(document.getElementById('docEA').cloneNode(true));
-    const pb = document.createElement('div'); pb.style.pageBreakAfter = 'always'; pdfContent.appendChild(pb);
-    pdfContent.appendChild(document.getElementById('docCC').cloneNode(true));
+    pdfContent.style.width = '794px'; // A4 width
+    pdfContent.style.margin = '0 auto';
+    pdfContent.style.background = '#fff';
+    pdfContent.style.boxSizing = 'border-box';
+    
+    // Clone documents
+    const docEA = document.getElementById('docEA').cloneNode(true);
+    const docCC = document.getElementById('docCC').cloneNode(true);
+    
+    // ✅ Remove problematic styles
+    [docEA, docCC].forEach(doc => {
+      doc.style.boxShadow = 'none';
+      doc.style.borderRadius = '0';
+    });
+    
+    // Add first document
+    pdfContent.appendChild(docEA);
+    
+    // ✅ Proper page break
+    const pageBreak = document.createElement('div');
+    pageBreak.style.display = 'block';
+    pageBreak.style.height = '0';
+    pageBreak.style.pageBreakAfter = 'always';
+    pdfContent.appendChild(pageBreak);
+    
+    // Add second document
+    pdfContent.appendChild(docCC);
+    
     document.body.appendChild(pdfContent);
-
+    
+    // ✅ Generate PDF with stable config
     const pdfBlob = await html2pdf().set({
-      margin:      [10, 12],
-      filename:    `Anstallningsavtal_${contractData.employee.name.replace(/\s+/g,'_')}.pdf`,
-      image:       { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 1.2, useCORS: true, allowTaint: true, logging: false },
-      jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak:   { mode: ['css', 'legacy'] }
+      margin: 10,
+      filename: `Anstallningsavtal_${contractData.employee.name.replace(/\s+/g,'_')}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait'
+      },
+      pagebreak: {
+        mode: ['css'],
+        avoid: ['.section', '.sig-block']
+      }
     }).from(pdfContent).outputPdf('blob');
-
+    
+    // Cleanup
     document.body.removeChild(pdfContent);
-
+    
     // Restore UI
     document.querySelectorAll('.pad-hint, .pad-actions, .btn-clear').forEach(el => el.style.visibility = '');
     document.getElementById('submitSection').style.display = 'block';
