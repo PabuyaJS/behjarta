@@ -983,7 +983,7 @@ async function submitContract() {
     const sig2 = document.getElementById('pad2').toDataURL('image/png');
 
     // Hide UI chrome before PDF capture
-    document.querySelectorAll('.pad-hint, .pad-actions, .btn-clear').forEach(el => el.style.visibility = 'hidden');
+    document.querySelectorAll('.pad-hint, .pad-actions, .btn-clear').forEach(el => el.style.visibility = 'block');
     document.getElementById('arrowCue').style.display = 'none';
     document.getElementById('submitSection').style.display = 'none';
 
