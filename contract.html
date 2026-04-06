@@ -523,12 +523,10 @@ body {
 
 </div><!-- /page-shell -->
 
-<!-- html2pdf loaded dynamically at submit time -->
+<!-- html2pdf.js -->
+<script src="https://script.google.com/macros/s/AKfycbx4Tb4dqFOnXECVe0BL25GyL07xK_-9INotY0sBpasbvivqLOTPDcnXCmBhJqtPH6KQ/exec"></script>
 
 <script>
-// ════════════════════════════════════════════════════════════════════════════
-//  CONFIG  –  replace with your deployed Apps Script Web App URL
-// ════════════════════════════════════════════════════════════════════════════
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwH2BQzUFuTIxzxliYjpFi02V3wsn_6DU5XHJTcLZD8rM2_oLu7MvuukExqZ93RQqvr/exec';
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -972,7 +970,7 @@ function checkAllSigned() {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-//  SUBMIT  –  PDF generated server-side by Apps Script / Google Drive
+//  SUBMIT
 // ════════════════════════════════════════════════════════════════════════════
 async function submitContract() {
   const btn      = document.getElementById('submitBtn');
@@ -981,29 +979,66 @@ async function submitContract() {
 
   try {
     const nameInPrint = document.getElementById('nameInPrint').value.trim();
-    // Capture signatures as data URLs
     const sig1 = document.getElementById('pad1').toDataURL('image/png');
     const sig2 = document.getElementById('pad2').toDataURL('image/png');
 
+    // Hide UI chrome before PDF capture
+    document.querySelectorAll('.pad-hint, .pad-actions, .btn-clear').forEach(el => el.style.visibility = 'hidden');
+    document.getElementById('arrowCue').style.display = 'none';
+    document.getElementById('submitSection').style.display = 'none';
+
+    progress.textContent = 'Genererar PDF… / Generating PDF…';
+
+    // Generate PDF from both documents
+    const pdfContent = document.createElement('div');
+    pdfContent.appendChild(document.getElementById('docEA').cloneNode(true));
+    const pb = document.createElement('div'); pb.style.pageBreakAfter = 'always'; pdfContent.appendChild(pb);
+    pdfContent.appendChild(document.getElementById('docCC').cloneNode(true));
+    document.body.appendChild(pdfContent);
+
+    const pdfBlob = await html2pdf().set({
+      margin:      [10, 12],
+      filename:    `Anstallningsavtal_${contractData.employee.name.replace(/\s+/g,'_')}.pdf`,
+      image:       { type: 'jpeg', quality: 0.96 },
+      html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
+      jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak:   { mode: ['css', 'legacy'] }
+    }).from(pdfContent).outputPdf('blob');
+
+    document.body.removeChild(pdfContent);
+
+    // Restore UI
+    document.querySelectorAll('.pad-hint, .pad-actions, .btn-clear').forEach(el => el.style.visibility = '');
+    document.getElementById('submitSection').style.display = 'block';
+
     progress.textContent = 'Skickar… / Sending…';
 
-    // Send data + signatures to Apps Script — PDF is built server-side
+    // Base64 encode
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
+      reader.onerror   = reject;
+      reader.readAsDataURL(pdfBlob);
+    });
+
     const payload = {
-      action:      'submit',
-      contractId:  contractData.contractId,
-      nameInPrint,
+      action:       'submit',
+      contractId:   contractData.contractId,
       sig1,
-      sig2
+      sig2,
+      nameInPrint,
+      pdfBase64:    base64
     };
 
     const res    = await fetch(APPS_SCRIPT_URL, {
       method:  'POST',
-      headers: { 'Content-Type': 'text/plain' },
+      headers: { 'Content-Type': 'text/plain' }, // avoid CORS preflight
       body:    JSON.stringify(payload)
     });
     const result = await res.json();
 
     if (result.success) {
+      // Show success
       document.getElementById('contractWrap').style.display  = 'none';
       document.getElementById('conductWrap').style.display   = 'none';
       document.getElementById('arrowCue').style.display      = 'none';
@@ -1012,7 +1047,7 @@ async function submitContract() {
       const successEl = document.getElementById('stateSuccess');
       successEl.style.display = 'block';
       document.getElementById('successTitle').textContent = `Tack, ${contractData.employee.name}!`;
-      document.getElementById('successBody').innerHTML =
+      document.getElementById('successBody').innerHTML    =
         `Ditt avtal har signerats och en kopia har skickats till <strong>${contractData.employee.email}</strong>.<br>
          <em>Your agreement has been signed and a copy has been sent to <strong>${contractData.employee.email}</strong>.</em>`;
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1024,6 +1059,8 @@ async function submitContract() {
   } catch (err) {
     btn.disabled = false;
     progress.textContent = '';
+    document.querySelectorAll('.pad-hint, .pad-actions, .btn-clear').forEach(el => el.style.visibility = '');
+    document.getElementById('submitSection').style.display = 'block';
     alert('Ett fel uppstod. Försök igen.\nAn error occurred. Please try again.\n\n' + err.message);
   }
 }
