@@ -999,8 +999,8 @@ async function submitContract() {
     const pdfBlob = await html2pdf().set({
       margin:      [10, 12],
       filename:    `Anstallningsavtal_${contractData.employee.name.replace(/\s+/g,'_')}.pdf`,
-      image:       { type: 'jpeg', quality: 1 },
-      html2canvas: { scale: 8, useCORS: true, allowTaint: true, logging: false },
+      image:       { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 1.2, useCORS: true, allowTaint: true, logging: false },
       jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak:   { mode: ['css', 'legacy'] }
     }).from(pdfContent).outputPdf('blob');
