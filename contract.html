@@ -849,7 +849,7 @@ body {
 <script>
 // ── Config ──────────────────────────────────────────────────
 // Replace with your deployed Apps Script Web App URL:
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzolZ0hTUpIpsN8ZUS9HXRP19H9kBPIOBbiDoxAy8eBagHz86gb1EgIN7Wz-xpFB885/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
 
 // ── State ───────────────────────────────────────────────────
 const state = {
@@ -884,9 +884,16 @@ async function fetchContractData() {
     if (data.error) { showError(data.error); return; }
     state.empData = data;
     populateContract(data);
-    initCanvases();
+
+    // Show the contract FIRST so the DOM has real dimensions,
+    // then init canvases in the next animation frame.
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('contract-wrap').style.display  = 'block';
+
+    requestAnimationFrame(() => {
+      initCanvases();
+      wireNameInput();
+    });
   } catch (err) {
     showError('Kunde inte hämta avtalsuppgifter. / Could not fetch contract details. ' + err.message);
   }
@@ -917,32 +924,45 @@ function initCanvases() {
   [1, 2].forEach(id => {
     const canvas = document.getElementById(`sig-canvas-${id}`);
     canvases[id] = canvas;
-    const ctx    = canvas.getContext('2d');
-    ctxs[id]     = ctx;
 
-    // Size canvas to container
-    const resize = () => {
-      const w = canvas.parentElement.offsetWidth;
-      canvas.width  = w;
-      canvas.height = 110;
-      ctx.strokeStyle = '#0f1623';
-      ctx.lineWidth   = 2;
-      ctx.lineCap     = 'round';
-      ctx.lineJoin    = 'round';
-    };
-    resize();
-    window.addEventListener('resize', resize);
+    // Set canvas resolution to match its actual rendered width NOW
+    // (the wrapper is visible at this point so offsetWidth is real)
+    const w = canvas.parentElement.offsetWidth || 300;
+    canvas.width  = w;
+    canvas.height = 120;
+    // CSS makes it fill the container regardless of pixel dimensions
+    canvas.style.width  = '100%';
+    canvas.style.height = '120px';
 
-    // Mouse
+    const ctx = canvas.getContext('2d');
+    ctxs[id]  = ctx;
+    ctx.strokeStyle = '#0f1623';
+    ctx.lineWidth   = 2.5;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+
+    // Mouse events
     canvas.addEventListener('mousedown',  e => startDraw(id, e));
     canvas.addEventListener('mousemove',  e => draw(id, e));
-    canvas.addEventListener('mouseup',    ()=> stopDraw(id));
-    canvas.addEventListener('mouseleave', ()=> stopDraw(id));
+    canvas.addEventListener('mouseup',    () => stopDraw(id));
+    canvas.addEventListener('mouseleave', () => stopDraw(id));
 
-    // Touch
+    // Touch events (mobile finger signing)
     canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(id, e.touches[0]); }, { passive: false });
     canvas.addEventListener('touchmove',  e => { e.preventDefault(); draw(id, e.touches[0]);       }, { passive: false });
     canvas.addEventListener('touchend',   e => { e.preventDefault(); stopDraw(id);                  }, { passive: false });
+  });
+}
+
+// ── Wire name input (called after DOM is visible) ─────────────
+function wireNameInput() {
+  const nameInput = document.getElementById('print-name');
+  if (!nameInput) return;
+  nameInput.addEventListener('input', () => {
+    state.nameEntered = nameInput.value.trim().length > 1;
+    document.getElementById('err-name').style.display = 'none';
+    nameInput.classList.remove('invalid');
+    onSignatureChange();
   });
 }
 
@@ -989,20 +1009,7 @@ function clearCanvas(id) {
   onSignatureChange();
 }
 
-// ── Name input watcher ───────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
-    const nameInput = document.getElementById('print-name');
-    if (nameInput) {
-      nameInput.addEventListener('input', () => {
-        state.nameEntered = nameInput.value.trim().length > 1;
-        document.getElementById('err-name').style.display = 'none';
-        nameInput.classList.remove('invalid');
-        onSignatureChange();
-      });
-    }
-  }, 500);
-});
+
 
 // ── Signature change logic ───────────────────────────────────
 function onSignatureChange() {
