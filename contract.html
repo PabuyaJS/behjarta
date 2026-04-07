@@ -1070,12 +1070,17 @@ async function submitContract() {
       employeeName:             name
     };
 
-    const res  = await fetch(APPS_SCRIPT_URL, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(payload)
+    // Send as text/plain to avoid CORS preflight — Apps Script can't handle OPTIONS.
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method:   'POST',
+      headers:  { 'Content-Type': 'text/plain' },
+      body:     JSON.stringify(payload),
+      redirect: 'follow'
     });
-    const data = await res.json();
+    const text = await res.text();
+    let data;
+    try   { data = JSON.parse(text); }
+    catch { data = {}; }
 
     if (data.error) throw new Error(data.error);
 
