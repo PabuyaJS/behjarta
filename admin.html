@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Behjärta Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body, #root { height: 100%; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: #F0F4F7; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #80CBC4; border-radius: 4px; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeIn 0.22s ease; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 0.8s linear infinite; }
+  input, button, select { font-family: 'Plus Jakarta Sans', sans-serif; }
+  button { cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo, useRef } = React;
+
+/* ════════════════════════════════════════════════
+   ⚙️  CONFIG — Update before deploying
+════════════════════════════════════════════════ */
+const CONFIG = {
+  GOOGLE_CLIENT_ID:  '362029715087-a2dm4v9gr0g4tda39cqd9pul87s4sq50.apps.googleusercontent.com',
+  APPS_SCRIPT_URL:   'https://script.google.com/a/macros/behjarta.com/s/AKfycby4ZLG2Ta2EROAUdiXhT3rsXoS7L-oevqqarRN0u3CzFViIMuqyNFl2mYQbwgTH8Q_S/exec',
+  ALLOWED_DOMAIN:    'behjarta.com',
+  DEMO_MODE:         true,   // Set false in production
+};
+
+/* ════════════════════════════════════════════════
+   🎨  THEME
+════════════════════════════════════════════════ */
+const T = {
+  primary:      '#009688',
+  primaryDark:  '#00695C',
+  primaryMid:   '#26A69A',
+  primaryLight: '#E0F2F1',
+  sidebar:      '#0C2220',
+  bg:           '#F0F4F7',
+  white:        '#FFFFFF',
+  text:         '#1A2332',
+  muted:        '#6B7280',
+  border:       '#E5E7EB',
+  danger:       '#DC2626',
+  warning:      '#D97706',
+  success:      '#059669',
+  info:         '#2563EB',
+  purple:       '#7C3AED',
+};
+
+/* ════════════════════════════════════════════════
+   📊  MOCK DATA  (replaced by AppScript in prod)
+════════════════════════════════════════════════ */
+const MOCK = {
+  bookingRequests: [
+    { id: 1, timestamp: '2025-04-18 09:23', name: 'Anna Lindgren', email: 'anna.l@gmail.com', phone: '070-123 45 67', address: 'Vasagatan 12, 111 20 Stockholm', service: 'Hemstädning', date: '2025-04-25', time: '10:00', area: '75 kvm', rooms: 3, bathrooms: 1, price: '1 200 kr', status: 'Ny' },
+    { id: 2, timestamp: '2025-04-18 08:45', name: 'Erik Svensson', email: 'erik.sv@outlook.com', phone: '073-456 78 90', address: 'Kungsgatan 8, 111 22 Stockholm', service: 'Storstädning', date: '2025-04-27', time: '09:00', area: '110 kvm', rooms: 4, bathrooms: 2, price: '3 400 kr', status: 'Pågår' },
+    { id: 3, timestamp: '2025-04-17 16:12', name: 'Maria Johansson', email: 'maria.j@gmail.com', phone: '076-789 01 23', address: 'Drottninggatan 45, 111 35 Stockholm', service: 'Flyttstädning', date: '2025-04-30', time: '08:00', area: '130 kvm', rooms: 5, bathrooms: 2, price: '4 800 kr', status: 'Ny' },
+    { id: 4, timestamp: '2025-04-17 14:30', name: 'Lars Petersson', email: 'lars.p@hotmail.com', phone: '072-234 56 78', address: 'Storgatan 22, 141 31 Huddinge', service: 'Hemstädning', date: '2025-04-26', time: '13:00', area: '55 kvm', rooms: 2, bathrooms: 1, price: '950 kr', status: 'Bekräftad' },
+    { id: 5, timestamp: '2025-04-16 11:05', name: 'Ingrid Holm', email: 'ingrid.holm@telia.com', phone: '070-987 65 43', address: 'Norrtullsgatan 3, 113 45 Stockholm', service: 'Hemstädning', date: '2025-04-28', time: '11:00', area: '80 kvm', rooms: 3, bathrooms: 1, price: '1 300 kr', status: 'Ny' },
+    { id: 6, timestamp: '2025-04-16 09:18', name: 'Björn Lindqvist', email: 'bjorn.l@gmail.com', phone: '076-111 22 33', address: 'Hornsgatan 78, 118 21 Stockholm', service: 'Kontorsstädning', date: '2025-04-29', time: '07:00', area: '200 kvm', rooms: 0, bathrooms: 2, price: '5 200 kr', status: 'Ny' },
+  ],
+  tickets: [
+    { id: 1, timestamp: '2025-04-18 10:15', name: 'Karin Nilsson', email: 'karin.n@gmail.com', phone: '070-876 54 32', subject: 'Fråga om bokning', message: 'Hej! Kan ni städa på lördagar? Jag behöver hjälp varannan helg.', status: 'Obesvarad' },
+    { id: 2, timestamp: '2025-04-17 15:42', name: 'Johan Berg', email: 'johan.b@gmail.com', phone: '073-345 67 89', subject: 'Klagomål städning', message: 'Inte nöjd med senaste städningen, fönstren ej rengjorda och badrummet bristfälligt.', status: 'Obesvarad' },
+    { id: 3, timestamp: '2025-04-17 11:20', name: 'Sofia Lund', email: 'sofia.l@outlook.com', phone: '076-456 78 90', subject: 'Ändra bokning', message: 'Vill flytta min bokning BOK-1005 till nästa vecka istället.', status: 'Under behandling' },
+    { id: 4, timestamp: '2025-04-16 09:33', name: 'Peter Holm', email: 'peter.h@gmail.com', phone: '072-567 89 01', subject: 'Prisförfrågan kontor', message: 'Vad kostar kontorsstädning per vecka för ca 150 kvm?', status: 'Obesvarad' },
+    { id: 5, timestamp: '2025-04-15 14:15', name: 'Emma Strand', email: 'emma.s@gmail.com', phone: '070-678 90 12', subject: 'Ny kund', message: 'Vill boka min första städning. Hur fungerar det med RUT-avdrag?', status: 'Obesvarad' },
+  ],
+  bookedData: [
+    { id: 'BOK-1001', customer: 'Anna Lindgren', customerId: 'KD-001', employee: 'Fatima Al-Hassan', empId: 'EMP-001', service: 'Hemstädning', date: '2025-04-20', time: '10:00', address: 'Vasagatan 12, Stockholm', price: '1 200 kr', rut: '600 kr', status: 'Bekräftad' },
+    { id: 'BOK-1002', customer: 'Erik Svensson', customerId: 'KD-002', employee: 'Mirela Kovač', empId: 'EMP-002', service: 'Storstädning', date: '2025-04-21', time: '09:00', address: 'Kungsgatan 8, Stockholm', price: '3 400 kr', rut: '1 700 kr', status: 'Pågår' },
+    { id: 'BOK-1003', customer: 'Maria Johansson', customerId: 'KD-003', employee: 'Fatima Al-Hassan', empId: 'EMP-001', service: 'Flyttstädning', date: '2025-04-22', time: '08:00', address: 'Drottninggatan 45, Stockholm', price: '4 800 kr', rut: '2 400 kr', status: 'Klar' },
+    { id: 'BOK-1004', customer: 'Lars Petersson', customerId: 'KD-004', employee: 'Ana Popović', empId: 'EMP-003', service: 'Hemstädning', date: '2025-04-23', time: '13:00', address: 'Storgatan 22, Huddinge', price: '950 kr', rut: '475 kr', status: 'Bekräftad' },
+    { id: 'BOK-1005', customer: 'Karin Nilsson', customerId: 'KD-005', employee: 'Mirela Kovač', empId: 'EMP-002', service: 'Hemstädning', date: '2025-04-24', time: '11:00', address: 'Birgersgatan 9, Stockholm', price: '1 100 kr', rut: '550 kr', status: 'Bekräftad' },
+    { id: 'BOK-1006', customer: 'Ingrid Holm', customerId: 'KD-006', employee: 'Ana Popović', empId: 'EMP-003', service: 'Hemstädning', date: '2025-04-25', time: '09:00', address: 'Norrtullsgatan 3, Stockholm', price: '1 300 kr', rut: '650 kr', status: 'Bekräftad' },
+  ],
+  customers: [
+    { id: 'KD-001', name: 'Anna Lindgren', email: 'anna.l@gmail.com', phone: '070-123 45 67', address: 'Vasagatan 12', city: 'Stockholm', postalCode: '111 20', since: '2024-08-12', bookings: 8, total: '9 600 kr', rut: '4 800 kr' },
+    { id: 'KD-002', name: 'Erik Svensson', email: 'erik.sv@outlook.com', phone: '073-456 78 90', address: 'Kungsgatan 8', city: 'Stockholm', postalCode: '111 22', since: '2024-11-05', bookings: 3, total: '8 200 kr', rut: '4 100 kr' },
+    { id: 'KD-003', name: 'Maria Johansson', email: 'maria.j@gmail.com', phone: '076-789 01 23', address: 'Drottninggatan 45', city: 'Stockholm', postalCode: '111 35', since: '2025-01-18', bookings: 5, total: '12 400 kr', rut: '6 200 kr' },
+    { id: 'KD-004', name: 'Lars Petersson', email: 'lars.p@hotmail.com', phone: '072-234 56 78', address: 'Storgatan 22', city: 'Huddinge', postalCode: '141 31', since: '2024-09-30', bookings: 12, total: '11 400 kr', rut: '5 700 kr' },
+    { id: 'KD-005', name: 'Karin Nilsson', email: 'karin.n@gmail.com', phone: '070-876 54 32', address: 'Birgersgatan 9', city: 'Stockholm', postalCode: '114 11', since: '2025-02-14', bookings: 6, total: '6 600 kr', rut: '3 300 kr' },
+    { id: 'KD-006', name: 'Ingrid Holm', email: 'ingrid.holm@telia.com', phone: '070-987 65 43', address: 'Norrtullsgatan 3', city: 'Stockholm', postalCode: '113 45', since: '2025-03-01', bookings: 2, total: '2 600 kr', rut: '1 300 kr' },
+  ],
+  employees: [
+    { id: 'EMP-001', name: 'Fatima Al-Hassan', email: 'fatima@behjarta.com', phone: '070-111 22 33', city: 'Stockholm', personNr: '870312-XXXX', bankAccount: '1234-56 789 0', status: 'Aktiv', rating: '4.9', bookings: 124, skills: 'Hem, Flytt, Stor' },
+    { id: 'EMP-002', name: 'Mirela Kovač', email: 'mirela@behjarta.com', phone: '073-222 33 44', city: 'Solna', personNr: '920605-XXXX', bankAccount: '9876-54 321 0', status: 'Aktiv', rating: '4.8', bookings: 98, skills: 'Hem, Kontor' },
+    { id: 'EMP-003', name: 'Ana Popović', email: 'ana@behjarta.com', phone: '076-333 44 55', city: 'Stockholm', personNr: '950120-XXXX', bankAccount: '5555-12 345 6', status: 'Aktiv', rating: '4.7', bookings: 67, skills: 'Hem, Stor, Flytt' },
+    { id: 'EMP-004', name: 'Leila Ahmadi', email: 'leila@behjarta.com', phone: '072-444 55 66', city: 'Huddinge', personNr: '890815-XXXX', bankAccount: '7777-98 765 4', status: 'Inaktiv', rating: '4.6', bookings: 45, skills: 'Hem' },
+  ],
+  shifts: [
+    { id: 'PASS-001', employee: 'Fatima Al-Hassan', empId: 'EMP-001', date: '2025-04-20', start: '09:00', end: '12:00', hours: 3, customer: 'Anna Lindgren', address: 'Vasagatan 12, Stockholm', service: 'Hemstädning', status: 'Schemalagd' },
+    { id: 'PASS-002', employee: 'Mirela Kovač', empId: 'EMP-002', date: '2025-04-20', start: '10:00', end: '15:00', hours: 5, customer: 'Erik Svensson', address: 'Kungsgatan 8, Stockholm', service: 'Storstädning', status: 'Schemalagd' },
+    { id: 'PASS-003', employee: 'Ana Popović', empId: 'EMP-003', date: '2025-04-21', start: '08:00', end: '14:00', hours: 6, customer: 'Maria Johansson', address: 'Drottninggatan 45, Stockholm', service: 'Flyttstädning', status: 'Schemalagd' },
+    { id: 'PASS-004', employee: 'Fatima Al-Hassan', empId: 'EMP-001', date: '2025-04-22', start: '11:00', end: '13:00', hours: 2, customer: 'Lars Petersson', address: 'Storgatan 22, Huddinge', service: 'Hemstädning', status: 'Schemalagd' },
+    { id: 'PASS-005', employee: 'Mirela Kovač', empId: 'EMP-002', date: '2025-04-23', start: '09:00', end: '11:00', hours: 2, customer: 'Karin Nilsson', address: 'Birgersgatan 9, Stockholm', service: 'Hemstädning', status: 'Schemalagd' },
+    { id: 'PASS-006', employee: 'Ana Popović', empId: 'EMP-003', date: '2025-04-25', start: '10:00', end: '12:00', hours: 2, customer: 'Ingrid Holm', address: 'Norrtullsgatan 3, Stockholm', service: 'Hemstädning', status: 'Schemalagd' },
+  ],
+};
+
+/* ════════════════════════════════════════════════
+   🏷️  STATUS BADGE
+════════════════════════════════════════════════ */
+const STATUS_STYLES = {
+  'Ny':               { bg: '#DBEAFE', color: '#1E40AF' },
+  'Pågår':            { bg: '#FEF3C7', color: '#92400E' },
+  'Bekräftad':        { bg: '#D1FAE5', color: '#065F46' },
+  'Klar':             { bg: '#D1FAE5', color: '#065F46' },
+  'Avbokad':          { bg: '#FEE2E2', color: '#991B1B' },
+  'Obesvarad':        { bg: '#FEE2E2', color: '#991B1B' },
+  'Under behandling': { bg: '#FEF3C7', color: '#92400E' },
+  'Aktiv':            { bg: '#D1FAE5', color: '#065F46' },
+  'Inaktiv':          { bg: '#F3F4F6', color: '#4B5563' },
+  'Schemalagd':       { bg: '#EDE9FE', color: '#5B21B6' },
+};
+function StatusBadge({ status }) {
+  const s = STATUS_STYLES[status] || { bg: '#F3F4F6', color: '#4B5563' };
+  return <span style={{ background: s.bg, color: s.color, padding: '2px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{status}</span>;
+}
+
+/* ════════════════════════════════════════════════
+   📋  DATA TABLE  (search + sort + pagination)
+════════════════════════════════════════════════ */
+const PAGE_SIZE = 10;
+function DataTable({ columns, rows, onRefresh }) {
+  const [q, setQ] = useState('');
+  const [sortCol, setSortCol] = useState(null);
+  const [sortDir, setSortDir] = useState('asc');
+  const [page, setPage] = useState(0);
+
+  const filtered = useMemo(() => {
+    const lq = q.toLowerCase();
+    return rows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(lq)));
+  }, [rows, q]);
+
+  const sorted = useMemo(() => {
+    if (!sortCol) return filtered;
+    return [...filtered].sort((a, b) => {
+      const av = String(a[sortCol] ?? ''), bv = String(b[sortCol] ?? '');
+      return sortDir === 'asc' ? av.localeCompare(bv, 'sv') : bv.localeCompare(av, 'sv');
+    });
+  }, [filtered, sortCol, sortDir]);
+
+  const pages = Math.ceil(sorted.length / PAGE_SIZE);
+  const paged = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  const handleSort = key => {
+    if (sortCol === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortCol(key); setSortDir('asc'); }
+    setPage(0);
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', flex: '1 1 240px', maxWidth: 300 }}>
+          <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: T.muted, pointerEvents: 'none' }}>🔍</span>
+          <input value={q} onChange={e => { setQ(e.target.value); setPage(0); }} placeholder="Sök i tabellen..."
+            style={{ paddingLeft: 34, paddingRight: 12, paddingTop: 8, paddingBottom: 8, border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 13, width: '100%', outline: 'none', transition: 'border-color 0.15s' }}
+            onFocus={e => e.target.style.borderColor = T.primary}
+            onBlur={e => e.target.style.borderColor = T.border} />
+        </div>
+        <span style={{ fontSize: 12, color: T.muted }}>{sorted.length} poster</span>
+        <button onClick={onRefresh}
+          style={{ marginLeft: 'auto', padding: '7px 14px', background: T.primaryLight, border: `1px solid ${T.primaryMid}`, borderRadius: 8, color: T.primaryDark, fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s' }}
+          onMouseEnter={e => { e.currentTarget.style.background = T.primaryMid; e.currentTarget.style.color = '#fff'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = T.primaryLight; e.currentTarget.style.color = T.primaryDark; }}>
+          ↻ Uppdatera från Sheets
+        </button>
+      </div>
+
+      <div style={{ overflowX: 'auto', border: `1px solid ${T.border}`, borderRadius: 10 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: T.primaryLight }}>
+              {columns.map(col => (
+                <th key={col.key} onClick={() => !col.noSort && handleSort(col.key)}
+                  style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: T.primaryDark, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', cursor: col.noSort ? 'default' : 'pointer', userSelect: 'none' }}>
+                  {col.label}{sortCol === col.key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {paged.length === 0
+              ? <tr><td colSpan={columns.length} style={{ padding: 48, textAlign: 'center', color: T.muted, fontSize: 14 }}>Inga poster hittades</td></tr>
+              : paged.map((row, i) => (
+                <tr key={row.id || i}
+                  style={{ backgroundColor: i % 2 === 0 ? T.white : '#FAFAFA', borderTop: `1px solid ${T.border}`, transition: 'background 0.12s' }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F0FDFA'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = i % 2 === 0 ? T.white : '#FAFAFA'}>
+                  {columns.map(col => (
+                    <td key={col.key} style={{ padding: '10px 14px', whiteSpace: col.wrap ? 'normal' : 'nowrap', maxWidth: col.maxW || 'none', overflow: 'hidden', textOverflow: 'ellipsis', color: T.text }}>
+                      {col.render ? col.render(row[col.key], row) : (row[col.key] ?? '—')}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      {pages > 1 && (
+        <div style={{ display: 'flex', gap: 5, marginTop: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
+          <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
+            style={{ padding: '5px 10px', border: `1px solid ${T.border}`, borderRadius: 6, background: T.white, color: page === 0 ? T.muted : T.text, fontSize: 13 }}>‹</button>
+          {Array.from({ length: pages }, (_, i) => (
+            <button key={i} onClick={() => setPage(i)}
+              style={{ width: 32, height: 32, borderRadius: 6, border: `1px solid ${i === page ? T.primary : T.border}`, background: i === page ? T.primary : T.white, color: i === page ? '#fff' : T.text, fontSize: 13, fontWeight: i === page ? 700 : 400 }}>
+              {i + 1}
+            </button>
+          ))}
+          <button onClick={() => setPage(p => Math.min(pages - 1, p + 1))} disabled={page === pages - 1}
+            style={{ padding: '5px 10px', border: `1px solid ${T.border}`, borderRadius: 6, background: T.white, color: page === pages - 1 ? T.muted : T.text, fontSize: 13 }}>›</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════
+   📦  STAT CARD
+════════════════════════════════════════════════ */
+function StatCard({ label, value, sub, color, emoji }) {
+  return (
+    <div style={{ background: T.white, borderRadius: 12, padding: '16px 18px', borderLeft: `4px solid ${color}`, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: `1px solid ${T.border}`, borderLeftWidth: 4, borderLeftColor: color }}>
+      <div style={{ fontSize: 18, marginBottom: 6 }}>{emoji}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color: T.text, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 4 }}>{label}</div>
+      {sub && <div style={{ fontSize: 11, color, fontWeight: 600, marginTop: 3 }}>{sub}</div>}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════
+   🗂️  VIEW COMPONENTS
+════════════════════════════════════════════════ */
+function ViewShell({ stats, children }) {
+  return (
+    <div className="fade-in">
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${stats.length}, 1fr)`, gap: 14, marginBottom: 22 }}>
+        {stats.map((s, i) => <StatCard key={i} {...s} />)}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/* --- AppScript fetch helper --- */
+async function fetchSheet(sheetName) {
+  if (CONFIG.DEMO_MODE) return null;
+  const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?sheet=${sheetName}`);
+  const json = await res.json();
+  return json.data;
+}
+
+function useSheetData(mockKey, sheetName) {
+  const [data, setData] = useState(MOCK[mockKey]);
+  const [loading, setLoading] = useState(false);
+
+  const refresh = async () => {
+    if (CONFIG.DEMO_MODE) { setData(MOCK[mockKey]); return; }
+    setLoading(true);
+    try {
+      const live = await fetchSheet(sheetName);
+      if (live) setData(live);
+    } catch(e) { console.error('Sheet fetch error:', e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { refresh(); }, []);
+  return { data, loading, refresh };
+}
+
+/* --- Booking Requests (Input-data A:V) --- */
+function BookingRequests() {
+  const { data, refresh } = useSheetData('bookingRequests', 'Input-data');
+  return (
+    <ViewShell stats={[
+      { label: 'Totalt inkomna', value: data.length, emoji: '📋', color: T.info },
+      { label: 'Nya förfrågningar', value: data.filter(r => r.status === 'Ny').length, emoji: '🆕', color: T.warning, sub: 'Kräver åtgärd' },
+      { label: 'Bekräftade', value: data.filter(r => r.status === 'Bekräftad').length, emoji: '✅', color: T.success },
+      { label: 'Pågår', value: data.filter(r => r.status === 'Pågår').length, emoji: '⏳', color: T.primary },
+    ]}>
+      <DataTable onRefresh={refresh} rows={data} columns={[
+        { key: 'timestamp', label: 'Tidpunkt' },
+        { key: 'name', label: 'Namn' },
+        { key: 'email', label: 'Email' },
+        { key: 'phone', label: 'Telefon' },
+        { key: 'service', label: 'Tjänst' },
+        { key: 'date', label: 'Önskat datum' },
+        { key: 'time', label: 'Tid' },
+        { key: 'rooms', label: 'Rum' },
+        { key: 'area', label: 'Yta' },
+        { key: 'price', label: 'Pris' },
+        { key: 'status', label: 'Status', render: v => <StatusBadge status={v} />, noSort: true },
+      ]} />
+    </ViewShell>
+  );
+}
+
+/* --- Tickets (contact-data A:G) --- */
+function Tickets() {
+  const { data, refresh } = useSheetData('tickets', 'contact-data');
+  return (
+    <ViewShell stats={[
+      { label: 'Totalt ärenden', value: data.length, emoji: '🎫', color: T.info },
+      { label: 'Obesvarade', value: data.filter(r => r.status === 'Obesvarad').length, emoji: '❗', color: T.danger, sub: 'Kräver svar' },
+      { label: 'Under behandling', value: data.filter(r => r.status === 'Under behandling').length, emoji: '🔄', color: T.warning },
+    ]}>
+      <DataTable onRefresh={refresh} rows={data} columns={[
+        { key: 'timestamp', label: 'Tidpunkt' },
+        { key: 'name', label: 'Namn' },
+        { key: 'email', label: 'Email' },
+        { key: 'phone', label: 'Telefon' },
+        { key: 'subject', label: 'Ämne' },
+        { key: 'message', label: 'Meddelande', maxW: 300, wrap: true },
+        { key: 'status', label: 'Status', render: v => <StatusBadge status={v} />, noSort: true },
+      ]} />
+    </ViewShell>
+  );
+}
+
+/* --- Booked Data (booking_data A:AO) --- */
+function BookedData() {
+  const { data, refresh } = useSheetData('bookedData', 'booking_data');
+  return (
+    <ViewShell stats={[
+      { label: 'Totalt bokningar', value: data.length, emoji: '📅', color: T.primary },
+      { label: 'Bekräftade', value: data.filter(r => r.status === 'Bekräftad').length, emoji: '✅', color: T.success },
+      { label: 'Pågår', value: data.filter(r => r.status === 'Pågår').length, emoji: '⏳', color: T.warning },
+      { label: 'Klara', value: data.filter(r => r.status === 'Klar').length, emoji: '🏁', color: T.info },
+    ]}>
+      <DataTable onRefresh={refresh} rows={data} columns={[
+        { key: 'id', label: 'Boknings-ID' },
+        { key: 'customer', label: 'Kund' },
+        { key: 'employee', label: 'Personal' },
+        { key: 'service', label: 'Tjänst' },
+        { key: 'date', label: 'Datum' },
+        { key: 'time', label: 'Tid' },
+        { key: 'address', label: 'Adress' },
+        { key: 'price', label: 'Pris' },
+        { key: 'rut', label: 'RUT' },
+        { key: 'status', label: 'Status', render: v => <StatusBadge status={v} />, noSort: true },
+      ]} />
+    </ViewShell>
+  );
+}
+
+/* --- Customers (customer_data A:Q) --- */
+function Customers() {
+  const { data, refresh } = useSheetData('customers', 'customer_data');
+  const avgBookings = data.length ? (data.reduce((s, r) => s + r.bookings, 0) / data.length).toFixed(1) : 0;
+  return (
+    <ViewShell stats={[
+      { label: 'Totalt kunder', value: data.length, emoji: '👥', color: T.primary },
+      { label: 'Snitt bokningar/kund', value: avgBookings, emoji: '📊', color: T.info },
+      { label: 'Aktiva städer', value: [...new Set(data.map(r => r.city))].length, emoji: '🏙️', color: T.success },
+    ]}>
+      <DataTable onRefresh={refresh} rows={data} columns={[
+        { key: 'id', label: 'Kund-ID' },
+        { key: 'name', label: 'Namn' },
+        { key: 'email', label: 'Email' },
+        { key: 'phone', label: 'Telefon' },
+        { key: 'city', label: 'Stad' },
+        { key: 'postalCode', label: 'Postnr' },
+        { key: 'since', label: 'Kund sedan' },
+        { key: 'bookings', label: 'Bokningar' },
+        { key: 'total', label: 'Total intäkt' },
+        { key: 'rut', label: 'RUT-värde' },
+      ]} />
+    </ViewShell>
+  );
+}
+
+/* --- Employees (cleaner A:W) --- */
+function Employees() {
+  const { data, refresh } = useSheetData('employees', 'cleaner');
+  const avgRating = data.length ? (data.reduce((s, r) => s + parseFloat(r.rating), 0) / data.length).toFixed(1) : 0;
+  return (
+    <ViewShell stats={[
+      { label: 'Totalt personal', value: data.length, emoji: '🧹', color: T.primary },
+      { label: 'Aktiva', value: data.filter(r => r.status === 'Aktiv').length, emoji: '✅', color: T.success },
+      { label: 'Snitt betyg', value: '⭐ ' + avgRating, emoji: '⭐', color: T.warning },
+      { label: 'Totalt uppdrag', value: data.reduce((s, r) => s + r.bookings, 0), emoji: '📋', color: T.info },
+    ]}>
+      <DataTable onRefresh={refresh} rows={data} columns={[
+        { key: 'id', label: 'ID' },
+        { key: 'name', label: 'Namn' },
+        { key: 'email', label: 'Email' },
+        { key: 'phone', label: 'Telefon' },
+        { key: 'city', label: 'Stad' },
+        { key: 'skills', label: 'Kompetenser' },
+        { key: 'bookings', label: 'Uppdrag' },
+        { key: 'rating', label: 'Betyg', render: v => `⭐ ${v}` },
+        { key: 'status', label: 'Status', render: v => <StatusBadge status={v} />, noSort: true },
+      ]} />
+    </ViewShell>
+  );
+}
+
+/* --- Shifts (shifts A:AI) --- */
+function Shifts() {
+  const { data, refresh } = useSheetData('shifts', 'shifts');
+  const today = new Date().toISOString().split('T')[0];
+  return (
+    <ViewShell stats={[
+      { label: 'Schemalagda pass', value: data.length, emoji: '⏰', color: T.primary },
+      { label: 'Idag', value: data.filter(r => r.date === today).length, emoji: '📆', color: T.warning },
+      { label: 'Totalt timmar', value: data.reduce((s, r) => s + r.hours, 0) + ' h', emoji: '⏱️', color: T.info },
+      { label: 'Städare involverade', value: [...new Set(data.map(r => r.employee))].length, emoji: '🧹', color: T.success },
+    ]}>
+      <DataTable onRefresh={refresh} rows={data} columns={[
+        { key: 'id', label: 'Pass-ID' },
+        { key: 'employee', label: 'Personal' },
+        { key: 'date', label: 'Datum' },
+        { key: 'start', label: 'Start' },
+        { key: 'end', label: 'Slut' },
+        { key: 'hours', label: 'Timmar', render: v => `${v} h` },
+        { key: 'customer', label: 'Kund' },
+        { key: 'address', label: 'Adress' },
+        { key: 'service', label: 'Tjänst' },
+        { key: 'status', label: 'Status', render: v => <StatusBadge status={v} />, noSort: true },
+      ]} />
+    </ViewShell>
+  );
+}
+
+/* ════════════════════════════════════════════════
+   🗺️  NAVIGATION CONFIG
+════════════════════════════════════════════════ */
+const NAV = [
+  { id: 'booking-requests', label: 'Bokningsförfrågningar', emoji: '📋', title: 'Bokningsförfrågningar', subtitle: 'Inkommande förfrågningar via behjarta.com', Component: BookingRequests, getBadge: () => MOCK.bookingRequests.filter(r => r.status === 'Ny').length, badgeColor: T.warning },
+  { id: 'tickets',          label: 'Obesvarade ärenden',   emoji: '🎫', title: 'Obesvarade ärenden',    subtitle: 'Kontaktformulär och klagomål som väntar på svar', Component: Tickets,         getBadge: () => MOCK.tickets.filter(r => r.status === 'Obesvarad').length, badgeColor: T.danger },
+  { id: 'booked-data',      label: 'Bokningar',            emoji: '📅', title: 'Bokningar',             subtitle: 'Alla bekräftade och pågående bokningar', Component: BookedData },
+  { id: 'customers',        label: 'Kunder',               emoji: '👥', title: 'Kunder',                subtitle: 'Kundregister och bokningshistorik', Component: Customers },
+  { id: 'employees',        label: 'Personal',             emoji: '🧹', title: 'Personal',              subtitle: 'Städpersonalens uppgifter, kompetenser och status', Component: Employees },
+  { id: 'shifts',           label: 'Arbetspass',           emoji: '⏰', title: 'Arbetspass',            subtitle: 'Schema och arbetspass för personalen', Component: Shifts },
+];
+
+/* ════════════════════════════════════════════════
+   🧭  SIDEBAR
+════════════════════════════════════════════════ */
+function Sidebar({ active, setActive, user, onLogout }) {
+  return (
+    <div style={{ width: 244, minWidth: 244, background: T.sidebar, display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0, zIndex: 20 }}>
+      <div style={{ padding: '22px 20px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height: 32, filter: 'brightness(0) invert(1)', display: 'block' }}
+          onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+        <span style={{ display: 'none', fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>behjärta</span>
+        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.16em', textTransform: 'uppercase', fontWeight: 600, marginTop: 7 }}>Admin Portal</div>
+      </div>
+
+      {CONFIG.DEMO_MODE && (
+        <div style={{ margin: '10px 12px 0', padding: '7px 10px', background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: 7, fontSize: 11, color: '#FCD34D', fontWeight: 600 }}>
+          ⚠️ Demo-läge aktiv
+        </div>
+      )}
+
+      <nav style={{ flex: 1, paddingTop: 10, overflowY: 'auto' }}>
+        {NAV.map(item => {
+          const isActive = active === item.id;
+          const badge = item.getBadge?.();
+          return (
+            <button key={item.id} onClick={() => setActive(item.id)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 20px', background: isActive ? 'rgba(0,150,136,0.18)' : 'transparent', border: 'none', borderLeft: `3px solid ${isActive ? T.primary : 'transparent'}`, color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.48)', fontSize: 13, fontWeight: isActive ? 600 : 400, textAlign: 'left', fontFamily: 'inherit', transition: 'all 0.14s', cursor: 'pointer' }}
+              onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; } }}
+              onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.48)'; } }}>
+              <span style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>{item.emoji}</span>
+              <span style={{ flex: 1 }}>{item.label}</span>
+              {badge > 0 && <span style={{ background: item.badgeColor, color: '#fff', borderRadius: 999, padding: '1px 8px', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>{badge}</span>}
+            </button>
+          );
+        })}
+      </nav>
+
+      <div style={{ padding: '14px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, overflow: 'hidden' }}>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', background: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{user?.avatar}</div>
+          <div style={{ overflow: 'hidden' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</div>
+          </div>
+        </div>
+        <button onClick={onLogout}
+          style={{ width: '100%', padding: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: 'rgba(255,255,255,0.45)', fontSize: 12, fontFamily: 'inherit', transition: 'all 0.14s' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; }}>
+          Logga ut
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════
+   🔐  LOGIN PAGE
+════════════════════════════════════════════════ */
+function LoginPage({ onLogin }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const btnRef = useRef(null);
+
+  useEffect(() => {
+    if (!window.google?.accounts?.id) return;
+    window.google.accounts.id.initialize({
+      client_id: CONFIG.GOOGLE_CLIENT_ID,
+      hosted_domain: CONFIG.ALLOWED_DOMAIN,
+      callback: (response) => {
+        try {
+          const payload = JSON.parse(atob(response.credential.split('.')[1]));
+          if (!payload.email.endsWith('@' + CONFIG.ALLOWED_DOMAIN)) {
+            setError('Åtkomst nekad. Endast @' + CONFIG.ALLOWED_DOMAIN + '-konton är tillåtna.');
+            return;
+          }
+          const avatar = (payload.name || '?').split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase();
+          onLogin({ name: payload.name, email: payload.email, avatar, picture: payload.picture });
+        } catch(e) {
+          setError('Inloggning misslyckades. Försök igen.');
+        }
+      }
+    });
+    if (btnRef.current) {
+      window.google.accounts.id.renderButton(btnRef.current, { theme: 'outline', size: 'large', width: 340, locale: 'sv' });
+    }
+  }, []);
+
+  const demoLogin = () => {
+    setLoading(true);
+    setTimeout(() => onLogin({ name: 'Admin Behjärta', email: 'admin@behjarta.com', avatar: 'AB' }), 1100);
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(140deg, #003D35 0%, #00695C 40%, #009688 70%, #26A69A 100%)', position: 'relative', overflow: 'hidden' }}>
+      {/* Decorative rings */}
+      {[350, 550, 750].map((size, i) => (
+        <div key={i} style={{ position: 'absolute', width: size, height: size, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.055)', top: '50%', left: '50%', transform: `translate(-${30 + i * 10}%, -${50 + i * 5}%)`, pointerEvents: 'none' }} />
+      ))}
+      <div style={{ background: T.white, borderRadius: 20, padding: '44px 40px', width: '100%', maxWidth: 420, boxShadow: '0 30px 80px rgba(0,0,0,0.35)', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+        <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height: 46, marginBottom: 8 }} onError={e => e.target.style.display = 'none'} />
+        <div style={{ fontSize: 11, color: T.muted, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 28 }}>Administrationsportal</div>
+
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text, marginBottom: 8 }}>Välkommen tillbaka</h1>
+        <p style={{ fontSize: 13, color: T.muted, marginBottom: 28, lineHeight: 1.65 }}>
+          Logga in med ditt&nbsp;<strong style={{ color: T.primaryDark }}>@behjarta.com</strong>-konto. Åtkomst är begränsad till din organisation.
+        </p>
+
+        {error && (
+          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: T.danger, padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 18, textAlign: 'left', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <span>⚠️</span><span>{error}</span>
+          </div>
+        )}
+
+        {/* Real Google button (appears when GIS loads) */}
+        <div ref={btnRef} style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }} />
+
+        {/* Demo login button */}
+        {CONFIG.DEMO_MODE && (
+          <button onClick={demoLogin} disabled={loading}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 11, width: '100%', padding: '12px', background: loading ? '#F9FAFB' : T.white, border: `1.5px dashed ${loading ? T.border : T.primaryMid}`, borderRadius: 10, cursor: loading ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600, color: loading ? T.muted : T.primaryDark, fontFamily: 'inherit', transition: 'all 0.18s' }}
+            onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = T.primaryLight; } }}
+            onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = T.white; } }}>
+            {loading
+              ? <><span className="spin" style={{ display: 'inline-block', width: 15, height: 15, border: `2px solid ${T.border}`, borderTopColor: T.primary, borderRadius: '50%' }} /> Loggar in...</>
+              : <>🧪 Demo-inloggning (testläge)</>
+            }
+          </button>
+        )}
+
+        <div style={{ marginTop: 22, padding: '12px', background: '#F8FAFC', borderRadius: 10, fontSize: 11, color: T.muted, lineHeight: 1.6 }}>
+          🔒 Skyddad sida — Åtkomst begränsad till <strong>@{CONFIG.ALLOWED_DOMAIN}</strong>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════
+   🏠  ROOT APP
+════════════════════════════════════════════════ */
+function App() {
+  const [user, setUser] = useState(null);
+  const [active, setActive] = useState('booking-requests');
+
+  const activeNav = NAV.find(n => n.id === active);
+  const { Component } = activeNav;
+
+  if (!user) return <LoginPage onLogin={setUser} />;
+
+  return (
+    <div style={{ display: 'flex', height: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <Sidebar active={active} setActive={setActive} user={user} onLogout={() => setUser(null)} />
+
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Sticky top header */}
+        <div style={{ background: T.white, borderBottom: `1px solid ${T.border}`, padding: '14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div>
+            <h1 style={{ fontSize: 17, fontWeight: 700, color: T.text, margin: 0 }}>{activeNav.title}</h1>
+            <p style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>{activeNav.subtitle}</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <span style={{ fontSize: 12, color: T.muted }}>
+              {new Date().toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </span>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: T.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: T.primaryDark, border: `2px solid ${T.primary}`, cursor: 'default', title: user.name }}>
+              {user.avatar}
+            </div>
+          </div>
+        </div>
+
+        {/* Scrollable content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: 28, background: T.bg }}>
+          <div style={{ background: T.white, borderRadius: 14, padding: '22px 24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: `1px solid ${T.border}`, minHeight: 300 }}>
+            <Component />
+          </div>
+          <div style={{ textAlign: 'center', marginTop: 20, fontSize: 11, color: T.muted }}>
+            Behjärta Admin Platform © {new Date().getFullYear()} — MS Secure Solutions AB
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
