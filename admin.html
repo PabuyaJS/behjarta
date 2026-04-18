@@ -569,6 +569,18 @@ function LoginPage({ onLogin }) {
 
         {/* Real Google button (appears when GIS loads) */}
         <div ref={btnRef} style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }} />
+
+        {/* Demo login button */}
+        {CONFIG.DEMO_MODE && (
+          <button onClick={demoLogin} disabled={loading}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 11, width: '100%', padding: '12px', background: loading ? '#F9FAFB' : T.white, border: `1.5px dashed ${loading ? T.border : T.primaryMid}`, borderRadius: 10, cursor: loading ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600, color: loading ? T.muted : T.primaryDark, fontFamily: 'inherit', transition: 'all 0.18s' }}
+            onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = T.primaryLight; } }}
+            onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = T.white; } }}>
+            {loading
+              ? <><span className="spin" style={{ display: 'inline-block', width: 15, height: 15, border: `2px solid ${T.border}`, borderTopColor: T.primary, borderRadius: '50%' }} /> Loggar in...</>
+              : <>🧪 Demo-inloggning (testläge)</>
+            }
+          </button>
         )}
 
         <div style={{ marginTop: 22, padding: '12px', background: '#F8FAFC', borderRadius: 10, fontSize: 11, color: T.muted, lineHeight: 1.6 }}>
