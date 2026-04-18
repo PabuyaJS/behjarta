@@ -461,7 +461,7 @@ function Sidebar({ active, setActive, user, onLogout }) {
   return (
     <div style={{ width: 244, minWidth: 244, background: T.sidebar, display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0, zIndex: 20 }}>
       <div style={{ padding: '22px 20px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height: 32, filter: 'brightness(0) invert(1)', display: 'block' }}
+        <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height: 32, display: 'block' }}
           onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
         <span style={{ display: 'none', fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>behjärta</span>
         <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.16em', textTransform: 'uppercase', fontWeight: 600, marginTop: 7 }}>Admin Portal</div>
