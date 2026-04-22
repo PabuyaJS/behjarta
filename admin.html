@@ -20,128 +20,236 @@
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   .fade-in { animation: fadeIn 0.22s ease; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .spin { animation: spin 0.8s linear infinite; }
-  input, button, select { font-family: 'Plus Jakarta Sans', sans-serif; }
+  .spin { animation: spin 0.8s linear infinite; display: inline-block; }
+  input, button, select, textarea { font-family: 'Plus Jakarta Sans', sans-serif; }
   button { cursor: pointer; }
+  .sticky-edit { position: sticky; right: 0; z-index: 2; }
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.46);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999; padding: 20px;
+  }
+  .modal-box {
+    background: #fff; border-radius: 16px; width: 100%; max-width: 700px;
+    max-height: 90vh; display: flex; flex-direction: column;
+    box-shadow: 0 28px 70px rgba(0,0,0,0.25);
+  }
+  .modal-body { overflow-y: auto; padding: 20px 24px; flex: 1; }
+  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field-group label { display: block; font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .field-group input, .field-group textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid #E5E7EB; border-radius: 8px;
+    font-size: 13px; color: #1A2332; outline: none; transition: border-color 0.15s; background: #fff;
+  }
+  .field-group input:focus, .field-group textarea:focus { border-color: #009688; box-shadow: 0 0 0 3px rgba(0,150,136,0.1); }
+  .field-group textarea { resize: vertical; min-height: 70px; }
+  .field-full { grid-column: 1 / -1; }
+  .field-readonly input { background: #F9FAFB; color: #9CA3AF; cursor: not-allowed; }
 </style>
 </head>
 <body>
 <div id="root"></div>
 
 <script type="text/babel">
-const { useState, useEffect, useMemo, useRef } = React;
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
 
-/* ════════════════════════════════════════════════
-   ⚙️  CONFIG — Update before deploying
-════════════════════════════════════════════════ */
+/* ════════════════════════════
+   CONFIG
+════════════════════════════ */
 const CONFIG = {
-  GOOGLE_CLIENT_ID:  '362029715087-a2dm4v9gr0g4tda39cqd9pul87s4sq50.apps.googleusercontent.com',
-  APPS_SCRIPT_URL:   'https://script.google.com/a/macros/behjarta.com/s/AKfycbyt5Co7X7A9Q2Ujvar2SmXJJCqBGmBp4YWWxFj6Z6xFy6YrGS__DCGTbi3QC4ZZX1ZA/exec',
-  ALLOWED_DOMAIN:    'behjarta.com',
-  DEMO_MODE:         false,   // Set false in production
+  GOOGLE_CLIENT_ID: '362029715087-a2dm4v9gr0g4tda39cqd9pul87s4sq50.apps.googleusercontent.com',
+  APPS_SCRIPT_URL:  'https://script.google.com/a/macros/behjarta.com/s/AKfycbwwYWZePl_f7uFDGJBnihMLkU9UM_xK9_dKOEQGK7uF5Eup-ogWR5mqq_7O-bLWeoQq/exec',
+  BOOKING_FORM_URL: 'https://script.google.com/a/macros/behjarta.com/s/AKfycbzncgIeXvEOEjZL3l5Mj-Jy-C_oml-ipnNmVxOZAdNlY9FZfdR1cMuC1l4RneAIuDuM/exec',
+  ALLOWED_DOMAIN:   'behjarta.com',
+  DEMO_MODE:        true,
 };
 
-/* ════════════════════════════════════════════════
-   🎨  THEME
-════════════════════════════════════════════════ */
 const T = {
-  primary:      '#009688',
-  primaryDark:  '#00695C',
-  primaryMid:   '#26A69A',
-  primaryLight: '#E0F2F1',
-  sidebar:      '#0C2220',
-  bg:           '#F0F4F7',
-  white:        '#FFFFFF',
-  text:         '#1A2332',
-  muted:        '#6B7280',
-  border:       '#E5E7EB',
-  danger:       '#DC2626',
-  warning:      '#D97706',
-  success:      '#059669',
-  info:         '#2563EB',
-  purple:       '#7C3AED',
+  primary: '#009688', primaryDark: '#00695C', primaryMid: '#26A69A',
+  primaryLight: '#E0F2F1', sidebar: '#0C2220', bg: '#F0F4F7',
+  white: '#FFFFFF', text: '#1A2332', muted: '#6B7280',
+  border: '#E5E7EB', danger: '#DC2626', warning: '#D97706',
+  success: '#059669', info: '#2563EB',
 };
 
-/* ════════════════════════════════════════════════
-   📊  MOCK DATA  (replaced by AppScript in prod)
-════════════════════════════════════════════════ */
+/* ════════════════════════════
+   MOCK DATA (real column names)
+════════════════════════════ */
 const MOCK = {
-  bookingRequests: [
-    { id: 1, timestamp: '2025-04-18 09:23', name: 'Anna Lindgren', email: 'anna.l@gmail.com', phone: '070-123 45 67', address: 'Vasagatan 12, 111 20 Stockholm', service: 'Hemstädning', date: '2025-04-25', time: '10:00', area: '75 kvm', rooms: 3, bathrooms: 1, price: '1 200 kr', status: 'Ny' },
-    { id: 2, timestamp: '2025-04-18 08:45', name: 'Erik Svensson', email: 'erik.sv@outlook.com', phone: '073-456 78 90', address: 'Kungsgatan 8, 111 22 Stockholm', service: 'Storstädning', date: '2025-04-27', time: '09:00', area: '110 kvm', rooms: 4, bathrooms: 2, price: '3 400 kr', status: 'Pågår' },
-    { id: 3, timestamp: '2025-04-17 16:12', name: 'Maria Johansson', email: 'maria.j@gmail.com', phone: '076-789 01 23', address: 'Drottninggatan 45, 111 35 Stockholm', service: 'Flyttstädning', date: '2025-04-30', time: '08:00', area: '130 kvm', rooms: 5, bathrooms: 2, price: '4 800 kr', status: 'Ny' },
-    { id: 4, timestamp: '2025-04-17 14:30', name: 'Lars Petersson', email: 'lars.p@hotmail.com', phone: '072-234 56 78', address: 'Storgatan 22, 141 31 Huddinge', service: 'Hemstädning', date: '2025-04-26', time: '13:00', area: '55 kvm', rooms: 2, bathrooms: 1, price: '950 kr', status: 'Bekräftad' },
-    { id: 5, timestamp: '2025-04-16 11:05', name: 'Ingrid Holm', email: 'ingrid.holm@telia.com', phone: '070-987 65 43', address: 'Norrtullsgatan 3, 113 45 Stockholm', service: 'Hemstädning', date: '2025-04-28', time: '11:00', area: '80 kvm', rooms: 3, bathrooms: 1, price: '1 300 kr', status: 'Ny' },
-    { id: 6, timestamp: '2025-04-16 09:18', name: 'Björn Lindqvist', email: 'bjorn.l@gmail.com', phone: '076-111 22 33', address: 'Hornsgatan 78, 118 21 Stockholm', service: 'Kontorsstädning', date: '2025-04-29', time: '07:00', area: '200 kvm', rooms: 0, bathrooms: 2, price: '5 200 kr', status: 'Ny' },
-  ],
   tickets: [
-    { id: 1, timestamp: '2025-04-18 10:15', name: 'Karin Nilsson', email: 'karin.n@gmail.com', phone: '070-876 54 32', subject: 'Fråga om bokning', message: 'Hej! Kan ni städa på lördagar? Jag behöver hjälp varannan helg.', status: 'Obesvarad' },
-    { id: 2, timestamp: '2025-04-17 15:42', name: 'Johan Berg', email: 'johan.b@gmail.com', phone: '073-345 67 89', subject: 'Klagomål städning', message: 'Inte nöjd med senaste städningen, fönstren ej rengjorda och badrummet bristfälligt.', status: 'Obesvarad' },
-    { id: 3, timestamp: '2025-04-17 11:20', name: 'Sofia Lund', email: 'sofia.l@outlook.com', phone: '076-456 78 90', subject: 'Ändra bokning', message: 'Vill flytta min bokning BOK-1005 till nästa vecka istället.', status: 'Under behandling' },
-    { id: 4, timestamp: '2025-04-16 09:33', name: 'Peter Holm', email: 'peter.h@gmail.com', phone: '072-567 89 01', subject: 'Prisförfrågan kontor', message: 'Vad kostar kontorsstädning per vecka för ca 150 kvm?', status: 'Obesvarad' },
-    { id: 5, timestamp: '2025-04-15 14:15', name: 'Emma Strand', email: 'emma.s@gmail.com', phone: '070-678 90 12', subject: 'Ny kund', message: 'Vill boka min första städning. Hur fungerar det med RUT-avdrag?', status: 'Obesvarad' },
+    { created_at: '2025-04-18 10:15', unique_ID: 'TKT-001', Name: 'Karin Nilsson', Phone: '070-876 54 32', Email: 'karin.n@gmail.com', Message: 'Hej! Kan ni städa på lördagar? Jag behöver hjälp varannan helg.', Answered: 'Nej' },
+    { created_at: '2025-04-17 15:42', unique_ID: 'TKT-002', Name: 'Johan Berg', Phone: '073-345 67 89', Email: 'johan.b@gmail.com', Message: 'Inte nöjd med senaste städningen. Fönstren ej rengjorda och badrummet bristfälligt.', Answered: 'Nej' },
+    { created_at: '2025-04-17 11:20', unique_ID: 'TKT-003', Name: 'Sofia Lund', Phone: '076-456 78 90', Email: 'sofia.l@outlook.com', Message: 'Vill flytta min bokning BOK-1005 till nästa vecka.', Answered: 'Under behandling' },
+    { created_at: '2025-04-16 09:33', unique_ID: 'TKT-004', Name: 'Peter Holm', Phone: '072-567 89 01', Email: 'peter.h@gmail.com', Message: 'Vad kostar kontorsstädning per vecka för ca 150 kvm?', Answered: 'Nej' },
+    { created_at: '2025-04-15 14:15', unique_ID: 'TKT-005', Name: 'Emma Strand', Phone: '070-678 90 12', Email: 'emma.s@gmail.com', Message: 'Vill boka min första städning. Hur fungerar RUT-avdrag?', Answered: 'Nej' },
   ],
   bookedData: [
-    { id: 'BOK-1001', customer: 'Anna Lindgren', customerId: 'KD-001', employee: 'Fatima Al-Hassan', empId: 'EMP-001', service: 'Hemstädning', date: '2025-04-20', time: '10:00', address: 'Vasagatan 12, Stockholm', price: '1 200 kr', rut: '600 kr', status: 'Bekräftad' },
-    { id: 'BOK-1002', customer: 'Erik Svensson', customerId: 'KD-002', employee: 'Mirela Kovač', empId: 'EMP-002', service: 'Storstädning', date: '2025-04-21', time: '09:00', address: 'Kungsgatan 8, Stockholm', price: '3 400 kr', rut: '1 700 kr', status: 'Pågår' },
-    { id: 'BOK-1003', customer: 'Maria Johansson', customerId: 'KD-003', employee: 'Fatima Al-Hassan', empId: 'EMP-001', service: 'Flyttstädning', date: '2025-04-22', time: '08:00', address: 'Drottninggatan 45, Stockholm', price: '4 800 kr', rut: '2 400 kr', status: 'Klar' },
-    { id: 'BOK-1004', customer: 'Lars Petersson', customerId: 'KD-004', employee: 'Ana Popović', empId: 'EMP-003', service: 'Hemstädning', date: '2025-04-23', time: '13:00', address: 'Storgatan 22, Huddinge', price: '950 kr', rut: '475 kr', status: 'Bekräftad' },
-    { id: 'BOK-1005', customer: 'Karin Nilsson', customerId: 'KD-005', employee: 'Mirela Kovač', empId: 'EMP-002', service: 'Hemstädning', date: '2025-04-24', time: '11:00', address: 'Birgersgatan 9, Stockholm', price: '1 100 kr', rut: '550 kr', status: 'Bekräftad' },
-    { id: 'BOK-1006', customer: 'Ingrid Holm', customerId: 'KD-006', employee: 'Ana Popović', empId: 'EMP-003', service: 'Hemstädning', date: '2025-04-25', time: '09:00', address: 'Norrtullsgatan 3, Stockholm', price: '1 300 kr', rut: '650 kr', status: 'Bekräftad' },
+    { created_at:'2025-04-10', unique_ID:'BOK-1001', Date:'2025-04-20', Time:'10:00', Type:'Hemstädning', Duration_h:3, Frequency:'Varje vecka', Service_unit_price:400, Total_price_for_service:1200, Cleaning_supplies:'Nej', Ironing_1h:'Nej', Fridge_oven:'Nej', s1:0, Single_pane_window:0, Total_s1_price:0, s2:0, Single_pane_window_muntins:0, Total_s2_price:0, d1:0, Double_pane_window:0, Total_d1_price:0, d2:0, Double_pane_window_muntins:0, Total_d2_price:0, t1:0, Triple_pane_window:0, Total_t1_price:0, t2:0, Triple_pane_window_muntins:0, Total_t2_price:0, b1:0, Balcony_door:0, Total_b1_price:0, b2:0, Balcony_door_muntins:0, Total_b2_price:0, Add_services_total_price:0, Deep_cleaning_sqm:0, Deep_cleaning_unit_price:0, Total_price_Deep_cleaning:0, Moving_cleaning_sqm:0, Moving_cleaning_unit_price:0, Total_price_Moving_cleaning:0, Discount_amount:0, Subtotal_ex_VAT:960, 'VAT_25:percent':240, Subtotal:1200, RUT_reduction_50_percent:600, Admin_fee:0, Total_billable_lc:600, Name:'Anna Lindgren', Phone:'070-123 45 67', Email:'anna.l@gmail.com', Address:'Vasagatan 12', City:'Stockholm', PostalCode:'111 20', Comments:'', Customer_id:'KD-001', Discount_code:'', Discount_percent:0, Discount_exparation:'' },
+    { created_at:'2025-04-11', unique_ID:'BOK-1002', Date:'2025-04-21', Time:'09:00', Type:'Storstädning', Duration_h:5, Frequency:'Engång', Service_unit_price:680, Total_price_for_service:3400, Cleaning_supplies:'Ja', Ironing_1h:'Nej', Fridge_oven:'Ja', s1:0, Single_pane_window:0, Total_s1_price:0, s2:0, Single_pane_window_muntins:0, Total_s2_price:0, d1:0, Double_pane_window:0, Total_d1_price:0, d2:0, Double_pane_window_muntins:0, Total_d2_price:0, t1:0, Triple_pane_window:0, Total_t1_price:0, t2:0, Triple_pane_window_muntins:0, Total_t2_price:0, b1:0, Balcony_door:0, Total_b1_price:0, b2:0, Balcony_door_muntins:0, Total_b2_price:0, Add_services_total_price:0, Deep_cleaning_sqm:110, Deep_cleaning_unit_price:30, Total_price_Deep_cleaning:3300, Moving_cleaning_sqm:0, Moving_cleaning_unit_price:0, Total_price_Moving_cleaning:0, Discount_amount:0, Subtotal_ex_VAT:2720, 'VAT_25:percent':680, Subtotal:3400, RUT_reduction_50_percent:1700, Admin_fee:0, Total_billable_lc:1700, Name:'Erik Svensson', Phone:'073-456 78 90', Email:'erik.sv@outlook.com', Address:'Kungsgatan 8', City:'Stockholm', PostalCode:'111 22', Comments:'', Customer_id:'KD-002', Discount_code:'', Discount_percent:0, Discount_exparation:'' },
+    { created_at:'2025-04-12', unique_ID:'BOK-1003', Date:'2025-04-25', Time:'08:00', Type:'Flyttstädning', Duration_h:6, Frequency:'Engång', Service_unit_price:800, Total_price_for_service:4800, Cleaning_supplies:'Ja', Ironing_1h:'Nej', Fridge_oven:'Ja', s1:2, Single_pane_window:150, Total_s1_price:300, s2:0, Single_pane_window_muntins:0, Total_s2_price:0, d1:4, Double_pane_window:200, Total_d1_price:800, d2:0, Double_pane_window_muntins:0, Total_d2_price:0, t1:0, Triple_pane_window:0, Total_t1_price:0, t2:0, Triple_pane_window_muntins:0, Total_t2_price:0, b1:1, Balcony_door:250, Total_b1_price:250, b2:0, Balcony_door_muntins:0, Total_b2_price:0, Add_services_total_price:1350, Deep_cleaning_sqm:0, Deep_cleaning_unit_price:0, Total_price_Deep_cleaning:0, Moving_cleaning_sqm:130, Moving_cleaning_unit_price:37, Total_price_Moving_cleaning:4810, Discount_amount:200, Subtotal_ex_VAT:7968, 'VAT_25:percent':1992, Subtotal:9960, RUT_reduction_50_percent:4980, Admin_fee:0, Total_billable_lc:4980, Name:'Maria Johansson', Phone:'076-789 01 23', Email:'maria.j@gmail.com', Address:'Drottninggatan 45', City:'Stockholm', PostalCode:'111 35', Comments:'Fönsterputs ingår', Customer_id:'KD-003', Discount_code:'FLYTT10', Discount_percent:10, Discount_exparation:'2025-06-01' },
   ],
   customers: [
-    { id: 'KD-001', name: 'Anna Lindgren', email: 'anna.l@gmail.com', phone: '070-123 45 67', address: 'Vasagatan 12', city: 'Stockholm', postalCode: '111 20', since: '2024-08-12', bookings: 8, total: '9 600 kr', rut: '4 800 kr' },
-    { id: 'KD-002', name: 'Erik Svensson', email: 'erik.sv@outlook.com', phone: '073-456 78 90', address: 'Kungsgatan 8', city: 'Stockholm', postalCode: '111 22', since: '2024-11-05', bookings: 3, total: '8 200 kr', rut: '4 100 kr' },
-    { id: 'KD-003', name: 'Maria Johansson', email: 'maria.j@gmail.com', phone: '076-789 01 23', address: 'Drottninggatan 45', city: 'Stockholm', postalCode: '111 35', since: '2025-01-18', bookings: 5, total: '12 400 kr', rut: '6 200 kr' },
-    { id: 'KD-004', name: 'Lars Petersson', email: 'lars.p@hotmail.com', phone: '072-234 56 78', address: 'Storgatan 22', city: 'Huddinge', postalCode: '141 31', since: '2024-09-30', bookings: 12, total: '11 400 kr', rut: '5 700 kr' },
-    { id: 'KD-005', name: 'Karin Nilsson', email: 'karin.n@gmail.com', phone: '070-876 54 32', address: 'Birgersgatan 9', city: 'Stockholm', postalCode: '114 11', since: '2025-02-14', bookings: 6, total: '6 600 kr', rut: '3 300 kr' },
-    { id: 'KD-006', name: 'Ingrid Holm', email: 'ingrid.holm@telia.com', phone: '070-987 65 43', address: 'Norrtullsgatan 3', city: 'Stockholm', postalCode: '113 45', since: '2025-03-01', bookings: 2, total: '2 600 kr', rut: '1 300 kr' },
+    { created_at:'2024-08-12', Customer_ID:'KD-001', Name:'Anna Lindgren', Phone:'070-123 45 67', Email:'anna.l@gmail.com', Address:'Vasagatan 12', City:'Stockholm', PostalCode:'111 20', lanlot:'', WKT:'', Is_contract_active:'Ja', Contract_sent_date:'2024-08-10', Contract_start_date:'2024-08-15', Contract_resignation_date:'', Contract_end_date:'', Personnummer:'870312-XXXX', Signature:'Signerad' },
+    { created_at:'2024-11-05', Customer_ID:'KD-002', Name:'Erik Svensson', Phone:'073-456 78 90', Email:'erik.sv@outlook.com', Address:'Kungsgatan 8', City:'Stockholm', PostalCode:'111 22', lanlot:'', WKT:'', Is_contract_active:'Ja', Contract_sent_date:'2024-11-04', Contract_start_date:'2024-11-10', Contract_resignation_date:'', Contract_end_date:'', Personnummer:'920605-XXXX', Signature:'Signerad' },
+    { created_at:'2025-01-18', Customer_ID:'KD-003', Name:'Maria Johansson', Phone:'076-789 01 23', Email:'maria.j@gmail.com', Address:'Drottninggatan 45', City:'Stockholm', PostalCode:'111 35', lanlot:'', WKT:'', Is_contract_active:'Nej', Contract_sent_date:'', Contract_start_date:'', Contract_resignation_date:'', Contract_end_date:'', Personnummer:'850420-XXXX', Signature:'' },
+    { created_at:'2024-09-30', Customer_ID:'KD-004', Name:'Lars Petersson', Phone:'072-234 56 78', Email:'lars.p@hotmail.com', Address:'Storgatan 22', City:'Huddinge', PostalCode:'141 31', lanlot:'', WKT:'', Is_contract_active:'Ja', Contract_sent_date:'2024-09-28', Contract_start_date:'2024-10-01', Contract_resignation_date:'', Contract_end_date:'', Personnummer:'780815-XXXX', Signature:'Signerad' },
   ],
   employees: [
-    { id: 'EMP-001', name: 'Fatima Al-Hassan', email: 'fatima@behjarta.com', phone: '070-111 22 33', city: 'Stockholm', personNr: '870312-XXXX', bankAccount: '1234-56 789 0', status: 'Aktiv', rating: '4.9', bookings: 124, skills: 'Hem, Flytt, Stor' },
-    { id: 'EMP-002', name: 'Mirela Kovač', email: 'mirela@behjarta.com', phone: '073-222 33 44', city: 'Solna', personNr: '920605-XXXX', bankAccount: '9876-54 321 0', status: 'Aktiv', rating: '4.8', bookings: 98, skills: 'Hem, Kontor' },
-    { id: 'EMP-003', name: 'Ana Popović', email: 'ana@behjarta.com', phone: '076-333 44 55', city: 'Stockholm', personNr: '950120-XXXX', bankAccount: '5555-12 345 6', status: 'Aktiv', rating: '4.7', bookings: 67, skills: 'Hem, Stor, Flytt' },
-    { id: 'EMP-004', name: 'Leila Ahmadi', email: 'leila@behjarta.com', phone: '072-444 55 66', city: 'Huddinge', personNr: '890815-XXXX', bankAccount: '7777-98 765 4', status: 'Inaktiv', rating: '4.6', bookings: 45, skills: 'Hem' },
+    { created_at:'2024-01-15', employee_id:'EMP-001', Name:'Fatima Al-Hassan', Phone:'070-111 22 33', Email:'fatima@behjarta.com', Address:'Storgatan 5', City:'Stockholm', Postcode:'111 20', uploaded_background_check:'Ja', Trained:'Ja', contract_start_date:'2024-01-15', '6_months_probation':'2024-07-15', contract_end_date:'', is_active:'Ja', Payment_rule:'Timlön 150kr', img:'', Reporting_to:'ADM-001', Reporting_to_name:'Jovan', Reporting_to_phone:'070-789 89 52', Reporting_to_mail:'jovan@behjarta.com', Bank:'Swedbank', Clearing_number:'8327', Account_number:'1234567890' },
+    { created_at:'2024-03-10', employee_id:'EMP-002', Name:'Mirela Kovač', Phone:'073-222 33 44', Email:'mirela@behjarta.com', Address:'Parkvägen 12', City:'Solna', Postcode:'171 55', uploaded_background_check:'Ja', Trained:'Ja', contract_start_date:'2024-03-10', '6_months_probation':'2024-09-10', contract_end_date:'', is_active:'Ja', Payment_rule:'Timlön 150kr', img:'', Reporting_to:'ADM-001', Reporting_to_name:'Jovan', Reporting_to_phone:'070-789 89 52', Reporting_to_mail:'jovan@behjarta.com', Bank:'SEB', Clearing_number:'5000', Account_number:'9876543210' },
+    { created_at:'2024-06-01', employee_id:'EMP-003', Name:'Ana Popović', Phone:'076-333 44 55', Email:'ana@behjarta.com', Address:'Linnégatan 8', City:'Stockholm', Postcode:'114 47', uploaded_background_check:'Ja', Trained:'Nej', contract_start_date:'2024-06-01', '6_months_probation':'2024-12-01', contract_end_date:'', is_active:'Ja', Payment_rule:'Timlön 150kr', img:'', Reporting_to:'ADM-001', Reporting_to_name:'Jovan', Reporting_to_phone:'070-789 89 52', Reporting_to_mail:'jovan@behjarta.com', Bank:'Handelsbanken', Clearing_number:'6000', Account_number:'5555123456' },
+    { created_at:'2024-08-20', employee_id:'EMP-004', Name:'Leila Ahmadi', Phone:'072-444 55 66', Email:'leila@behjarta.com', Address:'Bergsgatan 3', City:'Huddinge', Postcode:'141 30', uploaded_background_check:'Nej', Trained:'Ja', contract_start_date:'2024-08-20', '6_months_probation':'2025-02-20', contract_end_date:'2025-03-01', is_active:'Nej', Payment_rule:'Timlön 150kr', img:'', Reporting_to:'ADM-001', Reporting_to_name:'Jovan', Reporting_to_phone:'070-789 89 52', Reporting_to_mail:'jovan@behjarta.com', Bank:'Nordea', Clearing_number:'3000', Account_number:'7777654321' },
   ],
   shifts: [
-    { id: 'PASS-001', employee: 'Fatima Al-Hassan', empId: 'EMP-001', date: '2025-04-20', start: '09:00', end: '12:00', hours: 3, customer: 'Anna Lindgren', address: 'Vasagatan 12, Stockholm', service: 'Hemstädning', status: 'Schemalagd' },
-    { id: 'PASS-002', employee: 'Mirela Kovač', empId: 'EMP-002', date: '2025-04-20', start: '10:00', end: '15:00', hours: 5, customer: 'Erik Svensson', address: 'Kungsgatan 8, Stockholm', service: 'Storstädning', status: 'Schemalagd' },
-    { id: 'PASS-003', employee: 'Ana Popović', empId: 'EMP-003', date: '2025-04-21', start: '08:00', end: '14:00', hours: 6, customer: 'Maria Johansson', address: 'Drottninggatan 45, Stockholm', service: 'Flyttstädning', status: 'Schemalagd' },
-    { id: 'PASS-004', employee: 'Fatima Al-Hassan', empId: 'EMP-001', date: '2025-04-22', start: '11:00', end: '13:00', hours: 2, customer: 'Lars Petersson', address: 'Storgatan 22, Huddinge', service: 'Hemstädning', status: 'Schemalagd' },
-    { id: 'PASS-005', employee: 'Mirela Kovač', empId: 'EMP-002', date: '2025-04-23', start: '09:00', end: '11:00', hours: 2, customer: 'Karin Nilsson', address: 'Birgersgatan 9, Stockholm', service: 'Hemstädning', status: 'Schemalagd' },
-    { id: 'PASS-006', employee: 'Ana Popović', empId: 'EMP-003', date: '2025-04-25', start: '10:00', end: '12:00', hours: 2, customer: 'Ingrid Holm', address: 'Norrtullsgatan 3, Stockholm', service: 'Hemstädning', status: 'Schemalagd' },
+    { created_at:'2025-04-18', booking_id:'BOK-1001', customer_id:'KD-001', Name:'Anna Lindgren', Phone:'070-123 45 67', Email:'anna.l@gmail.com', Address:'Vasagatan 12', City:'Stockholm', PostalCode:'111 20', Instructions:'Nyckel under mattan', lanlot:'', shift_id:'PASS-001', type:'Hemstädning', date:'2025-04-20', start_time:'09:00', end_time:'12:00', Cleaning_supplies:'Nej', Ironing_1h:'Nej', Fridge:'Nej', Window_cleaning:'Nej', shift_start_1:'', current_location_1:'', shift_end_1:'', shift_start_2:'', current_location_2:'', shift_end_2:'', shift_start_3:'', current_location_3:'', shift_end_3:'', cleaner_1:'Fatima Al-Hassan', cleaner_2:'', cleaner_3:'', rating:'', Confirmation_sent:'Ja', Followup_sent:'Nej' },
+    { created_at:'2025-04-18', booking_id:'BOK-1002', customer_id:'KD-002', Name:'Erik Svensson', Phone:'073-456 78 90', Email:'erik.sv@outlook.com', Address:'Kungsgatan 8', City:'Stockholm', PostalCode:'111 22', Instructions:'', lanlot:'', shift_id:'PASS-002', type:'Storstädning', date:'2025-04-21', start_time:'10:00', end_time:'15:00', Cleaning_supplies:'Ja', Ironing_1h:'Nej', Fridge:'Ja', Window_cleaning:'Nej', shift_start_1:'', current_location_1:'', shift_end_1:'', shift_start_2:'', current_location_2:'', shift_end_2:'', shift_start_3:'', current_location_3:'', shift_end_3:'', cleaner_1:'Mirela Kovač', cleaner_2:'Ana Popović', cleaner_3:'', rating:'', Confirmation_sent:'Nej', Followup_sent:'Nej' },
+    { created_at:'2025-04-19', booking_id:'BOK-1003', customer_id:'KD-003', Name:'Maria Johansson', Phone:'076-789 01 23', Email:'maria.j@gmail.com', Address:'Drottninggatan 45', City:'Stockholm', PostalCode:'111 35', Instructions:'Fönster ska putsas externt', lanlot:'', shift_id:'PASS-003', type:'Flyttstädning', date:'2025-04-25', start_time:'08:00', end_time:'14:00', Cleaning_supplies:'Ja', Ironing_1h:'Nej', Fridge:'Ja', Window_cleaning:'Ja', shift_start_1:'', current_location_1:'', shift_end_1:'', shift_start_2:'', current_location_2:'', shift_end_2:'', shift_start_3:'', current_location_3:'', shift_end_3:'', cleaner_1:'Ana Popović', cleaner_2:'Fatima Al-Hassan', cleaner_3:'', rating:'', Confirmation_sent:'Nej', Followup_sent:'Nej' },
   ],
 };
 
-/* ════════════════════════════════════════════════
-   🏷️  STATUS BADGE
-════════════════════════════════════════════════ */
-const STATUS_STYLES = {
-  'Ny':               { bg: '#DBEAFE', color: '#1E40AF' },
-  'Pågår':            { bg: '#FEF3C7', color: '#92400E' },
-  'Bekräftad':        { bg: '#D1FAE5', color: '#065F46' },
-  'Klar':             { bg: '#D1FAE5', color: '#065F46' },
-  'Avbokad':          { bg: '#FEE2E2', color: '#991B1B' },
-  'Obesvarad':        { bg: '#FEE2E2', color: '#991B1B' },
-  'Under behandling': { bg: '#FEF3C7', color: '#92400E' },
-  'Aktiv':            { bg: '#D1FAE5', color: '#065F46' },
-  'Inaktiv':          { bg: '#F3F4F6', color: '#4B5563' },
-  'Schemalagd':       { bg: '#EDE9FE', color: '#5B21B6' },
-};
-function StatusBadge({ status }) {
-  const s = STATUS_STYLES[status] || { bg: '#F3F4F6', color: '#4B5563' };
-  return <span style={{ background: s.bg, color: s.color, padding: '2px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{status}</span>;
+/* ════════════════════════════
+   API HELPERS
+════════════════════════════ */
+async function fetchSheet(sheetName) {
+  const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?sheet=${encodeURIComponent(sheetName)}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || 'Okänt fel');
+  return json.data;
 }
 
-/* ════════════════════════════════════════════════
-   📋  DATA TABLE  (search + sort + pagination)
-════════════════════════════════════════════════ */
-const PAGE_SIZE = 10;
-function DataTable({ columns, rows, onRefresh }) {
-  const [q, setQ] = useState('');
+async function updateSheetRow(sheetName, idKey, idValue, updatedRow) {
+  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: 'update', sheet: sheetName, idKey, idValue, row: updatedRow }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || 'Uppdatering misslyckades');
+}
+
+function useSheetData(mockKey, sheetName) {
+  const [data, setData] = useState(MOCK[mockKey] || []);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const refresh = useCallback(async () => {
+    if (CONFIG.DEMO_MODE) { setData([...(MOCK[mockKey] || [])]); return; }
+    setLoading(true); setError(null);
+    try { setData(await fetchSheet(sheetName)); }
+    catch(e) { setError(e.message); }
+    setLoading(false);
+  }, [mockKey, sheetName]);
+
+  useEffect(() => { refresh(); }, []);
+
+  const saveRow = useCallback(async (idKey, idValue, updatedRow) => {
+    if (CONFIG.DEMO_MODE) {
+      setData(prev => prev.map(r => String(r[idKey]) === String(idValue) ? { ...r, ...updatedRow } : r));
+      return;
+    }
+    await updateSheetRow(sheetName, idKey, idValue, updatedRow);
+    await refresh();
+  }, [sheetName, refresh]);
+
+  return { data, loading, error, refresh, saveRow };
+}
+
+/* ════════════════════════════
+   BADGE
+════════════════════════════ */
+const BADGE_MAP = {
+  'Ja': '#D1FAE5:#065F46', 'ja': '#D1FAE5:#065F46',
+  'Nej': '#FEE2E2:#991B1B', 'nej': '#FEE2E2:#991B1B',
+  'Under behandling': '#FEF3C7:#92400E',
+  'Signerad': '#D1FAE5:#065F46',
+};
+function Badge({ val }) {
+  const v = String(val || '');
+  const parts = (BADGE_MAP[v] || '#F3F4F6:#6B7280').split(':');
+  return <span style={{ background: parts[0], color: parts[1], padding: '2px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>{v || '—'}</span>;
+}
+
+/* ════════════════════════════
+   EDIT MODAL
+════════════════════════════ */
+const LONG_FIELDS   = new Set(['Message','Comments','Instructions','WKT','lanlot']);
+const READONLY_FIELDS = new Set(['created_at']);
+
+function EditModal({ row, title, onClose, onSave }) {
+  const [form, setForm] = useState({ ...row });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState('');
+  const keys = Object.keys(row);
+
+  const handleSave = async () => {
+    setSaving(true); setErr('');
+    try { await onSave(form); onClose(); }
+    catch(e) { setErr(e.message); setSaving(false); }
+  };
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box">
+        <div style={{ padding: '18px 24px 15px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Redigera rad</div>
+            <div style={{ fontSize: 11, color: T.muted, marginTop: 2 }}>{title}</div>
+          </div>
+          <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 22, color: T.muted, padding: '0 4px', lineHeight: 1 }}>×</button>
+        </div>
+
+        <div className="modal-body">
+          {err && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: T.danger, padding: '8px 12px', borderRadius: 8, fontSize: 13, marginBottom: 14 }}>⚠️ {err}</div>}
+          <div className="field-grid">
+            {keys.map(k => {
+              const isLong = LONG_FIELDS.has(k);
+              const isRO   = READONLY_FIELDS.has(k);
+              return (
+                <div key={k} className={`field-group${isLong ? ' field-full' : ''}${isRO ? ' field-readonly' : ''}`}>
+                  <label>{k.replace(/_/g, ' ')}</label>
+                  {isLong
+                    ? <textarea value={form[k] ?? ''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
+                    : <input type="text" value={form[k] ?? ''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
+                  }
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ padding: '14px 24px', borderTop: `1px solid ${T.border}`, display: 'flex', gap: 10, justifyContent: 'flex-end', flexShrink: 0 }}>
+          <button onClick={onClose}
+            style={{ padding: '9px 20px', border: `1px solid ${T.border}`, borderRadius: 8, background: T.white, color: T.muted, fontSize: 13, fontWeight: 600 }}>
+            Avbryt
+          </button>
+          <button onClick={handleSave} disabled={saving}
+            style={{ padding: '9px 22px', border: 'none', borderRadius: 8, background: T.primary, color: '#fff', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, opacity: saving ? 0.75 : 1 }}>
+            {saving
+              ? <><span className="spin" style={{ width: 13, height: 13, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%' }} />Sparar...</>
+              : '💾 Spara ändringar'
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════
+   DATA TABLE
+════════════════════════════ */
+const PAGE_SIZE = 15;
+
+function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, editTitle }) {
+  const [q, setQ]           = useState('');
   const [sortCol, setSortCol] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
-  const [page, setPage] = useState(0);
+  const [page, setPage]     = useState(0);
+  const [editRow, setEditRow] = useState(null);
 
   const filtered = useMemo(() => {
     const lq = q.toLowerCase();
@@ -156,352 +264,433 @@ function DataTable({ columns, rows, onRefresh }) {
     });
   }, [filtered, sortCol, sortDir]);
 
-  const pages = Math.ceil(sorted.length / PAGE_SIZE);
-  const paged = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const pages   = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const safePg  = Math.min(page, pages - 1);
+  const paged   = sorted.slice(safePg * PAGE_SIZE, (safePg + 1) * PAGE_SIZE);
 
-  const handleSort = key => {
-    if (sortCol === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-    else { setSortCol(key); setSortDir('asc'); }
+  const handleSort = k => {
+    setSortCol(prev => { setSortDir(prev === k ? (sortDir === 'asc' ? 'desc' : 'asc') : 'asc'); return k; });
     setPage(0);
   };
 
+  const TH_BASE = {
+    padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700,
+    color: T.primaryDark, textTransform: 'uppercase', letterSpacing: '0.06em',
+    whiteSpace: 'nowrap', background: T.primaryLight,
+  };
+
   return (
-    <div>
+    <>
+      {editRow && (
+        <EditModal
+          row={editRow} title={editTitle}
+          onClose={() => setEditRow(null)}
+          onSave={async updated => { await onSave(idKey, editRow[idKey], updated); setEditRow(null); }}
+        />
+      )}
+
+      {/* Toolbar */}
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: '1 1 240px', maxWidth: 300 }}>
-          <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: T.muted, pointerEvents: 'none' }}>🔍</span>
+        <div style={{ position: 'relative', flex: '1 1 200px', maxWidth: 280 }}>
+          <span style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: T.muted, fontSize: 12, pointerEvents: 'none' }}>🔍</span>
           <input value={q} onChange={e => { setQ(e.target.value); setPage(0); }} placeholder="Sök i tabellen..."
-            style={{ paddingLeft: 34, paddingRight: 12, paddingTop: 8, paddingBottom: 8, border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 13, width: '100%', outline: 'none', transition: 'border-color 0.15s' }}
+            style={{ paddingLeft: 30, paddingRight: 10, paddingTop: 8, paddingBottom: 8, border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 13, width: '100%', outline: 'none', transition: 'border-color 0.15s' }}
             onFocus={e => e.target.style.borderColor = T.primary}
             onBlur={e => e.target.style.borderColor = T.border} />
         </div>
+
         <span style={{ fontSize: 12, color: T.muted }}>{sorted.length} poster</span>
+
+        {loading && <span className="spin" style={{ width: 14, height: 14, border: `2px solid ${T.border}`, borderTopColor: T.primary, borderRadius: '50%' }} />}
+        {error   && <span style={{ fontSize: 12, color: T.danger }}>⚠️ {error}</span>}
+
         <button onClick={onRefresh}
-          style={{ marginLeft: 'auto', padding: '7px 14px', background: T.primaryLight, border: `1px solid ${T.primaryMid}`, borderRadius: 8, color: T.primaryDark, fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s' }}
+          style={{ marginLeft: 'auto', padding: '7px 14px', background: T.primaryLight, border: `1px solid ${T.primaryMid}`, borderRadius: 8, color: T.primaryDark, fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' }}
           onMouseEnter={e => { e.currentTarget.style.background = T.primaryMid; e.currentTarget.style.color = '#fff'; }}
           onMouseLeave={e => { e.currentTarget.style.background = T.primaryLight; e.currentTarget.style.color = T.primaryDark; }}>
-          ↻ Uppdatera från Sheets
+          ↻ Uppdatera
         </button>
       </div>
 
-      <div style={{ overflowX: 'auto', border: `1px solid ${T.border}`, borderRadius: 10 }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-          <thead>
-            <tr style={{ background: T.primaryLight }}>
-              {columns.map(col => (
-                <th key={col.key} onClick={() => !col.noSort && handleSort(col.key)}
-                  style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: T.primaryDark, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', cursor: col.noSort ? 'default' : 'pointer', userSelect: 'none' }}>
-                  {col.label}{sortCol === col.key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+      {/* Table */}
+      <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ borderCollapse: 'collapse', fontSize: 13, width: '100%', minWidth: 'max-content' }}>
+            <thead>
+              <tr>
+                {columns.map(col => (
+                  <th key={col.key} onClick={() => !col.noSort && handleSort(col.key)}
+                    style={{ ...TH_BASE, cursor: col.noSort ? 'default' : 'pointer', userSelect: 'none' }}>
+                    {col.label}{sortCol === col.key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                  </th>
+                ))}
+                {/* Sticky Edit header */}
+                <th className="sticky-edit" style={{ ...TH_BASE, right: 0, borderLeft: `2px solid ${T.primaryMid}`, textAlign: 'center', width: 94, minWidth: 94, boxShadow: '-3px 0 8px rgba(0,0,0,0.06)' }}>
+                  Åtgärd
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {paged.length === 0
-              ? <tr><td colSpan={columns.length} style={{ padding: 48, textAlign: 'center', color: T.muted, fontSize: 14 }}>Inga poster hittades</td></tr>
-              : paged.map((row, i) => (
-                <tr key={row.id || i}
-                  style={{ backgroundColor: i % 2 === 0 ? T.white : '#FAFAFA', borderTop: `1px solid ${T.border}`, transition: 'background 0.12s' }}
-                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F0FDFA'}
-                  onMouseLeave={e => e.currentTarget.style.backgroundColor = i % 2 === 0 ? T.white : '#FAFAFA'}>
-                  {columns.map(col => (
-                    <td key={col.key} style={{ padding: '10px 14px', whiteSpace: col.wrap ? 'normal' : 'nowrap', maxWidth: col.maxW || 'none', overflow: 'hidden', textOverflow: 'ellipsis', color: T.text }}>
-                      {col.render ? col.render(row[col.key], row) : (row[col.key] ?? '—')}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            }
-          </tbody>
-        </table>
+              </tr>
+            </thead>
+            <tbody>
+              {paged.length === 0
+                ? <tr><td colSpan={columns.length + 1} style={{ padding: 48, textAlign: 'center', color: T.muted }}>Inga poster hittades</td></tr>
+                : paged.map((row, i) => {
+                    const bg = i % 2 === 0 ? T.white : '#FAFAFA';
+                    return (
+                      <tr key={row[idKey] ?? i} style={{ backgroundColor: bg, borderTop: `1px solid ${T.border}` }}
+                        onMouseEnter={e => e.currentTarget.style.backgroundColor = '#ECFDF5'}
+                        onMouseLeave={e => e.currentTarget.style.backgroundColor = bg}>
+                        {columns.map(col => (
+                          <td key={col.key} style={{ padding: '9px 14px', whiteSpace: 'nowrap', maxWidth: col.maxW || 260, overflow: 'hidden', textOverflow: 'ellipsis', color: T.text }}>
+                            {col.render ? col.render(row[col.key], row) : (row[col.key] != null && row[col.key] !== '' ? String(row[col.key]) : '—')}
+                          </td>
+                        ))}
+                        {/* Sticky Edit cell — bg must match row */}
+                        <td className="sticky-edit" style={{ right: 0, backgroundColor: bg, borderLeft: `2px solid ${T.border}`, padding: '7px 10px', textAlign: 'center', width: 94, minWidth: 94, boxShadow: '-3px 0 8px rgba(0,0,0,0.05)' }}
+                          onMouseEnter={e => e.currentTarget.style.backgroundColor = '#ECFDF5'}
+                          onMouseLeave={e => e.currentTarget.style.backgroundColor = bg}>
+                          <button onClick={() => setEditRow(row)}
+                            style={{ padding: '5px 11px', background: T.primaryLight, border: `1px solid ${T.primaryMid}`, borderRadius: 7, color: T.primaryDark, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', transition: 'all 0.13s' }}
+                            onMouseEnter={e => { e.currentTarget.style.background = T.primary; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = T.primary; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = T.primaryLight; e.currentTarget.style.color = T.primaryDark; e.currentTarget.style.borderColor = T.primaryMid; }}>
+                            ✎ Redigera
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
 
+      {/* Pagination */}
       {pages > 1 && (
         <div style={{ display: 'flex', gap: 5, marginTop: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
-          <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
-            style={{ padding: '5px 10px', border: `1px solid ${T.border}`, borderRadius: 6, background: T.white, color: page === 0 ? T.muted : T.text, fontSize: 13 }}>‹</button>
-          {Array.from({ length: pages }, (_, i) => (
+          <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={safePg === 0}
+            style={{ padding: '5px 10px', border: `1px solid ${T.border}`, borderRadius: 6, background: T.white, color: safePg === 0 ? T.muted : T.text, fontSize: 13 }}>‹</button>
+          {Array.from({ length: Math.min(pages, 8) }, (_, i) => (
             <button key={i} onClick={() => setPage(i)}
-              style={{ width: 32, height: 32, borderRadius: 6, border: `1px solid ${i === page ? T.primary : T.border}`, background: i === page ? T.primary : T.white, color: i === page ? '#fff' : T.text, fontSize: 13, fontWeight: i === page ? 700 : 400 }}>
+              style={{ width: 30, height: 30, borderRadius: 6, border: `1px solid ${i === safePg ? T.primary : T.border}`, background: i === safePg ? T.primary : T.white, color: i === safePg ? '#fff' : T.text, fontSize: 12, fontWeight: i === safePg ? 700 : 400 }}>
               {i + 1}
             </button>
           ))}
-          <button onClick={() => setPage(p => Math.min(pages - 1, p + 1))} disabled={page === pages - 1}
-            style={{ padding: '5px 10px', border: `1px solid ${T.border}`, borderRadius: 6, background: T.white, color: page === pages - 1 ? T.muted : T.text, fontSize: 13 }}>›</button>
+          <button onClick={() => setPage(p => Math.min(pages - 1, p + 1))} disabled={safePg === pages - 1}
+            style={{ padding: '5px 10px', border: `1px solid ${T.border}`, borderRadius: 6, background: T.white, color: safePg === pages - 1 ? T.muted : T.text, fontSize: 13 }}>›</button>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
-/* ════════════════════════════════════════════════
-   📦  STAT CARD
-════════════════════════════════════════════════ */
+/* ════════════════════════════
+   STAT CARD + SHELL
+════════════════════════════ */
 function StatCard({ label, value, sub, color, emoji }) {
   return (
-    <div style={{ background: T.white, borderRadius: 12, padding: '16px 18px', borderLeft: `4px solid ${color}`, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: `1px solid ${T.border}`, borderLeftWidth: 4, borderLeftColor: color }}>
-      <div style={{ fontSize: 18, marginBottom: 6 }}>{emoji}</div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: T.text, lineHeight: 1 }}>{value}</div>
-      <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 4 }}>{label}</div>
-      {sub && <div style={{ fontSize: 11, color, fontWeight: 600, marginTop: 3 }}>{sub}</div>}
+    <div style={{ background: T.white, borderRadius: 12, padding: '14px 16px', border: `1px solid ${T.border}`, borderLeft: `4px solid ${color}` }}>
+      <div style={{ fontSize: 16, marginBottom: 5 }}>{emoji}</div>
+      <div style={{ fontSize: 20, fontWeight: 700, color: T.text }}>{value}</div>
+      <div style={{ fontSize: 10, fontWeight: 700, color: T.muted, textTransform: 'uppercase', letterSpacing: '0.07em', marginTop: 3 }}>{label}</div>
+      {sub && <div style={{ fontSize: 11, color, fontWeight: 600, marginTop: 2 }}>{sub}</div>}
     </div>
   );
 }
-
-/* ════════════════════════════════════════════════
-   🗂️  VIEW COMPONENTS
-════════════════════════════════════════════════ */
 function ViewShell({ stats, children }) {
   return (
     <div className="fade-in">
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${stats.length}, 1fr)`, gap: 14, marginBottom: 22 }}>
-        {stats.map((s, i) => <StatCard key={i} {...s} />)}
-      </div>
+      {stats && (
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${stats.length}, minmax(0,1fr))`, gap: 12, marginBottom: 20 }}>
+          {stats.map((s, i) => <StatCard key={i} {...s} />)}
+        </div>
+      )}
       {children}
     </div>
   );
 }
 
-/* --- AppScript fetch helper --- */
-async function fetchSheet(sheetName) {
-  if (CONFIG.DEMO_MODE) return null;
-  const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?sheet=${sheetName}`);
-  const json = await res.json();
-  return json.data;
-}
+/* ════════════════════════════
+   VIEWS
+════════════════════════════ */
 
-function useSheetData(mockKey, sheetName) {
-  const [data, setData] = useState(MOCK[mockKey]);
-  const [loading, setLoading] = useState(false);
-
-  const refresh = async () => {
-    if (CONFIG.DEMO_MODE) { setData(MOCK[mockKey]); return; }
-    setLoading(true);
-    try {
-      const live = await fetchSheet(sheetName);
-      if (live) setData(live);
-    } catch(e) { console.error('Sheet fetch error:', e); }
-    setLoading(false);
-  };
-
-  useEffect(() => { refresh(); }, []);
-  return { data, loading, refresh };
-}
-
-/* --- Booking Requests (Input-data A:V) --- */
+/* 1. Bokningsförfrågningar — iframe only */
 function BookingRequests() {
-  const { data, refresh } = useSheetData('bookingRequests', 'Input-data');
+  const [iframeH, setIframeH] = useState(640);
   return (
-    <ViewShell stats={[
-      { label: 'Totalt inkomna', value: data.length, emoji: '📋', color: T.info },
-      { label: 'Nya förfrågningar', value: data.filter(r => r.status === 'Ny').length, emoji: '🆕', color: T.warning, sub: 'Kräver åtgärd' },
-      { label: 'Bekräftade', value: data.filter(r => r.status === 'Bekräftad').length, emoji: '✅', color: T.success },
-      { label: 'Pågår', value: data.filter(r => r.status === 'Pågår').length, emoji: '⏳', color: T.primary },
-    ]}>
-      <DataTable onRefresh={refresh} rows={data} columns={[
-        { key: 'timestamp', label: 'Tidpunkt' },
-        { key: 'name', label: 'Namn' },
-        { key: 'email', label: 'Email' },
-        { key: 'phone', label: 'Telefon' },
-        { key: 'service', label: 'Tjänst' },
-        { key: 'date', label: 'Önskat datum' },
-        { key: 'time', label: 'Tid' },
-        { key: 'rooms', label: 'Rum' },
-        { key: 'area', label: 'Yta' },
-        { key: 'price', label: 'Pris' },
-        { key: 'status', label: 'Status', render: v => <StatusBadge status={v} />, noSort: true },
-      ]} />
-    </ViewShell>
+    <div className="fade-in">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
+        <p style={{ fontSize: 13, color: T.muted, flex: 1 }}>
+          Bokningsförfrågningar hanteras direkt via formuläret nedan (Google Apps Script).
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <span style={{ fontSize: 12, color: T.muted }}>Höjd:</span>
+          <input type="range" min={400} max={1400} step={50} value={iframeH} onChange={e => setIframeH(+e.target.value)} style={{ width: 90 }} />
+          <span style={{ fontSize: 12, color: T.muted, minWidth: 38 }}>{iframeH}px</span>
+        </div>
+      </div>
+      <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, overflow: 'hidden' }}>
+        <iframe
+          src={CONFIG.BOOKING_FORM_URL}
+          width="100%" height={iframeH}
+          style={{ display: 'block', border: 'none' }}
+          title="Bokningsförfrågningar — Apps Script"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+        />
+      </div>
+    </div>
   );
 }
 
-/* --- Tickets (contact-data A:G) --- */
+/* 2. Tickets — contact-data: created_at unique_ID Name Phone Email Message Answered */
 function Tickets() {
-  const { data, refresh } = useSheetData('tickets', 'contact-data');
+  const { data, loading, error, refresh, saveRow } = useSheetData('tickets', 'contact-data');
   return (
     <ViewShell stats={[
       { label: 'Totalt ärenden', value: data.length, emoji: '🎫', color: T.info },
-      { label: 'Obesvarade', value: data.filter(r => r.status === 'Obesvarad').length, emoji: '❗', color: T.danger, sub: 'Kräver svar' },
-      { label: 'Under behandling', value: data.filter(r => r.status === 'Under behandling').length, emoji: '🔄', color: T.warning },
+      { label: 'Obesvarade', value: data.filter(r => !r.Answered || r.Answered === 'Nej').length, emoji: '❗', color: T.danger, sub: 'Kräver svar' },
+      { label: 'Under behandling', value: data.filter(r => r.Answered === 'Under behandling').length, emoji: '🔄', color: T.warning },
     ]}>
-      <DataTable onRefresh={refresh} rows={data} columns={[
-        { key: 'timestamp', label: 'Tidpunkt' },
-        { key: 'name', label: 'Namn' },
-        { key: 'email', label: 'Email' },
-        { key: 'phone', label: 'Telefon' },
-        { key: 'subject', label: 'Ämne' },
-        { key: 'message', label: 'Meddelande', maxW: 300, wrap: true },
-        { key: 'status', label: 'Status', render: v => <StatusBadge status={v} />, noSort: true },
-      ]} />
+      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
+        idKey="unique_ID" onSave={saveRow} editTitle="Obesvarade ärenden — contact-data"
+        columns={[
+          { key: 'created_at', label: 'Datum' },
+          { key: 'unique_ID',  label: 'Ärende-ID' },
+          { key: 'Name',       label: 'Namn' },
+          { key: 'Phone',      label: 'Telefon' },
+          { key: 'Email',      label: 'Email' },
+          { key: 'Message',    label: 'Meddelande', maxW: 300 },
+          { key: 'Answered',   label: 'Besvarat', render: v => <Badge val={v || 'Nej'} />, noSort: true },
+        ]}
+      />
     </ViewShell>
   );
 }
 
-/* --- Booked Data (booking_data A:AO) --- */
+/* 3. Bokningar — booking_data: all columns */
 function BookedData() {
-  const { data, refresh } = useSheetData('bookedData', 'booking_data');
+  const { data, loading, error, refresh, saveRow } = useSheetData('bookedData', 'booking_data');
+  const totalRev = data.reduce((s, r) => s + (parseFloat(r.Total_billable_lc) || 0), 0);
   return (
     <ViewShell stats={[
       { label: 'Totalt bokningar', value: data.length, emoji: '📅', color: T.primary },
-      { label: 'Bekräftade', value: data.filter(r => r.status === 'Bekräftad').length, emoji: '✅', color: T.success },
-      { label: 'Pågår', value: data.filter(r => r.status === 'Pågår').length, emoji: '⏳', color: T.warning },
-      { label: 'Klara', value: data.filter(r => r.status === 'Klar').length, emoji: '🏁', color: T.info },
+      { label: 'Hemstädning', value: data.filter(r => r.Type === 'Hemstädning').length, emoji: '🏠', color: T.info },
+      { label: 'Flytt / Storstäd', value: data.filter(r => ['Storstädning','Flyttstädning'].includes(r.Type)).length, emoji: '📦', color: T.warning },
+      { label: 'Total intäkt (efter RUT)', value: totalRev.toLocaleString('sv-SE') + ' kr', emoji: '💰', color: T.success },
     ]}>
-      <DataTable onRefresh={refresh} rows={data} columns={[
-        { key: 'id', label: 'Boknings-ID' },
-        { key: 'customer', label: 'Kund' },
-        { key: 'employee', label: 'Personal' },
-        { key: 'service', label: 'Tjänst' },
-        { key: 'date', label: 'Datum' },
-        { key: 'time', label: 'Tid' },
-        { key: 'address', label: 'Adress' },
-        { key: 'price', label: 'Pris' },
-        { key: 'rut', label: 'RUT' },
-        { key: 'status', label: 'Status', render: v => <StatusBadge status={v} />, noSort: true },
-      ]} />
+      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
+        idKey="unique_ID" onSave={saveRow} editTitle="Bokningar — booking_data"
+        columns={[
+          { key: 'created_at', label: 'Skapad' },
+          { key: 'unique_ID',  label: 'Boknings-ID' },
+          { key: 'Date',       label: 'Datum' },
+          { key: 'Time',       label: 'Tid' },
+          { key: 'Type',       label: 'Tjänst' },
+          { key: 'Duration_h', label: 'Timmar', render: v => v ? `${v} h` : '—' },
+          { key: 'Frequency',  label: 'Frekvens' },
+          { key: 'Name',       label: 'Kund' },
+          { key: 'Phone',      label: 'Telefon' },
+          { key: 'Email',      label: 'Email' },
+          { key: 'City',       label: 'Stad' },
+          { key: 'Cleaning_supplies', label: 'Städmat.', render: v => <Badge val={v} />, noSort: true },
+          { key: 'Ironing_1h',  label: 'Strykning', render: v => <Badge val={v} />, noSort: true },
+          { key: 'Fridge_oven', label: 'Kylskåp/ugn', render: v => <Badge val={v} />, noSort: true },
+          { key: 'Total_price_for_service', label: 'Tjänstpris', render: v => v ? `${v} kr` : '—' },
+          { key: 'Add_services_total_price', label: 'Tilläggstjänster', render: v => v ? `${v} kr` : '—' },
+          { key: 'Discount_amount', label: 'Rabatt', render: v => v ? `${v} kr` : '—' },
+          { key: 'Subtotal_ex_VAT', label: 'Subtotal ex. moms', render: v => v ? `${v} kr` : '—' },
+          { key: 'VAT_25:percent', label: 'Moms 25%', render: v => v ? `${v} kr` : '—' },
+          { key: 'Subtotal', label: 'Subtotal', render: v => v ? `${v} kr` : '—' },
+          { key: 'RUT_reduction_50_percent', label: 'RUT 50%', render: v => v ? `${v} kr` : '—' },
+          { key: 'Admin_fee', label: 'Adm.avgift', render: v => v ? `${v} kr` : '—' },
+          { key: 'Total_billable_lc', label: 'Att betala', render: v => v ? `${v} kr` : '—' },
+          { key: 'Customer_id', label: 'Kund-ID' },
+          { key: 'Discount_code', label: 'Rabattkod' },
+          { key: 'Discount_percent', label: 'Rabatt %', render: v => v ? `${v}%` : '—' },
+          { key: 'Discount_exparation', label: 'Rabatt giltig t.o.m.' },
+          { key: 'Comments', label: 'Kommentar' },
+        ]}
+      />
     </ViewShell>
   );
 }
 
-/* --- Customers (customer_data A:Q) --- */
+/* 4. Kunder — customer_data: created_at Customer_ID Name Phone Email Address City PostalCode lanlot WKT Is_contract_active Contract_sent_date Contract_start_date Contract_resignation_date Contract_end_date Personnummer Signature */
 function Customers() {
-  const { data, refresh } = useSheetData('customers', 'customer_data');
-  const avgBookings = data.length ? (data.reduce((s, r) => s + r.bookings, 0) / data.length).toFixed(1) : 0;
+  const { data, loading, error, refresh, saveRow } = useSheetData('customers', 'customer_data');
   return (
     <ViewShell stats={[
       { label: 'Totalt kunder', value: data.length, emoji: '👥', color: T.primary },
-      { label: 'Snitt bokningar/kund', value: avgBookings, emoji: '📊', color: T.info },
-      { label: 'Aktiva städer', value: [...new Set(data.map(r => r.city))].length, emoji: '🏙️', color: T.success },
+      { label: 'Aktiva kontrakt', value: data.filter(r => r.Is_contract_active === 'Ja').length, emoji: '📝', color: T.success },
+      { label: 'Utan aktivt kontrakt', value: data.filter(r => r.Is_contract_active !== 'Ja').length, emoji: '⚠️', color: T.warning },
+      { label: 'Städer', value: [...new Set(data.map(r => r.City).filter(Boolean))].length, emoji: '🏙️', color: T.info },
     ]}>
-      <DataTable onRefresh={refresh} rows={data} columns={[
-        { key: 'id', label: 'Kund-ID' },
-        { key: 'name', label: 'Namn' },
-        { key: 'email', label: 'Email' },
-        { key: 'phone', label: 'Telefon' },
-        { key: 'city', label: 'Stad' },
-        { key: 'postalCode', label: 'Postnr' },
-        { key: 'since', label: 'Kund sedan' },
-        { key: 'bookings', label: 'Bokningar' },
-        { key: 'total', label: 'Total intäkt' },
-        { key: 'rut', label: 'RUT-värde' },
-      ]} />
+      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
+        idKey="Customer_ID" onSave={saveRow} editTitle="Kunder — customer_data"
+        columns={[
+          { key: 'created_at', label: 'Skapad' },
+          { key: 'Customer_ID', label: 'Kund-ID' },
+          { key: 'Name',   label: 'Namn' },
+          { key: 'Phone',  label: 'Telefon' },
+          { key: 'Email',  label: 'Email' },
+          { key: 'Address',label: 'Adress' },
+          { key: 'City',   label: 'Stad' },
+          { key: 'PostalCode', label: 'Postnr' },
+          { key: 'Is_contract_active', label: 'Kontrakt aktivt', render: v => <Badge val={v} />, noSort: true },
+          { key: 'Contract_sent_date',  label: 'Kontrakt skickat' },
+          { key: 'Contract_start_date', label: 'Kontrakt start' },
+          { key: 'Contract_resignation_date', label: 'Uppsägning' },
+          { key: 'Contract_end_date',   label: 'Kontrakt slut' },
+          { key: 'Personnummer', label: 'Personnummer' },
+          { key: 'Signature', label: 'Signatur', render: v => <Badge val={v || 'Nej'} />, noSort: true },
+        ]}
+      />
     </ViewShell>
   );
 }
 
-/* --- Employees (cleaner A:W) --- */
+/* 5. Personal — cleaner: created_at employee_id Name Phone Email Address City Postcode uploaded_background_check Trained contract_start_date 6_months_probation contract_end_date is_active Payment_rule img Reporting_to Reporting_to_name Reporting_to_phone Reporting_to_mail Bank Clearing_number Account_number */
 function Employees() {
-  const { data, refresh } = useSheetData('employees', 'cleaner');
-  const avgRating = data.length ? (data.reduce((s, r) => s + parseFloat(r.rating), 0) / data.length).toFixed(1) : 0;
+  const { data, loading, error, refresh, saveRow } = useSheetData('employees', 'cleaner');
   return (
     <ViewShell stats={[
-      { label: 'Totalt personal', value: data.length, emoji: '🧹', color: T.primary },
-      { label: 'Aktiva', value: data.filter(r => r.status === 'Aktiv').length, emoji: '✅', color: T.success },
-      { label: 'Snitt betyg', value: '⭐ ' + avgRating, emoji: '⭐', color: T.warning },
-      { label: 'Totalt uppdrag', value: data.reduce((s, r) => s + r.bookings, 0), emoji: '📋', color: T.info },
+      { label: 'Total personal', value: data.length, emoji: '🧹', color: T.primary },
+      { label: 'Aktiva', value: data.filter(r => r.is_active === 'Ja').length, emoji: '✅', color: T.success },
+      { label: 'Inaktiva', value: data.filter(r => r.is_active !== 'Ja').length, emoji: '🔴', color: T.danger },
+      { label: 'Utbildade', value: data.filter(r => r.Trained === 'Ja').length, emoji: '🎓', color: T.info },
     ]}>
-      <DataTable onRefresh={refresh} rows={data} columns={[
-        { key: 'id', label: 'ID' },
-        { key: 'name', label: 'Namn' },
-        { key: 'email', label: 'Email' },
-        { key: 'phone', label: 'Telefon' },
-        { key: 'city', label: 'Stad' },
-        { key: 'skills', label: 'Kompetenser' },
-        { key: 'bookings', label: 'Uppdrag' },
-        { key: 'rating', label: 'Betyg', render: v => `⭐ ${v}` },
-        { key: 'status', label: 'Status', render: v => <StatusBadge status={v} />, noSort: true },
-      ]} />
+      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
+        idKey="employee_id" onSave={saveRow} editTitle="Personal — cleaner"
+        columns={[
+          { key: 'created_at',  label: 'Skapad' },
+          { key: 'employee_id', label: 'ID' },
+          { key: 'Name',  label: 'Namn' },
+          { key: 'Phone', label: 'Telefon' },
+          { key: 'Email', label: 'Email' },
+          { key: 'Address', label: 'Adress' },
+          { key: 'City',    label: 'Stad' },
+          { key: 'Postcode',label: 'Postnr' },
+          { key: 'is_active', label: 'Aktiv', render: v => <Badge val={v} />, noSort: true },
+          { key: 'Trained', label: 'Utbildad', render: v => <Badge val={v} />, noSort: true },
+          { key: 'uploaded_background_check', label: 'Bakgrundskontroll', render: v => <Badge val={v} />, noSort: true },
+          { key: 'Payment_rule', label: 'Löneregel' },
+          { key: 'contract_start_date', label: 'Kontrakt start' },
+          { key: '6_months_probation',  label: 'Provanst. slut' },
+          { key: 'contract_end_date',   label: 'Kontrakt slut' },
+          { key: 'Reporting_to_name',   label: 'Rapporterar till' },
+          { key: 'Reporting_to_phone',  label: 'Chef telefon' },
+          { key: 'Bank',             label: 'Bank' },
+          { key: 'Clearing_number',  label: 'Clearingnr' },
+          { key: 'Account_number',   label: 'Kontonr' },
+        ]}
+      />
     </ViewShell>
   );
 }
 
-/* --- Shifts (shifts A:AI) --- */
+/* 6. Arbetspass — shifts: created_at booking_id customer_id Name Phone Email Address City PostalCode Instructions lanlot shift_id type date start_time end_time Cleaning_supplies Ironing_1h Fridge Window_cleaning shift_start_1 current_location_1 shift_end_1 shift_start_2 current_location_2 shift_end_2 shift_start_3 current_location_3 shift_end_3 cleaner_1 cleaner_2 cleaner_3 rating Confirmation_sent Followup_sent */
 function Shifts() {
-  const { data, refresh } = useSheetData('shifts', 'shifts');
+  const { data, loading, error, refresh, saveRow } = useSheetData('shifts', 'shifts');
   const today = new Date().toISOString().split('T')[0];
   return (
     <ViewShell stats={[
       { label: 'Schemalagda pass', value: data.length, emoji: '⏰', color: T.primary },
       { label: 'Idag', value: data.filter(r => r.date === today).length, emoji: '📆', color: T.warning },
-      { label: 'Totalt timmar', value: data.reduce((s, r) => s + r.hours, 0) + ' h', emoji: '⏱️', color: T.info },
-      { label: 'Städare involverade', value: [...new Set(data.map(r => r.employee))].length, emoji: '🧹', color: T.success },
+      { label: 'Bekräftelse skickad', value: data.filter(r => r.Confirmation_sent === 'Ja').length, emoji: '✅', color: T.success },
+      { label: 'Uppföljning kvar', value: data.filter(r => r.Followup_sent !== 'Ja').length, emoji: '📤', color: T.info },
     ]}>
-      <DataTable onRefresh={refresh} rows={data} columns={[
-        { key: 'id', label: 'Pass-ID' },
-        { key: 'employee', label: 'Personal' },
-        { key: 'date', label: 'Datum' },
-        { key: 'start', label: 'Start' },
-        { key: 'end', label: 'Slut' },
-        { key: 'hours', label: 'Timmar', render: v => `${v} h` },
-        { key: 'customer', label: 'Kund' },
-        { key: 'address', label: 'Adress' },
-        { key: 'service', label: 'Tjänst' },
-        { key: 'status', label: 'Status', render: v => <StatusBadge status={v} />, noSort: true },
-      ]} />
+      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
+        idKey="shift_id" onSave={saveRow} editTitle="Arbetspass — shifts"
+        columns={[
+          { key: 'shift_id',   label: 'Pass-ID' },
+          { key: 'booking_id', label: 'Boknings-ID' },
+          { key: 'customer_id',label: 'Kund-ID' },
+          { key: 'date',       label: 'Datum' },
+          { key: 'start_time', label: 'Start' },
+          { key: 'end_time',   label: 'Slut' },
+          { key: 'type',       label: 'Tjänst' },
+          { key: 'Name',       label: 'Kund' },
+          { key: 'Phone',      label: 'Telefon' },
+          { key: 'Address',    label: 'Adress' },
+          { key: 'City',       label: 'Stad' },
+          { key: 'Instructions', label: 'Instruktioner', maxW: 200 },
+          { key: 'Cleaning_supplies', label: 'Städmat.', render: v => <Badge val={v} />, noSort: true },
+          { key: 'Ironing_1h', label: 'Strykning', render: v => <Badge val={v} />, noSort: true },
+          { key: 'Fridge',     label: 'Kylskåp', render: v => <Badge val={v} />, noSort: true },
+          { key: 'Window_cleaning', label: 'Fönster', render: v => <Badge val={v} />, noSort: true },
+          { key: 'cleaner_1',  label: 'Städare 1' },
+          { key: 'cleaner_2',  label: 'Städare 2' },
+          { key: 'cleaner_3',  label: 'Städare 3' },
+          { key: 'shift_start_1', label: 'Stämplar in 1' },
+          { key: 'shift_end_1',   label: 'Stämplar ut 1' },
+          { key: 'shift_start_2', label: 'Stämplar in 2' },
+          { key: 'shift_end_2',   label: 'Stämplar ut 2' },
+          { key: 'shift_start_3', label: 'Stämplar in 3' },
+          { key: 'shift_end_3',   label: 'Stämplar ut 3' },
+          { key: 'rating',    label: 'Betyg' },
+          { key: 'Confirmation_sent', label: 'Bekräft. skickad', render: v => <Badge val={v} />, noSort: true },
+          { key: 'Followup_sent',     label: 'Uppföljn. skickad', render: v => <Badge val={v} />, noSort: true },
+        ]}
+      />
     </ViewShell>
   );
 }
 
-/* ════════════════════════════════════════════════
-   🗺️  NAVIGATION CONFIG
-════════════════════════════════════════════════ */
+/* ════════════════════════════
+   NAV
+════════════════════════════ */
 const NAV = [
-  { id: 'booking-requests', label: 'Bokningsförfrågningar', emoji: '📋', title: 'Bokningsförfrågningar', subtitle: 'Inkommande förfrågningar via behjarta.com', Component: BookingRequests, getBadge: () => MOCK.bookingRequests.filter(r => r.status === 'Ny').length, badgeColor: T.warning },
-  { id: 'tickets',          label: 'Obesvarade ärenden',   emoji: '🎫', title: 'Obesvarade ärenden',    subtitle: 'Kontaktformulär och klagomål som väntar på svar', Component: Tickets,         getBadge: () => MOCK.tickets.filter(r => r.status === 'Obesvarad').length, badgeColor: T.danger },
-  { id: 'booked-data',      label: 'Bokningar',            emoji: '📅', title: 'Bokningar',             subtitle: 'Alla bekräftade och pågående bokningar', Component: BookedData },
-  { id: 'customers',        label: 'Kunder',               emoji: '👥', title: 'Kunder',                subtitle: 'Kundregister och bokningshistorik', Component: Customers },
-  { id: 'employees',        label: 'Personal',             emoji: '🧹', title: 'Personal',              subtitle: 'Städpersonalens uppgifter, kompetenser och status', Component: Employees },
-  { id: 'shifts',           label: 'Arbetspass',           emoji: '⏰', title: 'Arbetspass',            subtitle: 'Schema och arbetspass för personalen', Component: Shifts },
+  { id: 'booking-requests', label: 'Bokningsförfrågningar', emoji: '📋', title: 'Bokningsförfrågningar', subtitle: 'Inkommande förfrågningar via behjarta.com (Apps Script)', Component: BookingRequests },
+  { id: 'tickets',    label: 'Obesvarade ärenden', emoji: '🎫', title: 'Obesvarade ärenden', subtitle: 'Kontaktformulär — contact-data', Component: Tickets, getBadge: d => (d||MOCK.tickets).filter(r=>!r.Answered||r.Answered==='Nej').length, badgeColor: T.danger },
+  { id: 'booked-data', label: 'Bokningar',    emoji: '📅', title: 'Bokningar',  subtitle: 'Alla bokningar — booking_data', Component: BookedData },
+  { id: 'customers',  label: 'Kunder',        emoji: '👥', title: 'Kunder',     subtitle: 'Kundregister — customer_data', Component: Customers },
+  { id: 'employees',  label: 'Personal',      emoji: '🧹', title: 'Personal',   subtitle: 'Städpersonal — cleaner', Component: Employees },
+  { id: 'shifts',     label: 'Arbetspass',    emoji: '⏰', title: 'Arbetspass', subtitle: 'Schema — shifts', Component: Shifts },
 ];
 
-/* ════════════════════════════════════════════════
-   🧭  SIDEBAR
-════════════════════════════════════════════════ */
+/* ════════════════════════════
+   SIDEBAR
+════════════════════════════ */
 function Sidebar({ active, setActive, user, onLogout }) {
   return (
-    <div style={{ width: 244, minWidth: 244, background: T.sidebar, display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0, zIndex: 20 }}>
-      <div style={{ padding: '22px 20px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height: 32, display: 'block' }}
-          onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
-        <span style={{ display: 'none', fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>behjärta</span>
-        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.16em', textTransform: 'uppercase', fontWeight: 600, marginTop: 7 }}>Admin Portal</div>
+    <div style={{ width: 236, minWidth: 236, background: T.sidebar, display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0, zIndex: 20 }}>
+      <div style={{ padding: '20px 18px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height: 30, filter: 'brightness(0) invert(1)', display: 'block' }}
+          onError={e => { e.target.style.display='none'; }} />
+        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.27)', letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 700, marginTop: 6 }}>Admin Portal</div>
       </div>
-
       {CONFIG.DEMO_MODE && (
-        <div style={{ margin: '10px 12px 0', padding: '7px 10px', background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: 7, fontSize: 11, color: '#FCD34D', fontWeight: 600 }}>
+        <div style={{ margin: '10px 12px 0', padding: '6px 10px', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 7, fontSize: 11, color: '#FCD34D', fontWeight: 600 }}>
           ⚠️ Demo-läge aktiv
         </div>
       )}
-
-      <nav style={{ flex: 1, paddingTop: 10, overflowY: 'auto' }}>
+      <nav style={{ flex: 1, paddingTop: 8, overflowY: 'auto' }}>
         {NAV.map(item => {
           const isActive = active === item.id;
           const badge = item.getBadge?.();
           return (
             <button key={item.id} onClick={() => setActive(item.id)}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 20px', background: isActive ? 'rgba(0,150,136,0.18)' : 'transparent', border: 'none', borderLeft: `3px solid ${isActive ? T.primary : 'transparent'}`, color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.48)', fontSize: 13, fontWeight: isActive ? 600 : 400, textAlign: 'left', fontFamily: 'inherit', transition: 'all 0.14s', cursor: 'pointer' }}
-              onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; } }}
-              onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.48)'; } }}>
-              <span style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>{item.emoji}</span>
+              style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', padding: '10px 18px', background: isActive ? 'rgba(0,150,136,0.18)' : 'transparent', border: 'none', borderLeft: `3px solid ${isActive ? T.primary : 'transparent'}`, color: isActive ? '#fff' : 'rgba(255,255,255,0.44)', fontSize: 13, fontWeight: isActive ? 600 : 400, textAlign: 'left', fontFamily: 'inherit', transition: 'all 0.13s', cursor: 'pointer' }}
+              onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.color='rgba(255,255,255,0.72)'; } }}
+              onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='rgba(255,255,255,0.44)'; } }}>
+              <span style={{ fontSize: 14, flexShrink: 0 }}>{item.emoji}</span>
               <span style={{ flex: 1 }}>{item.label}</span>
-              {badge > 0 && <span style={{ background: item.badgeColor, color: '#fff', borderRadius: 999, padding: '1px 8px', fontSize: 10, fontWeight: 800, flexShrink: 0 }}>{badge}</span>}
+              {badge > 0 && <span style={{ background: item.badgeColor, color: '#fff', borderRadius: 999, padding: '1px 7px', fontSize: 10, fontWeight: 800 }}>{badge}</span>}
             </button>
           );
         })}
       </nav>
-
-      <div style={{ padding: '14px 16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, overflow: 'hidden' }}>
-          <div style={{ width: 36, height: 36, borderRadius: '50%', background: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{user?.avatar}</div>
+      <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 10, overflow: 'hidden' }}>
+          <div style={{ width: 33, height: 33, borderRadius: '50%', background: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{user?.avatar}</div>
           <div style={{ overflow: 'hidden' }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.88)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</div>
           </div>
         </div>
         <button onClick={onLogout}
-          style={{ width: '100%', padding: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: 'rgba(255,255,255,0.45)', fontSize: 12, fontFamily: 'inherit', transition: 'all 0.14s' }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; }}>
+          style={{ width: '100%', padding: '7px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, color: 'rgba(255,255,255,0.38)', fontSize: 12, fontFamily: 'inherit', transition: 'all 0.14s' }}
+          onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.1)'; e.currentTarget.style.color='#fff'; }}
+          onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.05)'; e.currentTarget.style.color='rgba(255,255,255,0.38)'; }}>
           Logga ut
         </button>
       </div>
@@ -509,12 +698,12 @@ function Sidebar({ active, setActive, user, onLogout }) {
   );
 }
 
-/* ════════════════════════════════════════════════
-   🔐  LOGIN PAGE
-════════════════════════════════════════════════ */
+/* ════════════════════════════
+   LOGIN
+════════════════════════════ */
 function LoginPage({ onLogin }) {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError]     = useState('');
   const btnRef = useRef(null);
 
   useEffect(() => {
@@ -522,115 +711,76 @@ function LoginPage({ onLogin }) {
     window.google.accounts.id.initialize({
       client_id: CONFIG.GOOGLE_CLIENT_ID,
       hosted_domain: CONFIG.ALLOWED_DOMAIN,
-      callback: (response) => {
+      callback: (resp) => {
         try {
-          const payload = JSON.parse(atob(response.credential.split('.')[1]));
-          if (!payload.email.endsWith('@' + CONFIG.ALLOWED_DOMAIN)) {
-            setError('Åtkomst nekad. Endast @' + CONFIG.ALLOWED_DOMAIN + '-konton är tillåtna.');
-            return;
-          }
-          const avatar = (payload.name || '?').split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase();
-          onLogin({ name: payload.name, email: payload.email, avatar, picture: payload.picture });
-        } catch(e) {
-          setError('Inloggning misslyckades. Försök igen.');
-        }
+          const pl = JSON.parse(atob(resp.credential.split('.')[1]));
+          if (!pl.email.endsWith('@' + CONFIG.ALLOWED_DOMAIN)) { setError('Åtkomst nekad. Endast @' + CONFIG.ALLOWED_DOMAIN + '-konton tillåts.'); return; }
+          onLogin({ name: pl.name, email: pl.email, avatar: (pl.name||'?').split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase() });
+        } catch { setError('Inloggning misslyckades.'); }
       }
     });
-    if (btnRef.current) {
-      window.google.accounts.id.renderButton(btnRef.current, { theme: 'outline', size: 'large', width: 340, locale: 'sv' });
-    }
+    if (btnRef.current) window.google.accounts.id.renderButton(btnRef.current, { theme: 'outline', size: 'large', width: 340, locale: 'sv' });
   }, []);
 
-  const demoLogin = () => {
-    setLoading(true);
-    setTimeout(() => onLogin({ name: 'Admin Behjärta', email: 'admin@behjarta.com', avatar: 'AB' }), 1100);
-  };
+  const demoLogin = () => { setLoading(true); setTimeout(() => onLogin({ name: 'Admin Behjärta', email: 'admin@behjarta.com', avatar: 'AB' }), 900); };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(140deg, #003D35 0%, #00695C 40%, #009688 70%, #26A69A 100%)', position: 'relative', overflow: 'hidden' }}>
-      {/* Decorative rings */}
-      {[350, 550, 750].map((size, i) => (
-        <div key={i} style={{ position: 'absolute', width: size, height: size, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.055)', top: '50%', left: '50%', transform: `translate(-${30 + i * 10}%, -${50 + i * 5}%)`, pointerEvents: 'none' }} />
-      ))}
+      {[350,550,750].map((s,i) => <div key={i} style={{ position:'absolute', width:s, height:s, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.05)', top:'50%', left:'50%', transform:`translate(-${30+i*10}%,-${50+i*5}%)`, pointerEvents:'none' }} />)}
       <div style={{ background: T.white, borderRadius: 20, padding: '44px 40px', width: '100%', maxWidth: 420, boxShadow: '0 30px 80px rgba(0,0,0,0.35)', textAlign: 'center', position: 'relative', zIndex: 1 }}>
-        <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height: 46, marginBottom: 8 }} onError={e => e.target.style.display = 'none'} />
-        <div style={{ fontSize: 11, color: T.muted, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 28 }}>Administrationsportal</div>
-
+        <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height: 42, marginBottom: 8 }} onError={e => e.target.style.display='none'} />
+        <div style={{ fontSize: 10, color: T.muted, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 28 }}>Administrationsportal</div>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text, marginBottom: 8 }}>Välkommen tillbaka</h1>
         <p style={{ fontSize: 13, color: T.muted, marginBottom: 28, lineHeight: 1.65 }}>
-          Logga in med ditt&nbsp;<strong style={{ color: T.primaryDark }}>@behjarta.com</strong>-konto. Åtkomst är begränsad till din organisation.
+          Logga in med ditt <strong style={{ color: T.primaryDark }}>@behjarta.com</strong>-konto.
         </p>
-
-        {error && (
-          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: T.danger, padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 18, textAlign: 'left', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-            <span>⚠️</span><span>{error}</span>
-          </div>
-        )}
-
-        {/* Real Google button (appears when GIS loads) */}
+        {error && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: T.danger, padding: '10px 14px', borderRadius: 10, fontSize: 13, marginBottom: 18, textAlign: 'left' }}>⚠️ {error}</div>}
         <div ref={btnRef} style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }} />
-
-        {/* Demo login button */}
         {CONFIG.DEMO_MODE && (
           <button onClick={demoLogin} disabled={loading}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 11, width: '100%', padding: '12px', background: loading ? '#F9FAFB' : T.white, border: `1.5px dashed ${loading ? T.border : T.primaryMid}`, borderRadius: 10, cursor: loading ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600, color: loading ? T.muted : T.primaryDark, fontFamily: 'inherit', transition: 'all 0.18s' }}
-            onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = T.primaryLight; } }}
-            onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = T.white; } }}>
-            {loading
-              ? <><span className="spin" style={{ display: 'inline-block', width: 15, height: 15, border: `2px solid ${T.border}`, borderTopColor: T.primary, borderRadius: '50%' }} /> Loggar in...</>
-              : <>🧪 Demo-inloggning (testläge)</>
-            }
+            style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', padding:'12px', background:T.white, border:`1.5px dashed ${T.primaryMid}`, borderRadius:10, cursor:loading?'not-allowed':'pointer', fontSize:13, fontWeight:600, color:T.primaryDark, fontFamily:'inherit', transition:'all 0.15s', opacity:loading?0.7:1 }}
+            onMouseEnter={e=>{ if(!loading) e.currentTarget.style.background=T.primaryLight; }}
+            onMouseLeave={e=>{ if(!loading) e.currentTarget.style.background=T.white; }}>
+            {loading ? <><span className="spin" style={{width:14,height:14,border:`2px solid ${T.border}`,borderTopColor:T.primary,borderRadius:'50%'}}/>Loggar in...</> : '🧪 Demo-inloggning'}
           </button>
         )}
-
-        <div style={{ marginTop: 22, padding: '12px', background: '#F8FAFC', borderRadius: 10, fontSize: 11, color: T.muted, lineHeight: 1.6 }}>
-          🔒 Skyddad sida — Åtkomst begränsad till <strong>@{CONFIG.ALLOWED_DOMAIN}</strong>
+        <div style={{ marginTop: 22, padding: '11px', background: '#F8FAFC', borderRadius: 10, fontSize: 11, color: T.muted }}>
+          🔒 Åtkomst begränsad till <strong>@{CONFIG.ALLOWED_DOMAIN}</strong>
         </div>
       </div>
     </div>
   );
 }
 
-/* ════════════════════════════════════════════════
-   🏠  ROOT APP
-════════════════════════════════════════════════ */
+/* ════════════════════════════
+   APP
+════════════════════════════ */
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser]   = useState(null);
   const [active, setActive] = useState('booking-requests');
-
   const activeNav = NAV.find(n => n.id === active);
   const { Component } = activeNav;
-
   if (!user) return <LoginPage onLogin={setUser} />;
-
   return (
-    <div style={{ display: 'flex', height: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <div style={{ display: 'flex', height: '100vh' }}>
       <Sidebar active={active} setActive={setActive} user={user} onLogout={() => setUser(null)} />
-
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {/* Sticky top header */}
-        <div style={{ background: T.white, borderBottom: `1px solid ${T.border}`, padding: '14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ background: T.white, borderBottom: `1px solid ${T.border}`, padding: '13px 26px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
-            <h1 style={{ fontSize: 17, fontWeight: 700, color: T.text, margin: 0 }}>{activeNav.title}</h1>
-            <p style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>{activeNav.subtitle}</p>
+            <h1 style={{ fontSize: 16, fontWeight: 700, color: T.text, margin: 0 }}>{activeNav.title}</h1>
+            <p style={{ fontSize: 11, color: T.muted, marginTop: 1 }}>{activeNav.subtitle}</p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <span style={{ fontSize: 12, color: T.muted }}>
-              {new Date().toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            </span>
-            <div style={{ width: 34, height: 34, borderRadius: '50%', background: T.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: T.primaryDark, border: `2px solid ${T.primary}`, cursor: 'default', title: user.name }}>
-              {user.avatar}
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 11, color: T.muted }}>{new Date().toLocaleDateString('sv-SE', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}</span>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: T.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: T.primaryDark, border: `2px solid ${T.primary}` }}>{user.avatar}</div>
           </div>
         </div>
-
-        {/* Scrollable content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: 28, background: T.bg }}>
-          <div style={{ background: T.white, borderRadius: 14, padding: '22px 24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: `1px solid ${T.border}`, minHeight: 300 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: 24, background: T.bg }}>
+          <div style={{ background: T.white, borderRadius: 14, padding: '20px 22px', border: `1px solid ${T.border}`, minHeight: 300 }}>
             <Component />
           </div>
-          <div style={{ textAlign: 'center', marginTop: 20, fontSize: 11, color: T.muted }}>
-            Behjärta Admin Platform © {new Date().getFullYear()} — MS Secure Solutions AB
+          <div style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: T.muted }}>
+            Behjärta Admin Platform © {new Date().getFullYear()} — MS Secure Solutions AB (559189-2806)
           </div>
         </div>
       </main>
