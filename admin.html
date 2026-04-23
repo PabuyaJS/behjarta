@@ -579,9 +579,9 @@ function Employees() {
   return (
     <ViewShell stats={[
       { label: 'Total personal', value: data.length, emoji: '🧹', color: T.primary },
-      { label: 'Aktiva', value: data.filter(r => r.is_active === 'TRUE').length, emoji: '✅', color: T.success },
-      { label: 'Inaktiva', value: data.filter(r => r.is_active !== 'FALSE').length, emoji: '🔴', color: T.danger },
-      { label: 'Utbildade', value: data.filter(r => r.Trained === 'TRUE').length, emoji: '🎓', color: T.info },
+      { label: 'Aktiva', value: data.filter(r => r.is_active === 'true').length, emoji: '✅', color: T.success },
+      { label: 'Inaktiva', value: data.filter(r => r.is_active !== 'true').length, emoji: '🔴', color: T.danger },
+      { label: 'Utbildade', value: data.filter(r => r.Trained === 'true').length, emoji: '🎓', color: T.info },
     ]}>
       <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
         idKey="employee_id" onSave={saveRow} editTitle="Personal — cleaner"
