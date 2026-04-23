@@ -58,7 +58,7 @@ const { useState, useEffect, useMemo, useRef, useCallback } = React;
 ════════════════════════════ */
 const CONFIG = {
   GOOGLE_CLIENT_ID: '362029715087-a2dm4v9gr0g4tda39cqd9pul87s4sq50.apps.googleusercontent.com',
-  APPS_SCRIPT_URL:  'https://script.google.com/a/macros/behjarta.com/s/AKfycbwrSn71gbNxtJo09s4VZiBxLXa_8b6QBJBuAieGIcAJT-Q52wd2cxK4m5oMEECO4nCc/exec',
+  APPS_SCRIPT_URL:  'https://script.google.com/a/macros/behjarta.com/s/AKfycbwPbyDXmOD0zXQXjNfh1PElVDfOckufbMN-cAviH6AbpliOF0C_IWLyWWeBc5XYMCQL/exec',
   BOOKING_FORM_URL: 'https://script.google.com/a/macros/behjarta.com/s/AKfycbzncgIeXvEOEjZL3l5Mj-Jy-C_oml-ipnNmVxOZAdNlY9FZfdR1cMuC1l4RneAIuDuM/exec',
   ALLOWED_DOMAIN:   'behjarta.com',
   DEMO_MODE:        false,
@@ -194,6 +194,45 @@ function Badge({ val }) {
   const v = String(val || '');
   const parts = (BADGE_MAP[v] || '#F3F4F6:#6B7280').split(':');
   return <span style={{ background: parts[0], color: parts[1], padding: '2px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>{v || '—'}</span>;
+}
+
+/* ════════════════════════════
+   DATE / TIME RENDER HELPERS
+   Frontend safety net — handles any ISO strings that
+   slip through Apps Script formatting unchanged.
+════════════════════════════ */
+
+// Extracts date as yyyy-MM-dd regardless of input format:
+//   "2026-04-09T22:00:00.000Z"  → "2026-04-10"  (converted to local Stockholm time)
+//   "2025-11-07 23:00:00"       → "2025-11-08"
+//   "2025-04-20"                → "2025-04-20"   (already clean, passthrough)
+function renderDate(val) {
+  if (val == null || val === '') return '—';
+  const s = String(val);
+  if (s.includes('T') || (s.includes(' ') && s.length > 10)) {
+    // Parse as Date — browser uses local timezone for display
+    const d = new Date(s.includes('T') ? s : s.replace(' ', 'T'));
+    if (isNaN(d)) return s;
+    return d.toLocaleDateString('sv-SE'); // gives yyyy-MM-dd in local time
+  }
+  return s.slice(0, 10); // already "yyyy-MM-dd"
+}
+
+// Extracts time as HH:mm regardless of input format:
+//   "1899-12-30T09:00:00.000Z"  → "09:00"  (pure time cell from Sheets epoch)
+//   "2025-04-20T07:30:00.000Z"  → "07:30"  (datetime, take UTC time part)
+//   "09:00:00"                  → "09:00"  (already clean)
+//   "09:00"                     → "09:00"
+function renderTime(val) {
+  if (val == null || val === '') return '—';
+  const s = String(val);
+  if (s.includes('T')) {
+    // For "1899-12-30T..." (Sheets time epoch), the UTC time IS the stored time
+    const timePart = s.split('T')[1] || '';
+    return timePart.slice(0, 5); // "HH:mm"
+  }
+  // "09:00:00" or "09:00"
+  return s.slice(0, 5);
 }
 
 /* ════════════════════════════
@@ -507,8 +546,8 @@ function BookedData() {
         columns={[
           { key: 'created_at', label: 'Skapad' },
           { key: 'unique_ID',  label: 'Boknings-ID' },
-          { key: 'Date',       label: 'Datum' },
-          { key: 'Time',       label: 'Tid' },
+          { key: 'Date',       label: 'Datum', render: renderDate },
+          { key: 'Time',       label: 'Tid',   render: renderTime },
           { key: 'Type',       label: 'Tjänst' },
           { key: 'Duration_h', label: 'Timmar', render: v => v ? `${v} h` : '—' },
           { key: 'Frequency',  label: 'Frekvens' },
@@ -561,10 +600,10 @@ function Customers() {
           { key: 'City',   label: 'Stad' },
           { key: 'PostalCode', label: 'Postnr' },
           { key: 'Is_contract_active', label: 'Kontrakt aktivt', render: v => <Badge val={v} />, noSort: true },
-          { key: 'Contract_sent_date',  label: 'Kontrakt skickat' },
-          { key: 'Contract_start_date', label: 'Kontrakt start' },
-          { key: 'Contract_resignation_date', label: 'Uppsägning' },
-          { key: 'Contract_end_date',   label: 'Kontrakt slut' },
+          { key: 'Contract_sent_date',  label: 'Kontrakt skickat', render: renderDate },
+          { key: 'Contract_start_date', label: 'Kontrakt start',   render: renderDate },
+          { key: 'Contract_resignation_date', label: 'Uppsägning', render: renderDate },
+          { key: 'Contract_end_date',   label: 'Kontrakt slut',    render: renderDate },
           { key: 'Personnummer', label: 'Personnummer' },
           { key: 'Signature', label: 'Signatur', render: v => <Badge val={v || 'Nej'} />, noSort: true },
         ]}
@@ -579,9 +618,9 @@ function Employees() {
   return (
     <ViewShell stats={[
       { label: 'Total personal', value: data.length, emoji: '🧹', color: T.primary },
-      { label: 'Aktiva', value: data.filter(r => r.is_active === 'true').length, emoji: '✅', color: T.success },
-      { label: 'Inaktiva', value: data.filter(r => r.is_active !== 'true').length, emoji: '🔴', color: T.danger },
-      { label: 'Utbildade', value: data.filter(r => r.Trained === 'true').length, emoji: '🎓', color: T.info },
+      { label: 'Aktiva', value: data.filter(r => r.is_active === 'TRUE').length, emoji: '✅', color: T.success },
+      { label: 'Inaktiva', value: data.filter(r => r.is_active !== 'TRUE').length, emoji: '🔴', color: T.danger },
+      { label: 'Utbildade', value: data.filter(r => r.Trained === 'TRUE').length, emoji: '🎓', color: T.info },
     ]}>
       <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
         idKey="employee_id" onSave={saveRow} editTitle="Personal — cleaner"
@@ -598,9 +637,9 @@ function Employees() {
           { key: 'Trained', label: 'Utbildad', render: v => <Badge val={v} />, noSort: true },
           { key: 'uploaded_background_check', label: 'Bakgrundskontroll', render: v => <Badge val={v} />, noSort: true },
           { key: 'Payment_rule', label: 'Löneregel' },
-          { key: 'contract_start_date', label: 'Kontrakt start' },
-          { key: '6_months_probation',  label: 'Provanst. slut' },
-          { key: 'contract_end_date',   label: 'Kontrakt slut' },
+          { key: 'contract_start_date', label: 'Kontrakt start', render: renderDate },
+          { key: '6_months_probation',  label: 'Provanst. slut', render: renderDate },
+          { key: 'contract_end_date',   label: 'Kontrakt slut',  render: renderDate },
           { key: 'Reporting_to_name',   label: 'Rapporterar till' },
           { key: 'Reporting_to_phone',  label: 'Chef telefon' },
           { key: 'Bank',             label: 'Bank' },
@@ -629,9 +668,9 @@ function Shifts() {
           { key: 'shift_id',   label: 'Pass-ID' },
           { key: 'booking_id', label: 'Boknings-ID' },
           { key: 'customer_id',label: 'Kund-ID' },
-          { key: 'date',       label: 'Datum' },
-          { key: 'start_time', label: 'Start' },
-          { key: 'end_time',   label: 'Slut' },
+          { key: 'date',       label: 'Datum', render: renderDate },
+          { key: 'start_time', label: 'Start', render: renderTime },
+          { key: 'end_time',   label: 'Slut',  render: renderTime },
           { key: 'type',       label: 'Tjänst' },
           { key: 'Name',       label: 'Kund' },
           { key: 'Phone',      label: 'Telefon' },
@@ -645,12 +684,12 @@ function Shifts() {
           { key: 'cleaner_1',  label: 'Städare 1' },
           { key: 'cleaner_2',  label: 'Städare 2' },
           { key: 'cleaner_3',  label: 'Städare 3' },
-          { key: 'shift_start_1', label: 'Stämplar in 1' },
-          { key: 'shift_end_1',   label: 'Stämplar ut 1' },
-          { key: 'shift_start_2', label: 'Stämplar in 2' },
-          { key: 'shift_end_2',   label: 'Stämplar ut 2' },
-          { key: 'shift_start_3', label: 'Stämplar in 3' },
-          { key: 'shift_end_3',   label: 'Stämplar ut 3' },
+          { key: 'shift_start_1', label: 'Stämplar in 1', render: renderTime },
+          { key: 'shift_end_1',   label: 'Stämplar ut 1', render: renderTime },
+          { key: 'shift_start_2', label: 'Stämplar in 2', render: renderTime },
+          { key: 'shift_end_2',   label: 'Stämplar ut 2', render: renderTime },
+          { key: 'shift_start_3', label: 'Stämplar in 3', render: renderTime },
+          { key: 'shift_end_3',   label: 'Stämplar ut 3', render: renderTime },
           { key: 'rating',    label: 'Betyg' },
           { key: 'Confirmation_sent', label: 'Bekräft. skickad', render: v => <Badge val={v} />, noSort: true },
           { key: 'Followup_sent',     label: 'Uppföljn. skickad', render: v => <Badge val={v} />, noSort: true },
