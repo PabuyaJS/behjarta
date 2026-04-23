@@ -538,7 +538,7 @@ function BookedData() {
     <ViewShell stats={[
       { label: 'Totalt bokningar', value: data.length, emoji: '📅', color: T.primary },
       { label: 'Hemstädning', value: data.filter(r => r.Type === 'Hemstädning').length, emoji: '🏠', color: T.info },
-      { label: 'Flytt / Storstäd', value: data.filter(r => ['Storstädning','Flyttstädning'].includes(r.Type)).length, emoji: '📦', color: T.warning },
+      { label: 'Flytt / Storstäd', value: data.filter(r => ['Storstädning','Flyttstädning', 'Speciell Flyttstädning', 'Flyttstädning 0-50 kvm', 'Flyttstädning 50+ kvm'].includes(r.Type)).length, emoji: '📦', color: T.warning },
       { label: 'Total intäkt (efter RUT)', value: totalRev.toLocaleString('sv-SE') + ' kr', emoji: '💰', color: T.success },
     ]}>
       <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
@@ -618,9 +618,9 @@ function Employees() {
   return (
     <ViewShell stats={[
       { label: 'Total personal', value: data.length, emoji: '🧹', color: T.primary },
-      { label: 'Aktiva', value: data.filter(r => r.is_active === 'TRUE').length, emoji: '✅', color: T.success },
-      { label: 'Inaktiva', value: data.filter(r => r.is_active !== 'TRUE').length, emoji: '🔴', color: T.danger },
-      { label: 'Utbildade', value: data.filter(r => r.Trained === 'TRUE').length, emoji: '🎓', color: T.info },
+      { label: 'Aktiva', value: data.filter(r => r.is_active === 'Ja').length, emoji: '✅', color: T.success },
+      { label: 'Inaktiva', value: data.filter(r => r.is_active !== 'Ja').length, emoji: '🔴', color: T.danger },
+      { label: 'Utbildade', value: data.filter(r => r.Trained === 'Ja').length, emoji: '🎓', color: T.info },
     ]}>
       <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
         idKey="employee_id" onSave={saveRow} editTitle="Personal — cleaner"
@@ -704,7 +704,7 @@ function Shifts() {
 ════════════════════════════ */
 const NAV = [
   { id: 'booking-requests', label: 'Bokningsförfrågningar', emoji: '📋', title: 'Bokningsförfrågningar', subtitle: 'Inkommande förfrågningar via behjarta.com (Apps Script)', Component: BookingRequests },
-  { id: 'tickets',    label: 'Obesvarade ärenden', emoji: '🎫', title: 'Obesvarade ärenden', subtitle: 'Kontaktformulär — contact-data', Component: Tickets, getBadge: d => (d||MOCK.tickets).filter(r=>!r.Answered||r.Answered==='Nej').length, badgeColor: T.danger },
+  { id: 'tickets',    label: 'Obesvarade ärenden', emoji: '🎫', title: 'Obesvarade ärenden', subtitle: 'Kontaktformulär — contact-data', Component: Tickets, getBadge: d => (d.tickets).filter(r=>!r.Answered||r.Answered==='Nej').length, badgeColor: T.danger },
   { id: 'booked-data', label: 'Bokningar',    emoji: '📅', title: 'Bokningar',  subtitle: 'Alla bokningar — booking_data', Component: BookedData },
   { id: 'customers',  label: 'Kunder',        emoji: '👥', title: 'Kunder',     subtitle: 'Kundregister — customer_data', Component: Customers },
   { id: 'employees',  label: 'Personal',      emoji: '🧹', title: 'Personal',   subtitle: 'Städpersonal — cleaner', Component: Employees },
@@ -718,7 +718,7 @@ function Sidebar({ active, setActive, user, onLogout }) {
   return (
     <div style={{ width: 236, minWidth: 236, background: T.sidebar, display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0, zIndex: 20 }}>
       <div style={{ padding: '20px 18px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height: 30, filter: 'brightness(0) invert(1)', display: 'block' }}
+        <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height: 30, display: 'block' }}
           onError={e => { e.target.style.display='none'; }} />
         <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.27)', letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 700, marginTop: 6 }}>Admin Portal</div>
       </div>
