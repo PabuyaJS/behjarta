@@ -704,7 +704,7 @@ function Shifts() {
 ════════════════════════════ */
 const NAV = [
   { id: 'booking-requests', label: 'Bokningsförfrågningar', emoji: '📋', title: 'Bokningsförfrågningar', subtitle: 'Inkommande förfrågningar via behjarta.com (Apps Script)', Component: BookingRequests },
-  { id: 'tickets',    label: 'Obesvarade ärenden', emoji: '🎫', title: 'Obesvarade ärenden', subtitle: 'Kontaktformulär — contact-data', Component: Tickets, getBadge: d => (Tickets||MOCK.tickets).filter(r=>!r.Answered||r.Answered==='Nej').length, badgeColor: T.danger },
+  { id: 'tickets',    label: 'Obesvarade ärenden', emoji: '🎫', title: 'Obesvarade ärenden', subtitle: 'Kontaktformulär — contact-data', Component: Tickets},
   { id: 'booked-data', label: 'Bokningar',    emoji: '📅', title: 'Bokningar',  subtitle: 'Alla bokningar — booking_data', Component: BookedData },
   { id: 'customers',  label: 'Kunder',        emoji: '👥', title: 'Kunder',     subtitle: 'Kundregister — customer_data', Component: Customers },
   { id: 'employees',  label: 'Personal',      emoji: '🧹', title: 'Personal',   subtitle: 'Städpersonal — cleaner', Component: Employees },
