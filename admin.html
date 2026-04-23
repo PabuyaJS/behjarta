@@ -58,10 +58,10 @@ const { useState, useEffect, useMemo, useRef, useCallback } = React;
 ════════════════════════════ */
 const CONFIG = {
   GOOGLE_CLIENT_ID: '362029715087-a2dm4v9gr0g4tda39cqd9pul87s4sq50.apps.googleusercontent.com',
-  APPS_SCRIPT_URL:  'https://script.google.com/a/macros/behjarta.com/s/AKfycbyuLNBiic7Ipy0yrra8V8UfSdZ0l7FQV0oAbyV491HBEVz2-CWk9Lx7Uyccv5n8tjhw/exec',
+  APPS_SCRIPT_URL:  'https://script.google.com/a/macros/behjarta.com/s/AKfycbzwoQO0HjNLYnjiLVifMwTljrbLwqaLIGfrIQ-xlOXna6oyE6BJHZLviUzGWlQ_Ofo8/exec',
   BOOKING_FORM_URL: 'https://script.google.com/a/macros/behjarta.com/s/AKfycbzncgIeXvEOEjZL3l5Mj-Jy-C_oml-ipnNmVxOZAdNlY9FZfdR1cMuC1l4RneAIuDuM/exec',
   ALLOWED_DOMAIN:   'behjarta.com',
-  DEMO_MODE:        false,
+  DEMO_MODE:        true,
 };
 
 const T = {
@@ -108,25 +108,50 @@ const MOCK = {
 };
 
 /* ════════════════════════════
-   API HELPERS
+   API HELPERS  — JSONP (bypasses Apps Script CORS)
 ════════════════════════════ */
-async function fetchSheet(sheetName) {
-  const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?sheet=${encodeURIComponent(sheetName)}`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
-  if (!json.success) throw new Error(json.error || 'Okänt fel');
-  return json.data;
+
+// Generic JSONP caller — injects a <script> tag, waits for callback
+function jsonp(url, params = {}, timeoutMs = 12000) {
+  return new Promise((resolve, reject) => {
+    const cbName = '__bh_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const qs = new URLSearchParams({ ...params, callback: cbName }).toString();
+    const script = document.createElement('script');
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('Timeout — kontrollera att Apps Script är deployat och att URL är korrekt.'));
+    }, timeoutMs);
+
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cbName] = (data) => { cleanup(); resolve(data); };
+    script.onerror = () => { cleanup(); reject(new Error('Nätverksfel — kunde inte nå Apps Script. Kontrollera URL i CONFIG.')); };
+    script.src = `${url}?${qs}`;
+    document.head.appendChild(script);
+  });
 }
 
+async function fetchSheet(sheetName) {
+  const res = await jsonp(CONFIG.APPS_SCRIPT_URL, { sheet: sheetName });
+  if (!res.success) throw new Error(res.error || 'Okänt fel från Apps Script');
+  return res.data;
+}
+
+// For updates we also use JSONP (GET with action=update + data as JSON in URL param)
+// The Apps Script doGet must handle action=update too (see companion script below)
 async function updateSheetRow(sheetName, idKey, idValue, updatedRow) {
-  const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action: 'update', sheet: sheetName, idKey, idValue, row: updatedRow }),
+  const res = await jsonp(CONFIG.APPS_SCRIPT_URL, {
+    action: 'update',
+    sheet: sheetName,
+    idKey,
+    idValue: String(idValue),
+    row: JSON.stringify(updatedRow),
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
-  if (!json.success) throw new Error(json.error || 'Uppdatering misslyckades');
+  if (!res.success) throw new Error(res.error || 'Uppdatering misslyckades');
 }
 
 function useSheetData(mockKey, sheetName) {
