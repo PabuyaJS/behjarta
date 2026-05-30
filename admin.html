@@ -198,6 +198,76 @@ function renderTime(val) {
   return s.slice(0, 5);
 }
 
+ /* ════════════════════════════
+   FORMAT ROW FOR SAVE
+   Normalises date/time/datetime fields before writing back to the sheet.
+   - date fields  → yyyy-MM-dd
+   - time fields  → HH:mm:ss
+   - datetime fields → M/d/yyyy HH:mm:ss
+════════════════════════════ */
+const DATE_KEYS = new Set([
+  'Date','created_at','Contract_sent_date','Contract_start_date',
+  'Contract_resignation_date','Contract_end_date','contract_start_date',
+  '6_months_probation','contract_end_date','Discount_exparation','date'
+]);
+const TIME_KEYS = new Set([
+  'Time','start_time','end_time',
+  'shift_start_1','shift_end_1','shift_start_2','shift_end_2','shift_start_3','shift_end_3'
+]);
+const DATETIME_KEYS = new Set(['created_at']); // add more if needed
+
+function formatForSheet(key, val) {
+  if (val == null || val === '') return val;
+  const s = String(val).trim();
+
+  if (TIME_KEYS.has(key)) {
+    // Already clean HH:mm or HH:mm:ss
+    if (/^\d{2}:\d{2}(:\d{2})?$/.test(s)) return s.length === 5 ? s + ':00' : s;
+    // Sheets epoch 1899-12-30THH:mm:ss.000Z
+    if (s.includes('T')) {
+      const timePart = s.split('T')[1] || '';
+      const hms = timePart.slice(0, 8); // HH:mm:ss
+      return hms || s;
+    }
+    return s;
+  }
+
+  if (DATE_KEYS.has(key) && !DATETIME_KEYS.has(key)) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    // ISO datetime → strip time
+    if (s.includes('T')) return s.split('T')[0];
+    // Try parsing
+    const d = new Date(s.replace(' ', 'T'));
+    if (!isNaN(d)) return d.toLocaleDateString('sv-SE', { timeZone:'Europe/Stockholm' }); // yyyy-MM-dd
+    return s;
+  }
+
+  // datetime: M/d/yyyy HH:mm:ss  (Sheets default import format)
+  if (DATETIME_KEYS.has(key)) {
+    const d = new Date(s.includes('T') ? s : s.replace(' ', 'T'));
+    if (!isNaN(d)) {
+      const mo = d.getMonth() + 1;
+      const dy = d.getDate();
+      const yr = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mm = String(d.getMinutes()).padStart(2,'0');
+      const ss = String(d.getSeconds()).padStart(2,'0');
+      return `${mo}/${dy}/${yr} ${hh}:${mm}:${ss}`;
+    }
+    return s;
+  }
+
+  return val;
+}
+
+function formatRowForSheet(row) {
+  const out = {};
+  for (const [k, v] of Object.entries(row)) {
+    out[k] = formatForSheet(k, v);
+  }
+  return out;
+}
+
 /* parse a date field into a yyyy-MM-dd string or '' */
 function toYMD(val) {
   if (!val || val === '—') return '';
@@ -414,8 +484,7 @@ function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys
 
   const handleSave = async () => {
     setSaving(true); setErr('');
-    try { await onSave(form); setEditMode(false); } catch(e) { setErr(e.message); }
-    setSaving(false);
+    try { await onSave(formatRowForSheet(form)); setEditMode(false); } catch(e) { setErr(e.message); }    setSaving(false);
   };
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -507,7 +576,7 @@ function EditModal({ row, title, onClose, onSave }) {
   const keys = Object.keys(row);
   const handleSave = async () => {
     setSaving(true); setErr('');
-    try { await onSave(form); onClose(); } catch(e) { setErr(e.message); setSaving(false); }
+    try { await onSave(formatRowForSheet(form)); onClose(); } catch(e) { setErr(e.message); setSaving(false); }
   };
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   return (
@@ -907,6 +976,7 @@ function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, o
               </div>
               {/* Right side */}
               <div style={{ padding:'14px 18px', display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', gap:6, flexShrink:0, borderLeft:`1px solid ${T.border}`, minWidth:130 }}>
+                <span style={{ fontSize:11, color:T.muted, fontWeight:600 }}>{renderDate(row.Date)}</span>
                 <span style={{ fontSize:11, fontWeight:700, color:T.muted, background:'#F3F4F6', padding:'2px 9px', borderRadius:999, letterSpacing:'0.03em' }}>{row.unique_ID || '—'}</span>
                 <span style={{ fontSize:14, fontWeight:700, color:T.success }}>{price}</span>
               </div>
@@ -1112,12 +1182,22 @@ function Tickets() {
 function BookedData() {
   const { data, loading, error, refresh, saveRow } = useSheetData('bookedData', 'booking_data');
   const [dateRange, setDateRange] = useState(getMonthRange);
-  const totalRev = data.reduce((s,r) => s + (parseFloat(r.Total_billable_lc)||0), 0);
+
+  const filteredData = useMemo(() =>
+    data.filter(r => {
+      const d = toYMD(r.Date);
+      if (!d || !dateRange.from || !dateRange.to) return true;
+      return d >= dateRange.from && d <= dateRange.to;
+    }),
+    [data, dateRange]
+  );
+
+  const totalRev = filteredData.reduce((s,r) => s + (parseFloat(r.Total_billable_lc)||0), 0);
   return (
     <ViewShell stats={[
-      { label:'Totalt bokningar',   value:data.length, emoji:'📅', color:T.primary },
-      { label:'Hemstädning',        value:data.filter(r => r.Type==='Hemstädning').length, emoji:'🏠', color:T.info },
-      { label:'Flytt / Storstäd',   value:data.filter(r => ['Storstädning','Flyttstädning','Speciell Flyttstädning','Flyttstädning 0-50 kvm','Flyttstädning 50+ kvm'].includes(r.Type)).length, emoji:'📦', color:T.warning },
+      { label:'Totalt bokningar',   value:filteredData.length, emoji:'📅', color:T.primary },
+      { label:'Hemstädning',        value:filteredData.filter(r => r.Type==='Hemstädning').length, emoji:'🏠', color:T.info },
+      { label:'Flytt / Storstäd',   value:filteredData.filter(r => ['Storstädning','Flyttstädning','Speciell Flyttstädning','Flyttstädning 0-50 kvm','Flyttstädning 50+ kvm'].includes(r.Type)).length, emoji:'📦', color:T.warning },
       { label:'Total intäkt (efter RUT)', value:totalRev.toLocaleString('sv-SE')+' kr', emoji:'💰', color:T.success },
     ]}>
       <BookingCardList
@@ -1204,9 +1284,9 @@ function Employees() {
 
 /* 6. Arbetspass — CARD LAYOUT */
 function Shifts() {
-  const { data, loading, error, refresh, saveRow }           = useSheetData('shifts', 'shifts');
-  const { data: employeeData }                               = useSheetData('employees', 'cleaner');
-  const [dateRange, setDateRange]                            = useState(getMonthRange);
+  const { data, loading, error, refresh, saveRow }  = useSheetData('shifts', 'shifts');
+  const { data: employeeData }                      = useSheetData('employees', 'cleaner');
+  const [dateRange, setDateRange]                   = useState(getMonthRange);
 
   const cleaners = useMemo(() =>
     employeeData
@@ -1215,6 +1295,33 @@ function Shifts() {
     [employeeData]
   );
 
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone:'Europe/Stockholm' });
+
+  const filteredData = useMemo(() =>
+    data.filter(r => {
+      const d = toYMD(r.date);
+      if (!d || !dateRange.from || !dateRange.to) return true;
+      return d >= dateRange.from && d <= dateRange.to;
+    }),
+    [data, dateRange]
+  );
+
+  return (
+    <ViewShell stats={[
+      { label:'Schemalagda pass',    value:filteredData.length, emoji:'⏰', color:T.primary },
+      { label:'Idag',                value:filteredData.filter(r => toYMD(r.date)===today).length, emoji:'📆', color:T.warning },
+      { label:'Bekräftelse skickad', value:filteredData.filter(r => r.Confirmation_sent==='Sent').length, emoji:'✅', color:T.success },
+      { label:'Uppföljning kvar',    value:filteredData.filter(r => !r.Followup_sent||r.Followup_sent.toString().trim()==='').length, emoji:'📤', color:T.info },
+    ]}>
+      <ShiftCardList
+        rows={data} loading={loading} error={error}
+        onRefresh={refresh} onSave={saveRow}
+        cleaners={cleaners}
+        dateRange={dateRange} onDateRangeChange={setDateRange}
+      />
+    </ViewShell>
+  );
+}
   const today = new Date().toLocaleDateString('sv-SE', { timeZone:'Europe/Stockholm' });
   return (
     <ViewShell stats={[
