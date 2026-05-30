@@ -37,14 +37,36 @@
   .modal-body { overflow-y: auto; padding: 20px 24px; flex: 1; }
   .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .field-group label { display: block; font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-  .field-group input, .field-group textarea {
+  .field-group input, .field-group textarea, .field-group select {
     width: 100%; padding: 8px 10px; border: 1px solid #E5E7EB; border-radius: 8px;
     font-size: 13px; color: #1A2332; outline: none; transition: border-color 0.15s; background: #fff;
   }
-  .field-group input:focus, .field-group textarea:focus { border-color: #009688; box-shadow: 0 0 0 3px rgba(0,150,136,0.1); }
+  .field-group input:focus, .field-group textarea:focus, .field-group select:focus { border-color: #009688; box-shadow: 0 0 0 3px rgba(0,150,136,0.1); }
   .field-group textarea { resize: vertical; min-height: 70px; }
   .field-full { grid-column: 1 / -1; }
-  .field-readonly input { background: #F9FAFB; color: #9CA3AF; cursor: not-allowed; }
+  .field-readonly input, .field-readonly textarea, .field-readonly select { background: #F9FAFB; color: #9CA3AF; cursor: not-allowed; }
+  .card-row {
+    display: flex; align-items: stretch; gap: 0;
+    border: 1px solid #E5E7EB; border-radius: 12px; background: #fff;
+    margin-bottom: 10px; overflow: hidden; cursor: pointer;
+    transition: box-shadow 0.15s, border-color 0.15s;
+  }
+  .card-row:hover { box-shadow: 0 4px 18px rgba(0,150,136,0.12); border-color: #80CBC4; }
+  /* Date range picker */
+  .date-range-bar {
+    display: flex; align-items: center; gap: 8px;
+    background: #fff; border: 1px solid #E5E7EB; border-radius: 10px;
+    padding: 6px 14px; font-size: 13px; color: #1A2332;
+    cursor: pointer; transition: border-color 0.15s;
+    user-select: none;
+  }
+  .date-range-bar:hover { border-color: #009688; }
+  .date-picker-popup {
+    position: fixed; z-index: 99999;
+    background: #fff; border: 1px solid #E5E7EB; border-radius: 14px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.18); padding: 18px 20px 14px;
+    min-width: 600px; font-family: 'Plus Jakarta Sans', sans-serif;
+  }
 </style>
 </head>
 <body>
@@ -119,9 +141,9 @@ async function updateSheetRow(sheetName, idKey, idValue, updatedRow) {
   if (!res.success) throw new Error(res.error || 'Uppdatering misslyckades');
 }
 function useSheetData(mockKey, sheetName) {
-  const [data, setData]     = useState(MOCK[mockKey] || []);
+  const [data, setData]       = useState(MOCK[mockKey] || []);
   const [loading, setLoading] = useState(false);
-  const [error, setError]   = useState(null);
+  const [error, setError]     = useState(null);
   const refresh = useCallback(async () => {
     if (CONFIG.DEMO_MODE) { setData([...(MOCK[mockKey] || [])]); return; }
     setLoading(true); setError(null);
@@ -153,37 +175,22 @@ function Badge({ val }) {
 }
 
 /* ════════════════════════════
-   DATE / TIME HELPERS — Stockholm (Europe/Stockholm)
-   
-   renderDate: always returns yyyy-MM-dd in Stockholm local time.
-   renderTime: 
-     • Plain "HH:mm" or "HH:mm:ss"          → take first 5 chars, no conversion needed.
-     • Sheets time-epoch "1899-12-30T..."    → UTC time IS the stored time value, take it directly.
-     • Real datetime ISO "2025-...T..."      → convert to Stockholm wall-clock time (handles CET/CEST).
+   DATE / TIME HELPERS
 ════════════════════════════ */
 function renderDate(val) {
   if (val == null || val === '') return '—';
   const s = String(val).trim();
-  // Already clean yyyy-MM-dd
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  // Parse as date and express in Stockholm timezone
   const d = new Date(s.includes('T') ? s : s.replace(' ', 'T'));
   if (isNaN(d)) return s;
-  return d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' }); // → "yyyy-MM-dd"
+  return d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' });
 }
-
 function renderTime(val) {
   if (val == null || val === '') return '—';
   const s = String(val).trim();
-  // Already clean HH:mm or HH:mm:ss
   if (/^\d{2}:\d{2}/.test(s)) return s.slice(0, 5);
   if (s.includes('T')) {
-    // Sheets time-only epoch: 1899-12-30 (or 1899-12-29 for edge timezone math)
-    // The UTC time part equals the stored time value — no conversion.
-    if (s.startsWith('1899-12-30') || s.startsWith('1899-12-29')) {
-      return s.split('T')[1].slice(0, 5);
-    }
-    // Real datetime: convert UTC → Stockholm wall-clock (CET = UTC+1, CEST = UTC+2)
+    if (s.startsWith('1899-12-30') || s.startsWith('1899-12-29')) return s.split('T')[1].slice(0, 5);
     const d = new Date(s);
     if (isNaN(d)) return s;
     return d.toLocaleTimeString('sv-SE', { hour:'2-digit', minute:'2-digit', timeZone:'Europe/Stockholm' });
@@ -191,12 +198,308 @@ function renderTime(val) {
   return s.slice(0, 5);
 }
 
+/* parse a date field into a yyyy-MM-dd string or '' */
+function toYMD(val) {
+  if (!val || val === '—') return '';
+  const s = String(val).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const d = new Date(s.includes('T') ? s : s.replace(' ', 'T'));
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('sv-SE', { timeZone:'Europe/Stockholm' });
+}
+
 /* ════════════════════════════
-   EDIT MODAL
+   DATE RANGE PICKER
+════════════════════════════ */
+function getMonthRange() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const first = new Date(y, m, 1);
+  const last  = new Date(y, m + 1, 0);
+  const fmt = d => d.toLocaleDateString('sv-SE');
+  return { from: fmt(first), to: fmt(last) };
+}
+
+const SV_MONTHS = ['Januari','Februari','Mars','April','Maj','Juni','Juli','Augusti','September','Oktober','November','December'];
+const SV_DAYS   = ['Mån','Tis','Ons','Tor','Fre','Lör','Sön'];
+
+function MiniCalendar({ year, month, selectedFrom, selectedTo, hoverDate, onDateClick, onDateHover }) {
+  const firstDay = new Date(year, month, 1);
+  // Monday-first: 0=Mon..6=Sun
+  let startDow = firstDay.getDay(); // 0=Sun..6=Sat
+  startDow = startDow === 0 ? 6 : startDow - 1;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < startDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ymd = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells.push(ymd);
+  }
+
+  const inRange = (ymd) => {
+    if (!ymd) return false;
+    const lo = selectedFrom || '';
+    const hi = (hoverDate && selectedFrom && !selectedTo)
+      ? (hoverDate >= selectedFrom ? hoverDate : selectedFrom)
+      : (selectedTo || '');
+    const hiReal = (hoverDate && selectedFrom && !selectedTo)
+      ? (hoverDate >= selectedFrom ? hoverDate : selectedFrom)
+      : selectedTo;
+    if (!lo || !hiReal) return false;
+    return ymd > lo && ymd < hiReal;
+  };
+  const isFrom  = ymd => ymd && ymd === selectedFrom;
+  const isTo    = ymd => ymd && ymd === selectedTo;
+  const isHov   = ymd => ymd && !selectedTo && hoverDate === ymd && selectedFrom;
+
+  return (
+    <div style={{ width:220 }}>
+      <div style={{ textAlign:'center', fontWeight:700, fontSize:13, color:T.text, marginBottom:10 }}>
+        {SV_MONTHS[month]} {year}
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:2, marginBottom:4 }}>
+        {SV_DAYS.map(d => (
+          <div key={d} style={{ textAlign:'center', fontSize:10, fontWeight:700, color:T.muted }}>{d}</div>
+        ))}
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:2 }}>
+        {cells.map((ymd, i) => {
+          if (!ymd) return <div key={`e${i}`} />;
+          const from  = isFrom(ymd);
+          const to    = isTo(ymd);
+          const range = inRange(ymd);
+          const hov   = isHov(ymd);
+          let bg = 'transparent', color = T.text, br = 6, fw = 400;
+          if (from || to) { bg = T.primary; color = '#fff'; fw = 700; }
+          else if (range || hov) { bg = T.primaryLight; color = T.primaryDark; }
+          return (
+            <div key={ymd}
+              onClick={() => onDateClick(ymd)}
+              onMouseEnter={() => onDateHover(ymd)}
+              style={{ textAlign:'center', fontSize:12, padding:'5px 2px', borderRadius:br,
+                background:bg, color, fontWeight:fw, cursor:'pointer', transition:'background 0.1s' }}
+              onMouseDown={e => e.preventDefault()}>
+              {parseInt(ymd.split('-')[2])}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function DateRangePicker({ from, to, onChange }) {
+  const [open, setOpen]       = useState(false);
+  const [hoverDate, setHover] = useState(null);
+  const [selecting, setSelecting] = useState(false); // false=picking from, true=picking to
+  const [tempFrom, setTempFrom]   = useState(from);
+  const [tempTo, setTempTo]       = useState(to);
+  const [viewYear1, setVY1]       = useState(() => { const d = new Date(); return d.getFullYear(); });
+  const [viewMonth1, setVM1]      = useState(() => { const d = new Date(); return d.getMonth(); });
+  const popRef = useRef(null);
+  const btnRef = useRef(null);
+  const [pos, setPos] = useState({ top:0, left:0 });
+
+  // Month 2 is always month1+1
+  const month2 = viewMonth1 === 11 ? 0 : viewMonth1 + 1;
+  const year2  = viewMonth1 === 11 ? viewYear1 + 1 : viewYear1;
+
+  useEffect(() => { setTempFrom(from); setTempTo(to); }, [from, to]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = e => {
+      if (popRef.current && !popRef.current.contains(e.target) && btnRef.current && !btnRef.current.contains(e.target)) setOpen(false);
+    };
+    setTimeout(() => document.addEventListener('mousedown', handler), 0);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const openPicker = () => {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 6, left: r.left });
+    }
+    setSelecting(false);
+    setOpen(o => !o);
+  };
+
+  const handleDateClick = (ymd) => {
+    if (!selecting) {
+      setTempFrom(ymd); setTempTo(null); setSelecting(true);
+    } else {
+      if (ymd < tempFrom) { setTempFrom(ymd); setTempTo(tempFrom); }
+      else { setTempTo(ymd); }
+      setSelecting(false);
+    }
+  };
+
+  const apply = () => {
+    if (tempFrom && tempTo) { onChange({ from: tempFrom, to: tempTo }); setOpen(false); }
+  };
+  const reset = () => {
+    const def = getMonthRange();
+    setTempFrom(def.from); setTempTo(def.to);
+    onChange(def); setOpen(false);
+  };
+
+  const prevMonth = () => {
+    if (viewMonth1 === 0) { setVM1(11); setVY1(y => y - 1); }
+    else setVM1(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth1 === 11) { setVM1(0); setVY1(y => y + 1); }
+    else setVM1(m => m + 1);
+  };
+
+  const label = (from && to)
+    ? `${from}  →  ${to}`
+    : 'Välj datumintervall';
+
+  return (
+    <>
+      <div ref={btnRef} className="date-range-bar" onClick={openPicker}
+        style={{ display:'flex', alignItems:'center', gap:8, minWidth:240 }}>
+        <span style={{ fontSize:14 }}>📅</span>
+        <span style={{ flex:1, fontSize:13, color: (from&&to) ? T.text : T.muted }}>{label}</span>
+        <span style={{ fontSize:10, color:T.muted }}>▾</span>
+      </div>
+      {open && ReactDOM.createPortal(
+        <div ref={popRef} className="date-picker-popup" style={{ top:pos.top, left:pos.left }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+            <button onClick={prevMonth} style={{ background:'none', border:`1px solid ${T.border}`, borderRadius:7, padding:'4px 10px', color:T.muted, fontSize:14, cursor:'pointer' }}>‹</button>
+            <div style={{ fontSize:12, color:T.muted, fontWeight:600 }}>
+              {selecting ? '📌 Välj slutdatum' : '📌 Välj startdatum'}
+            </div>
+            <button onClick={nextMonth} style={{ background:'none', border:`1px solid ${T.border}`, borderRadius:7, padding:'4px 10px', color:T.muted, fontSize:14, cursor:'pointer' }}>›</button>
+          </div>
+          <div style={{ display:'flex', gap:28 }}>
+            <MiniCalendar year={viewYear1} month={viewMonth1}
+              selectedFrom={tempFrom} selectedTo={tempTo} hoverDate={hoverDate}
+              onDateClick={handleDateClick} onDateHover={setHover} />
+            <MiniCalendar year={year2} month={month2}
+              selectedFrom={tempFrom} selectedTo={tempTo} hoverDate={hoverDate}
+              onDateClick={handleDateClick} onDateHover={setHover} />
+          </div>
+          <div style={{ display:'flex', gap:8, marginTop:14, paddingTop:12, borderTop:`1px solid ${T.border}`, alignItems:'center' }}>
+            <span style={{ fontSize:12, color:T.muted, flex:1 }}>
+              {tempFrom && tempTo ? `${tempFrom}  →  ${tempTo}` : tempFrom ? `${tempFrom}  →  …` : 'Inget intervall valt'}
+            </span>
+            <button onClick={reset} style={{ padding:'6px 14px', border:`1px solid ${T.border}`, borderRadius:8, background:'#F9FAFB', color:T.muted, fontSize:12, fontWeight:600, cursor:'pointer' }}>Denna månad</button>
+            <button onClick={apply} disabled={!tempFrom || !tempTo}
+              style={{ padding:'6px 16px', border:'none', borderRadius:8, background:(!tempFrom||!tempTo)?T.border:T.primary, color:'#fff', fontSize:12, fontWeight:600, cursor:(!tempFrom||!tempTo)?'not-allowed':'pointer' }}>
+              Använd
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
+/* ════════════════════════════
+   VIEW MODAL (read-only → editable)
 ════════════════════════════ */
 const LONG_FIELDS    = new Set(['Message','Comments','Instructions','WKT','lanlot']);
 const READONLY_FIELDS = new Set(['created_at']);
 
+function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys }) {
+  const [editMode, setEditMode] = useState(false);
+  const [form, setForm]         = useState({ ...row });
+  const [saving, setSaving]     = useState(false);
+  const [err, setErr]           = useState('');
+  const keys = Object.keys(row);
+
+  const handleSave = async () => {
+    setSaving(true); setErr('');
+    try { await onSave(form); setEditMode(false); } catch(e) { setErr(e.message); }
+    setSaving(false);
+  };
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const isCleanerField = (k) => cleanerFieldKeys && cleanerFieldKeys.includes(k);
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box">
+        {/* Header */}
+        <div style={{ padding:'18px 24px 15px', borderBottom:`1px solid ${T.border}`, display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+          <div>
+            <div style={{ fontSize:15, fontWeight:700, color:T.text }}>
+              {editMode ? '✎ Redigera' : '🔍 Detaljvy'}
+            </div>
+            <div style={{ fontSize:11, color:T.muted, marginTop:2 }}>{title}</div>
+          </div>
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            {!editMode && (
+              <button onClick={() => setEditMode(true)}
+                style={{ padding:'7px 16px', border:`1px solid ${T.primaryMid}`, borderRadius:8, background:T.primaryLight, color:T.primaryDark, fontSize:12, fontWeight:700, transition:'all 0.13s' }}
+                onMouseEnter={e => { e.currentTarget.style.background=T.primary; e.currentTarget.style.color='#fff'; }}
+                onMouseLeave={e => { e.currentTarget.style.background=T.primaryLight; e.currentTarget.style.color=T.primaryDark; }}>
+                ✎ Redigera
+              </button>
+            )}
+            <button onClick={onClose} style={{ border:'none', background:'none', fontSize:22, color:T.muted, padding:'0 4px', lineHeight:1 }}>×</button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="modal-body">
+          {err && <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', color:T.danger, padding:'8px 12px', borderRadius:8, fontSize:13, marginBottom:14 }}>⚠️ {err}</div>}
+          <div className="field-grid">
+            {keys.map(k => {
+              const isLong    = LONG_FIELDS.has(k);
+              const isRO      = READONLY_FIELDS.has(k) || !editMode;
+              const isCleaner = isCleanerField(k);
+              const displayLabel = k.replace(/_/g,' ');
+              return (
+                <div key={k} className={`field-group${isLong?' field-full':''}${isRO?' field-readonly':''}`}>
+                  <label>{displayLabel}</label>
+                  {isCleaner && editMode ? (
+                    <select value={form[k]??''} onChange={e => set(k, e.target.value)}>
+                      <option value="">— Ingen städare —</option>
+                      {cleaners.map(c => (
+                        <option key={c.email} value={c.email}>{c.name}</option>
+                      ))}
+                    </select>
+                  ) : isLong ? (
+                    <textarea value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
+                  ) : (
+                    <input type="text" value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding:'14px 24px', borderTop:`1px solid ${T.border}`, display:'flex', gap:10, justifyContent:'flex-end', flexShrink:0 }}>
+          {editMode ? (
+            <>
+              <button onClick={() => { setEditMode(false); setForm({...row}); setErr(''); }}
+                style={{ padding:'9px 20px', border:`1px solid ${T.border}`, borderRadius:8, background:T.white, color:T.muted, fontSize:13, fontWeight:600 }}>
+                Avbryt
+              </button>
+              <button onClick={handleSave} disabled={saving}
+                style={{ padding:'9px 22px', border:'none', borderRadius:8, background:T.primary, color:'#fff', fontSize:13, fontWeight:600, display:'flex', alignItems:'center', gap:8, opacity:saving?0.75:1 }}>
+                {saving ? <><span className="spin" style={{ width:13, height:13, border:'2px solid rgba(255,255,255,0.3)', borderTopColor:'#fff', borderRadius:'50%' }} />Sparar...</> : '💾 Spara ändringar'}
+              </button>
+            </>
+          ) : (
+            <button onClick={onClose} style={{ padding:'9px 20px', border:`1px solid ${T.border}`, borderRadius:8, background:T.white, color:T.muted, fontSize:13, fontWeight:600 }}>Stäng</button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════
+   EDIT MODAL (classic — for other tables)
+════════════════════════════ */
 function EditModal({ row, title, onClose, onSave }) {
   const [form, setForm]   = useState({ ...row });
   const [saving, setSaving] = useState(false);
@@ -249,150 +552,81 @@ function EditModal({ row, title, onClose, onSave }) {
 
 /* ════════════════════════════
    FILTER POPOVER
-   Renders via React portal (fixed position) so it's never clipped by
-   the table's overflow:hidden container.
 ════════════════════════════ */
 function FilterPopover({ colKey, colLabel, allValues, currentFilter, onSort, onSetFilter, onClose, anchor }) {
   const ref = useRef(null);
   const [search, setSearch] = useState('');
-  // If no active filter → all values ticked. If active filter (Set) → only those ticked.
   const [selected, setSelected] = useState(() =>
     currentFilter ? new Set(currentFilter) : new Set(allValues)
   );
-
-  // Close on outside click (delayed 1 tick so the opener button's click doesn't immediately close it)
   useEffect(() => {
     const handler = e => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
     const id = setTimeout(() => document.addEventListener('mousedown', handler), 0);
     return () => { clearTimeout(id); document.removeEventListener('mousedown', handler); };
   }, [onClose]);
-
   const displayValues = useMemo(() =>
     allValues.filter(v => String(v).toLowerCase().includes(search.toLowerCase())),
     [allValues, search]
   );
-
   const allChecked  = displayValues.length > 0 && displayValues.every(v => selected.has(v));
   const someChecked = !allChecked && displayValues.some(v => selected.has(v));
-
-  const toggleValue = v => setSelected(prev => {
-    const next = new Set(prev);
-    next.has(v) ? next.delete(v) : next.add(v);
-    return next;
-  });
-
-  const applyFilter = () => {
-    const allSelected = allValues.every(v => selected.has(v));
-    onSetFilter(colKey, allSelected ? null : new Set(selected));
-    onClose();
-  };
-
-  // Position: keep inside viewport horizontally
+  const toggleValue = v => setSelected(prev => { const next = new Set(prev); next.has(v) ? next.delete(v) : next.add(v); return next; });
+  const applyFilter = () => { const allSel = allValues.every(v => selected.has(v)); onSetFilter(colKey, allSel ? null : new Set(selected)); onClose(); };
   const left = Math.min(anchor.left, window.innerWidth - 248);
   const top  = anchor.bottom + 3;
-
   const SortBtn = ({ dir, label }) => {
     const [hov, setHov] = useState(false);
     return (
-      <button
-        onClick={() => { onSort(colKey, dir); onClose(); }}
-        onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-        style={{ display:'flex', alignItems:'center', gap:8, width:'100%', padding:'5px 8px',
-          background: hov ? T.primaryLight : 'transparent', border:'none', borderRadius:6,
-          textAlign:'left', fontSize:13, color: hov ? T.primaryDark : T.text,
-          cursor:'pointer', fontFamily:'inherit', fontWeight:500 }}>
+      <button onClick={() => { onSort(colKey, dir); onClose(); }} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+        style={{ display:'flex', alignItems:'center', gap:8, width:'100%', padding:'5px 8px', background:hov?T.primaryLight:'transparent', border:'none', borderRadius:6, textAlign:'left', fontSize:13, color:hov?T.primaryDark:T.text, cursor:'pointer', fontFamily:'inherit', fontWeight:500 }}>
         {label}
       </button>
     );
   };
-
   return ReactDOM.createPortal(
-    <div ref={ref} style={{
-      position:'fixed', top, left, width:242, zIndex:999999,
-      background:'#fff', border:`1px solid ${T.border}`, borderRadius:10,
-      boxShadow:'0 10px 36px rgba(0,0,0,0.18)', fontFamily:"'Plus Jakarta Sans',sans-serif",
-      overflow:'hidden',
-    }}>
-      {/* Header */}
+    <div ref={ref} style={{ position:'fixed', top, left, width:242, zIndex:999999, background:'#fff', border:`1px solid ${T.border}`, borderRadius:10, boxShadow:'0 10px 36px rgba(0,0,0,0.18)', fontFamily:"'Plus Jakarta Sans',sans-serif", overflow:'hidden' }}>
       <div style={{ padding:'8px 10px 6px', background:T.primaryLight, borderBottom:`1px solid ${T.border}` }}>
-        <div style={{ fontSize:11, fontWeight:700, color:T.primaryDark, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-          {colLabel}
-        </div>
+        <div style={{ fontSize:11, fontWeight:700, color:T.primaryDark, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{colLabel}</div>
       </div>
-
-      {/* Sort */}
       <div style={{ padding:'6px 6px 4px', borderBottom:`1px solid ${T.border}` }}>
         <div style={{ fontSize:10, fontWeight:700, color:T.muted, textTransform:'uppercase', letterSpacing:'0.06em', padding:'0 4px 4px' }}>Sortering</div>
-        <SortBtn dir="asc"  label="↑  A → Ö  (stigande)" />
+        <SortBtn dir="asc" label="↑  A → Ö  (stigande)" />
         <SortBtn dir="desc" label="↓  Ö → A  (fallande)" />
       </div>
-
-      {/* Filter values */}
       <div style={{ padding:'6px 8px 4px' }}>
         <div style={{ fontSize:10, fontWeight:700, color:T.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:5 }}>Filter</div>
-        <input
-          value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Sök värde..."
-          style={{ width:'100%', padding:'5px 8px', border:`1px solid ${T.border}`, borderRadius:6,
-            fontSize:12, outline:'none', fontFamily:'inherit', color:T.text, marginBottom:5 }}
-          onFocus={e => e.target.style.borderColor = T.primary}
-          onBlur={e => e.target.style.borderColor = T.border}
-        />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Sök värde..."
+          style={{ width:'100%', padding:'5px 8px', border:`1px solid ${T.border}`, borderRadius:6, fontSize:12, outline:'none', fontFamily:'inherit', color:T.text, marginBottom:5 }}
+          onFocus={e => e.target.style.borderColor=T.primary} onBlur={e => e.target.style.borderColor=T.border} />
         <div style={{ maxHeight:170, overflowY:'auto', marginRight:-2, paddingRight:2 }}>
-          {/* Select all row */}
-          <label style={{
-            display:'flex', alignItems:'center', gap:7, padding:'4px 4px 5px',
-            borderBottom:`1px solid ${T.border}`, marginBottom:3,
-            cursor:'pointer', fontSize:12, color:T.text, fontWeight:700,
-          }}>
-            <input type="checkbox"
-              checked={allChecked}
-              ref={el => { if (el) el.indeterminate = someChecked; }}
-              onChange={() => {
-                if (allChecked) setSelected(new Set());
-                else setSelected(new Set(displayValues));
-              }}
-              style={{ accentColor:T.primary, width:13, height:13, flexShrink:0 }}
-            />
+          <label style={{ display:'flex', alignItems:'center', gap:7, padding:'4px 4px 5px', borderBottom:`1px solid ${T.border}`, marginBottom:3, cursor:'pointer', fontSize:12, color:T.text, fontWeight:700 }}>
+            <input type="checkbox" checked={allChecked} ref={el => { if (el) el.indeterminate = someChecked; }}
+              onChange={() => { if (allChecked) setSelected(new Set()); else setSelected(new Set(displayValues)); }}
+              style={{ accentColor:T.primary, width:13, height:13, flexShrink:0 }} />
             (Välj alla)
           </label>
-
           {displayValues.map(v => (
-            <label key={v}
-              style={{ display:'flex', alignItems:'center', gap:7, padding:'3px 4px', borderRadius:5, cursor:'pointer', fontSize:12, color:T.text }}
-              onMouseEnter={e => e.currentTarget.style.background = T.primaryLight}
-              onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-              <input type="checkbox"
-                checked={selected.has(v)}
-                onChange={() => toggleValue(v)}
-                style={{ accentColor:T.primary, width:13, height:13, flexShrink:0 }}
-              />
+            <label key={v} style={{ display:'flex', alignItems:'center', gap:7, padding:'3px 4px', borderRadius:5, cursor:'pointer', fontSize:12, color:T.text }}
+              onMouseEnter={e => e.currentTarget.style.background=T.primaryLight}
+              onMouseLeave={e => e.currentTarget.style.background='none'}>
+              <input type="checkbox" checked={selected.has(v)} onChange={() => toggleValue(v)} style={{ accentColor:T.primary, width:13, height:13, flexShrink:0 }} />
               <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{v}</span>
             </label>
           ))}
-
-          {displayValues.length === 0 && (
-            <div style={{ fontSize:12, color:T.muted, textAlign:'center', padding:'10px 0' }}>Inga matchande värden</div>
-          )}
+          {displayValues.length === 0 && <div style={{ fontSize:12, color:T.muted, textAlign:'center', padding:'10px 0' }}>Inga matchande värden</div>}
         </div>
       </div>
-
-      {/* Actions */}
       <div style={{ padding:'7px 8px 8px', borderTop:`1px solid ${T.border}`, display:'flex', gap:6 }}>
-        <button
-          onClick={() => { onSetFilter(colKey, null); onClose(); }}
-          style={{ flex:1, padding:'6px 8px', border:`1px solid ${T.border}`, borderRadius:7,
-            background:'#F9FAFB', color:T.muted, fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}
+        <button onClick={() => { onSetFilter(colKey, null); onClose(); }}
+          style={{ flex:1, padding:'6px 8px', border:`1px solid ${T.border}`, borderRadius:7, background:'#F9FAFB', color:T.muted, fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}
           onMouseEnter={e => { e.currentTarget.style.background='#F3F4F6'; e.currentTarget.style.color=T.text; }}
           onMouseLeave={e => { e.currentTarget.style.background='#F9FAFB'; e.currentTarget.style.color=T.muted; }}>
           Rensa
         </button>
-        <button
-          onClick={applyFilter}
-          style={{ flex:2, padding:'6px 8px', border:'none', borderRadius:7,
-            background:T.primary, color:'#fff', fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}
-          onMouseEnter={e => e.currentTarget.style.background = T.primaryDark}
-          onMouseLeave={e => e.currentTarget.style.background = T.primary}>
+        <button onClick={applyFilter}
+          style={{ flex:2, padding:'6px 8px', border:'none', borderRadius:7, background:T.primary, color:'#fff', fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}
+          onMouseEnter={e => e.currentTarget.style.background=T.primaryDark}
+          onMouseLeave={e => e.currentTarget.style.background=T.primary}>
           Använd filter
         </button>
       </div>
@@ -407,43 +641,31 @@ function FilterPopover({ colKey, colLabel, allValues, currentFilter, onSort, onS
 const PAGE_SIZE = 15;
 
 function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, editTitle }) {
-  const [q, setQ]             = useState('');
+  const [q, setQ]               = useState('');
   const [sortCol, setSortCol]   = useState(null);
   const [sortDir, setSortDir]   = useState('asc');
   const [page, setPage]         = useState(0);
   const [editRow, setEditRow]   = useState(null);
+  const [filters, setFilters]   = useState({});
+  const [openFilter, setOpenFilter]     = useState(null);
+  const [filterAnchor, setFilterAnchor] = useState(null);
 
-  // Filter state: { [colKey]: Set<string> | null }   null = no filter (all shown)
-  const [filters, setFilters]         = useState({});
-  const [openFilter, setOpenFilter]   = useState(null);   // colKey currently showing popover
-  const [filterAnchor, setFilterAnchor] = useState(null); // DOMRect of the trigger button
-
-  // Unique raw values per column — computed from the full unfiltered rows
   const columnValues = useMemo(() => {
     const result = {};
     columns.forEach(col => {
-      const vals = [...new Set(
-        rows.map(r => {
-          const v = r[col.key];
-          return (v == null || v === '') ? '(tom)' : String(v);
-        })
-      )].sort((a, b) => a.localeCompare(b, 'sv'));
+      const vals = [...new Set(rows.map(r => { const v = r[col.key]; return (v==null||v==='') ? '(tom)' : String(v); }))].sort((a,b) => a.localeCompare(b,'sv'));
       result[col.key] = vals;
     });
     return result;
   }, [rows, columns]);
 
-  // Text search + column filters combined
   const filtered = useMemo(() => {
     const lq = q.toLowerCase();
     return rows.filter(r => {
-      // Global text search
       if (lq && !Object.values(r).some(v => String(v).toLowerCase().includes(lq))) return false;
-      // Per-column filters
       for (const [colKey, allowed] of Object.entries(filters)) {
-        if (!allowed) continue; // null = show all
-        const v  = r[colKey];
-        const sv = (v == null || v === '') ? '(tom)' : String(v);
+        if (!allowed) continue;
+        const v = r[colKey]; const sv = (v==null||v==='') ? '(tom)' : String(v);
         if (!allowed.has(sv)) return false;
       }
       return true;
@@ -452,100 +674,53 @@ function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, ed
 
   const sorted = useMemo(() => {
     if (!sortCol) return filtered;
-    return [...filtered].sort((a, b) => {
-      const av = String(a[sortCol] ?? ''), bv = String(b[sortCol] ?? '');
-      return sortDir === 'asc' ? av.localeCompare(bv, 'sv') : bv.localeCompare(av, 'sv');
-    });
+    return [...filtered].sort((a,b) => { const av=String(a[sortCol]??''), bv=String(b[sortCol]??''); return sortDir==='asc' ? av.localeCompare(bv,'sv') : bv.localeCompare(av,'sv'); });
   }, [filtered, sortCol, sortDir]);
 
   const pages  = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const safePg = Math.min(page, pages - 1);
   const paged  = sorted.slice(safePg * PAGE_SIZE, (safePg + 1) * PAGE_SIZE);
 
-  // Click on label text → toggle sort (same as before)
-  const handleLabelSort = colKey => {
-    setSortDir(prev => sortCol === colKey ? (prev === 'asc' ? 'desc' : 'asc') : 'asc');
-    setSortCol(colKey);
-    setPage(0);
-  };
-
-  // Called from FilterPopover sort buttons
-  const handlePopoverSort = (colKey, dir) => {
-    setSortCol(colKey); setSortDir(dir); setPage(0);
-  };
-
-  const handleSetFilter = (colKey, setOrNull) => {
-    setFilters(prev => ({ ...prev, [colKey]: setOrNull }));
-    setPage(0);
-  };
-
-  const clearAllFilters = () => { setFilters({}); setPage(0); };
-
+  const handleLabelSort = colKey => { setSortDir(prev => sortCol===colKey?(prev==='asc'?'desc':'asc'):'asc'); setSortCol(colKey); setPage(0); };
+  const handlePopoverSort = (colKey, dir) => { setSortCol(colKey); setSortDir(dir); setPage(0); };
+  const handleSetFilter   = (colKey, setOrNull) => { setFilters(prev => ({ ...prev, [colKey]: setOrNull })); setPage(0); };
+  const clearAllFilters   = () => { setFilters({}); setPage(0); };
   const openFilterPopover = (e, colKey) => {
     e.stopPropagation();
     if (openFilter === colKey) { setOpenFilter(null); setFilterAnchor(null); return; }
-    setFilterAnchor(e.currentTarget.getBoundingClientRect());
-    setOpenFilter(colKey);
+    setFilterAnchor(e.currentTarget.getBoundingClientRect()); setOpenFilter(colKey);
   };
-
-  const activeFilterCount = Object.values(filters).filter(v => v !== null).length;
-
-  /* ── Styles ── */
-  const TH_BASE = {
-    padding:'0', textAlign:'left', fontSize:11, fontWeight:700,
-    color:T.primaryDark, textTransform:'uppercase', letterSpacing:'0.06em',
-    whiteSpace:'nowrap', background:T.primaryLight, borderBottom:`1px solid ${T.primaryMid}`,
-  };
+  const activeFilterCount = Object.values(filters).filter(v => v!==null).length;
+  const TH_BASE = { padding:'0', textAlign:'left', fontSize:11, fontWeight:700, color:T.primaryDark, textTransform:'uppercase', letterSpacing:'0.06em', whiteSpace:'nowrap', background:T.primaryLight, borderBottom:`1px solid ${T.primaryMid}` };
 
   return (
     <>
-      {/* Filter Popover */}
       {openFilter && filterAnchor && (
-        <FilterPopover
-          colKey={openFilter}
-          colLabel={columns.find(c => c.key === openFilter)?.label || openFilter}
-          allValues={columnValues[openFilter] || []}
-          currentFilter={filters[openFilter] || null}
-          onSort={handlePopoverSort}
-          onSetFilter={handleSetFilter}
-          onClose={() => { setOpenFilter(null); setFilterAnchor(null); }}
-          anchor={filterAnchor}
-        />
+        <FilterPopover colKey={openFilter} colLabel={columns.find(c=>c.key===openFilter)?.label||openFilter}
+          allValues={columnValues[openFilter]||[]} currentFilter={filters[openFilter]||null}
+          onSort={handlePopoverSort} onSetFilter={handleSetFilter}
+          onClose={() => { setOpenFilter(null); setFilterAnchor(null); }} anchor={filterAnchor} />
       )}
-
-      {/* Edit Modal */}
       {editRow && (
-        <EditModal
-          row={editRow} title={editTitle}
-          onClose={() => setEditRow(null)}
-          onSave={async updated => { await onSave(idKey, editRow[idKey], updated); setEditRow(null); }}
-        />
+        <EditModal row={editRow} title={editTitle} onClose={() => setEditRow(null)}
+          onSave={async updated => { await onSave(idKey, editRow[idKey], updated); setEditRow(null); }} />
       )}
-
-      {/* ── Toolbar ── */}
       <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14, flexWrap:'wrap' }}>
         <div style={{ position:'relative', flex:'1 1 200px', maxWidth:280 }}>
           <span style={{ position:'absolute', left:9, top:'50%', transform:'translateY(-50%)', color:T.muted, fontSize:12, pointerEvents:'none' }}>🔍</span>
           <input value={q} onChange={e => { setQ(e.target.value); setPage(0); }} placeholder="Sök i tabellen..."
             style={{ paddingLeft:30, paddingRight:10, paddingTop:8, paddingBottom:8, border:`1px solid ${T.border}`, borderRadius:8, fontSize:13, width:'100%', outline:'none', transition:'border-color 0.15s' }}
-            onFocus={e => e.target.style.borderColor = T.primary}
-            onBlur={e => e.target.style.borderColor = T.border} />
+            onFocus={e => e.target.style.borderColor=T.primary} onBlur={e => e.target.style.borderColor=T.border} />
         </div>
-
         <span style={{ fontSize:12, color:T.muted }}>{sorted.length} poster</span>
-
-        {/* Active filters chip */}
         {activeFilterCount > 0 && (
           <div style={{ display:'flex', alignItems:'center', gap:6, background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:8, padding:'4px 10px', fontSize:12, color:'#92400E', fontWeight:600 }}>
             <span>🔽 {activeFilterCount} filter aktiva</span>
-            <button onClick={clearAllFilters}
-              style={{ background:'none', border:'none', color:'#92400E', cursor:'pointer', fontWeight:700, fontSize:13, padding:'0 2px', lineHeight:1 }}>×</button>
+            <button onClick={clearAllFilters} style={{ background:'none', border:'none', color:'#92400E', cursor:'pointer', fontWeight:700, fontSize:13, padding:'0 2px', lineHeight:1 }}>×</button>
           </div>
         )}
-
         {loading && <span className="spin" style={{ width:14, height:14, border:`2px solid ${T.border}`, borderTopColor:T.primary, borderRadius:'50%' }} />}
         {error   && <span style={{ fontSize:12, color:T.danger }}>⚠️ {error}</span>}
-
         <button onClick={onRefresh}
           style={{ marginLeft:'auto', padding:'7px 14px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:8, color:T.primaryDark, fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:5, transition:'all 0.15s' }}
           onMouseEnter={e => { e.currentTarget.style.background=T.primaryMid; e.currentTarget.style.color='#fff'; }}
@@ -553,47 +728,29 @@ function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, ed
           ↻ Uppdatera
         </button>
       </div>
-
-      {/* ── Table ── */}
       <div style={{ border:`1px solid ${T.border}`, borderRadius:10, overflow:'hidden' }}>
         <div style={{ overflowX:'auto' }}>
           <table style={{ borderCollapse:'collapse', fontSize:13, width:'100%', minWidth:'max-content' }}>
             <thead>
               <tr>
                 {columns.map(col => {
-                  const hasFilter  = !!(filters[col.key]);
-                  const isFiltered = hasFilter && filters[col.key] !== null;
+                  const isFiltered = !!(filters[col.key]) && filters[col.key] !== null;
                   return (
                     <th key={col.key} style={{ ...TH_BASE }}>
                       <div style={{ display:'flex', alignItems:'center', padding:'9px 10px 9px 14px', gap:4 }}>
-                        {/* Label (click to sort) */}
-                        <span
-                          onClick={() => !col.noSort && handleLabelSort(col.key)}
-                          style={{ flex:1, cursor: col.noSort ? 'default' : 'pointer', userSelect:'none' }}>
-                          {col.label}
-                          {sortCol === col.key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                        <span onClick={() => !col.noSort && handleLabelSort(col.key)} style={{ flex:1, cursor:col.noSort?'default':'pointer', userSelect:'none' }}>
+                          {col.label}{sortCol===col.key?(sortDir==='asc'?' ↑':' ↓'):''}
                         </span>
-                        {/* Filter button */}
-                        <button
-                          onClick={e => openFilterPopover(e, col.key)}
-                          title={isFiltered ? 'Filter aktivt – klicka för att ändra' : 'Filtrera kolumn'}
-                          style={{
-                            background: isFiltered ? T.primary : 'transparent',
-                            border: isFiltered ? `1px solid ${T.primaryDark}` : `1px solid transparent`,
-                            borderRadius:5, padding:'1px 4px', cursor:'pointer',
-                            color: isFiltered ? '#fff' : T.primaryDark,
-                            fontSize:10, lineHeight:1.4, flexShrink:0,
-                            transition:'all 0.12s',
-                          }}
-                          onMouseEnter={e => { if (!isFiltered) { e.currentTarget.style.background=T.primaryMid; e.currentTarget.style.color='#fff'; e.currentTarget.style.borderColor=T.primaryMid; } }}
-                          onMouseLeave={e => { if (!isFiltered) { e.currentTarget.style.background='transparent'; e.currentTarget.style.color=T.primaryDark; e.currentTarget.style.borderColor='transparent'; } }}>
-                          {isFiltered ? '🔽' : '▾'}
+                        <button onClick={e => openFilterPopover(e, col.key)}
+                          style={{ background:isFiltered?T.primary:'transparent', border:isFiltered?`1px solid ${T.primaryDark}`:'1px solid transparent', borderRadius:5, padding:'1px 4px', cursor:'pointer', color:isFiltered?'#fff':T.primaryDark, fontSize:10, lineHeight:1.4, flexShrink:0, transition:'all 0.12s' }}
+                          onMouseEnter={e => { if(!isFiltered){e.currentTarget.style.background=T.primaryMid;e.currentTarget.style.color='#fff';e.currentTarget.style.borderColor=T.primaryMid;} }}
+                          onMouseLeave={e => { if(!isFiltered){e.currentTarget.style.background='transparent';e.currentTarget.style.color=T.primaryDark;e.currentTarget.style.borderColor='transparent';} }}>
+                          {isFiltered?'🔽':'▾'}
                         </button>
                       </div>
                     </th>
                   );
                 })}
-                {/* Sticky Edit header */}
                 <th className="sticky-edit" style={{ ...TH_BASE, right:0, borderLeft:`2px solid ${T.primaryMid}`, textAlign:'center', width:94, minWidth:94, boxShadow:'-3px 0 8px rgba(0,0,0,0.06)' }}>
                   <div style={{ padding:'9px 10px' }}>Åtgärd</div>
                 </th>
@@ -603,17 +760,16 @@ function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, ed
               {paged.length === 0
                 ? <tr><td colSpan={columns.length+1} style={{ padding:48, textAlign:'center', color:T.muted }}>Inga poster hittades</td></tr>
                 : paged.map((row, i) => {
-                    const bg = i % 2 === 0 ? T.white : '#FAFAFA';
+                    const bg = i%2===0 ? T.white : '#FAFAFA';
                     return (
-                      <tr key={row[idKey] ?? i} style={{ backgroundColor:bg, borderTop:`1px solid ${T.border}` }}
+                      <tr key={row[idKey]??i} style={{ backgroundColor:bg, borderTop:`1px solid ${T.border}` }}
                         onMouseEnter={e => e.currentTarget.style.backgroundColor='#ECFDF5'}
                         onMouseLeave={e => e.currentTarget.style.backgroundColor=bg}>
                         {columns.map(col => (
                           <td key={col.key} style={{ padding:'9px 14px', whiteSpace:'nowrap', maxWidth:col.maxW||260, overflow:'hidden', textOverflow:'ellipsis', color:T.text }}>
-                            {col.render ? col.render(row[col.key], row) : (row[col.key] != null && row[col.key] !== '' ? String(row[col.key]) : '—')}
+                            {col.render ? col.render(row[col.key], row) : (row[col.key]!=null&&row[col.key]!==''?String(row[col.key]):'—')}
                           </td>
                         ))}
-                        {/* Sticky Edit cell */}
                         <td className="sticky-edit" style={{ right:0, backgroundColor:bg, borderLeft:`2px solid ${T.border}`, padding:'7px 10px', textAlign:'center', width:94, minWidth:94, boxShadow:'-3px 0 8px rgba(0,0,0,0.05)' }}
                           onMouseEnter={e => e.currentTarget.style.backgroundColor='#ECFDF5'}
                           onMouseLeave={e => e.currentTarget.style.backgroundColor=bg}>
@@ -632,20 +788,13 @@ function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, ed
           </table>
         </div>
       </div>
-
-      {/* Pagination */}
       {pages > 1 && (
         <div style={{ display:'flex', gap:5, marginTop:12, justifyContent:'flex-end', alignItems:'center' }}>
-          <button onClick={() => setPage(p => Math.max(0,p-1))} disabled={safePg===0}
-            style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===0?T.muted:T.text, fontSize:13 }}>‹</button>
+          <button onClick={() => setPage(p => Math.max(0,p-1))} disabled={safePg===0} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===0?T.muted:T.text, fontSize:13 }}>‹</button>
           {Array.from({ length:Math.min(pages,8) }, (_,i) => (
-            <button key={i} onClick={() => setPage(i)}
-              style={{ width:30, height:30, borderRadius:6, border:`1px solid ${i===safePg?T.primary:T.border}`, background:i===safePg?T.primary:T.white, color:i===safePg?'#fff':T.text, fontSize:12, fontWeight:i===safePg?700:400 }}>
-              {i+1}
-            </button>
+            <button key={i} onClick={() => setPage(i)} style={{ width:30, height:30, borderRadius:6, border:`1px solid ${i===safePg?T.primary:T.border}`, background:i===safePg?T.primary:T.white, color:i===safePg?'#fff':T.text, fontSize:12, fontWeight:i===safePg?700:400 }}>{i+1}</button>
           ))}
-          <button onClick={() => setPage(p => Math.min(pages-1,p+1))} disabled={safePg===pages-1}
-            style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===pages-1?T.muted:T.text, fontSize:13 }}>›</button>
+          <button onClick={() => setPage(p => Math.min(pages-1,p+1))} disabled={safePg===pages-1} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===pages-1?T.muted:T.text, fontSize:13 }}>›</button>
         </div>
       )}
     </>
@@ -679,10 +828,240 @@ function ViewShell({ stats, children }) {
 }
 
 /* ════════════════════════════
+   BOOKING CARD LIST
+════════════════════════════ */
+function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, onDateRangeChange }) {
+  const [q, setQ]           = useState('');
+  const [page, setPage]     = useState(0);
+  const [viewRow, setViewRow] = useState(null);
+
+  const filtered = useMemo(() => {
+    const lq = q.toLowerCase();
+    return rows.filter(r => {
+      // Date filter
+      const d = toYMD(r.Date);
+      if (d && dateRange.from && dateRange.to) {
+        if (d < dateRange.from || d > dateRange.to) return false;
+      }
+      // Text search
+      if (lq && !Object.values(r).some(v => String(v).toLowerCase().includes(lq))) return false;
+      return true;
+    });
+  }, [rows, q, dateRange]);
+
+  const pages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePg = Math.min(page, pages - 1);
+  const paged  = filtered.slice(safePg * PAGE_SIZE, (safePg + 1) * PAGE_SIZE);
+
+  return (
+    <>
+      {/* Modal */}
+      {viewRow && (
+        <ViewEditModal
+          row={viewRow} title={`Bokning — ${viewRow.unique_ID}`}
+          onClose={() => setViewRow(null)}
+          onSave={async updated => { await onSave('unique_ID', viewRow.unique_ID, updated); setViewRow({...viewRow, ...updated}); }}
+          cleaners={[]} cleanerFieldKeys={[]}
+        />
+      )}
+
+      {/* Toolbar */}
+      <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14, flexWrap:'wrap' }}>
+        <DateRangePicker from={dateRange.from} to={dateRange.to} onChange={onDateRangeChange} />
+        <div style={{ position:'relative', flex:'1 1 180px', maxWidth:260 }}>
+          <span style={{ position:'absolute', left:9, top:'50%', transform:'translateY(-50%)', color:T.muted, fontSize:12, pointerEvents:'none' }}>🔍</span>
+          <input value={q} onChange={e => { setQ(e.target.value); setPage(0); }} placeholder="Sök bokningar..."
+            style={{ paddingLeft:30, paddingRight:10, paddingTop:8, paddingBottom:8, border:`1px solid ${T.border}`, borderRadius:8, fontSize:13, width:'100%', outline:'none' }}
+            onFocus={e => e.target.style.borderColor=T.primary} onBlur={e => e.target.style.borderColor=T.border} />
+        </div>
+        <span style={{ fontSize:12, color:T.muted }}>{filtered.length} bokningar</span>
+        {loading && <span className="spin" style={{ width:14, height:14, border:`2px solid ${T.border}`, borderTopColor:T.primary, borderRadius:'50%' }} />}
+        {error && <span style={{ fontSize:12, color:T.danger }}>⚠️ {error}</span>}
+        <button onClick={onRefresh}
+          style={{ marginLeft:'auto', padding:'7px 14px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:8, color:T.primaryDark, fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:5 }}
+          onMouseEnter={e => { e.currentTarget.style.background=T.primaryMid; e.currentTarget.style.color='#fff'; }}
+          onMouseLeave={e => { e.currentTarget.style.background=T.primaryLight; e.currentTarget.style.color=T.primaryDark; }}>
+          ↻ Uppdatera
+        </button>
+      </div>
+
+      {/* Cards */}
+      {paged.length === 0 ? (
+        <div style={{ textAlign:'center', padding:48, color:T.muted, fontSize:13 }}>Inga bokningar hittades</div>
+      ) : (
+        paged.map((row, i) => {
+          const price = row.Total_billable_lc ? `${parseFloat(row.Total_billable_lc).toLocaleString('sv-SE')} kr` : '—';
+          return (
+            <div key={row.unique_ID ?? i} className="card-row" onClick={() => setViewRow(row)}>
+              {/* Left accent bar */}
+              <div style={{ width:4, background:T.primary, flexShrink:0 }} />
+              {/* Main content */}
+              <div style={{ flex:1, padding:'14px 16px' }}>
+                <div style={{ fontSize:14, fontWeight:700, color:T.text, marginBottom:3 }}>{row.Name || '—'}</div>
+                <div style={{ fontSize:12, color:T.primaryDark, fontWeight:600, marginBottom:6 }}>{row.Type || '—'}</div>
+                <div style={{ fontSize:12, color:T.muted, marginBottom:2 }}>{row.Address || '—'}</div>
+                <div style={{ fontSize:12, color:T.muted, display:'flex', gap:8 }}>
+                  <span>{row.PostalCode || '—'}</span>
+                  <span>{row.City || '—'}</span>
+                </div>
+              </div>
+              {/* Right side */}
+              <div style={{ padding:'14px 18px', display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', gap:6, flexShrink:0, borderLeft:`1px solid ${T.border}`, minWidth:130 }}>
+                <span style={{ fontSize:11, fontWeight:700, color:T.muted, background:'#F3F4F6', padding:'2px 9px', borderRadius:999, letterSpacing:'0.03em' }}>{row.unique_ID || '—'}</span>
+                <span style={{ fontSize:14, fontWeight:700, color:T.success }}>{price}</span>
+              </div>
+            </div>
+          );
+        })
+      )}
+
+      {/* Pagination */}
+      {pages > 1 && (
+        <div style={{ display:'flex', gap:5, marginTop:14, justifyContent:'flex-end', alignItems:'center' }}>
+          <button onClick={() => setPage(p => Math.max(0,p-1))} disabled={safePg===0} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===0?T.muted:T.text, fontSize:13 }}>‹</button>
+          {Array.from({ length:Math.min(pages,8) }, (_,i) => (
+            <button key={i} onClick={() => setPage(i)} style={{ width:30, height:30, borderRadius:6, border:`1px solid ${i===safePg?T.primary:T.border}`, background:i===safePg?T.primary:T.white, color:i===safePg?'#fff':T.text, fontSize:12, fontWeight:i===safePg?700:400 }}>{i+1}</button>
+          ))}
+          <button onClick={() => setPage(p => Math.min(pages-1,p+1))} disabled={safePg===pages-1} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===pages-1?T.muted:T.text, fontSize:13 }}>›</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ════════════════════════════
+   SHIFT STATUS CIRCLES
+════════════════════════════ */
+function ShiftCircles({ row }) {
+  // Determine how many cleaners there are
+  const cleaners = [];
+  if (row.cleaner_1 && String(row.cleaner_1).trim() !== '' && String(row.cleaner_1).trim() !== '—') cleaners.push(1);
+  if (row.cleaner_2 && String(row.cleaner_2).trim() !== '' && String(row.cleaner_2).trim() !== '—') cleaners.push(2);
+  if (row.cleaner_3 && String(row.cleaner_3).trim() !== '' && String(row.cleaner_3).trim() !== '—') cleaners.push(3);
+  if (cleaners.length === 0) cleaners.push(1); // show at least 1
+
+  return (
+    <div style={{ display:'flex', gap:4, marginTop:4 }}>
+      {cleaners.map(n => {
+        const stamIn  = row[`shift_start_${n}`];
+        const stamOut = row[`shift_end_${n}`];
+        const hasIn  = stamIn  && String(stamIn).trim()  !== '' && String(stamIn).trim()  !== '—' && String(stamIn).trim()  !== 'Loading...';
+        const hasOut = stamOut && String(stamOut).trim() !== '' && String(stamOut).trim() !== '—' && String(stamOut).trim() !== 'Loading...';
+        const emoji = hasOut ? '🟢' : hasIn ? '🟡' : '🔴';
+        return <span key={n} style={{ fontSize:14 }} title={`Städare ${n}: ${hasOut?'Utcheckad':hasIn?'Incheckad':'Ej startad'}`}>{emoji}</span>;
+      })}
+    </div>
+  );
+}
+
+/* ════════════════════════════
+   SHIFT CARD LIST
+════════════════════════════ */
+function ShiftCardList({ rows, loading, error, onRefresh, onSave, cleaners, dateRange, onDateRangeChange }) {
+  const [q, setQ]           = useState('');
+  const [page, setPage]     = useState(0);
+  const [viewRow, setViewRow] = useState(null);
+
+  const filtered = useMemo(() => {
+    const lq = q.toLowerCase();
+    return rows.filter(r => {
+      const d = toYMD(r.date);
+      if (d && dateRange.from && dateRange.to) {
+        if (d < dateRange.from || d > dateRange.to) return false;
+      }
+      if (lq && !Object.values(r).some(v => String(v).toLowerCase().includes(lq))) return false;
+      return true;
+    });
+  }, [rows, q, dateRange]);
+
+  const pages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePg = Math.min(page, pages - 1);
+  const paged  = filtered.slice(safePg * PAGE_SIZE, (safePg + 1) * PAGE_SIZE);
+
+  return (
+    <>
+      {viewRow && (
+        <ViewEditModal
+          row={viewRow} title={`Arbetspass — ${viewRow.shift_id}`}
+          onClose={() => setViewRow(null)}
+          onSave={async updated => { await onSave('shift_id', viewRow.shift_id, updated); setViewRow({...viewRow, ...updated}); }}
+          cleaners={cleaners}
+          cleanerFieldKeys={['cleaner_1','cleaner_2','cleaner_3']}
+        />
+      )}
+
+      {/* Toolbar */}
+      <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14, flexWrap:'wrap' }}>
+        <DateRangePicker from={dateRange.from} to={dateRange.to} onChange={onDateRangeChange} />
+        <div style={{ position:'relative', flex:'1 1 180px', maxWidth:260 }}>
+          <span style={{ position:'absolute', left:9, top:'50%', transform:'translateY(-50%)', color:T.muted, fontSize:12, pointerEvents:'none' }}>🔍</span>
+          <input value={q} onChange={e => { setQ(e.target.value); setPage(0); }} placeholder="Sök arbetspass..."
+            style={{ paddingLeft:30, paddingRight:10, paddingTop:8, paddingBottom:8, border:`1px solid ${T.border}`, borderRadius:8, fontSize:13, width:'100%', outline:'none' }}
+            onFocus={e => e.target.style.borderColor=T.primary} onBlur={e => e.target.style.borderColor=T.border} />
+        </div>
+        <span style={{ fontSize:12, color:T.muted }}>{filtered.length} pass</span>
+        {loading && <span className="spin" style={{ width:14, height:14, border:`2px solid ${T.border}`, borderTopColor:T.primary, borderRadius:'50%' }} />}
+        {error && <span style={{ fontSize:12, color:T.danger }}>⚠️ {error}</span>}
+        <button onClick={onRefresh}
+          style={{ marginLeft:'auto', padding:'7px 14px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:8, color:T.primaryDark, fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:5 }}
+          onMouseEnter={e => { e.currentTarget.style.background=T.primaryMid; e.currentTarget.style.color='#fff'; }}
+          onMouseLeave={e => { e.currentTarget.style.background=T.primaryLight; e.currentTarget.style.color=T.primaryDark; }}>
+          ↻ Uppdatera
+        </button>
+      </div>
+
+      {/* Cards */}
+      {paged.length === 0 ? (
+        <div style={{ textAlign:'center', padding:48, color:T.muted, fontSize:13 }}>Inga arbetspass hittades</div>
+      ) : (
+        paged.map((row, i) => {
+          const dateStr  = renderDate(row.date);
+          const startStr = renderTime(row.start_time);
+          const endStr   = renderTime(row.end_time);
+          return (
+            <div key={row.shift_id ?? i} className="card-row" onClick={() => setViewRow(row)}>
+              {/* Left accent */}
+              <div style={{ width:4, background:T.info, flexShrink:0 }} />
+              {/* Main content */}
+              <div style={{ flex:1, padding:'14px 16px' }}>
+                <div style={{ fontSize:14, fontWeight:700, color:T.text, marginBottom:3 }}>{row.shift_id || '—'}</div>
+                <div style={{ fontSize:12, color:T.info, fontWeight:600, marginBottom:5 }}>{row.type || '—'}</div>
+                <div style={{ fontSize:12, color:T.muted, marginBottom:2 }}>{row.Address || '—'}</div>
+                <div style={{ fontSize:12, color:T.muted, display:'flex', gap:8 }}>
+                  <span>{row.PostalCode || '—'}</span>
+                  <span>{row.City || '—'}</span>
+                </div>
+                <ShiftCircles row={row} />
+              </div>
+              {/* Right side */}
+              <div style={{ padding:'14px 18px', display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', gap:5, flexShrink:0, borderLeft:`1px solid ${T.border}`, minWidth:130 }}>
+                <span style={{ fontSize:13, fontWeight:700, color:T.text }}>{dateStr}</span>
+                <span style={{ fontSize:12, color:T.muted, fontWeight:600 }}>{startStr} – {endStr}</span>
+              </div>
+            </div>
+          );
+        })
+      )}
+
+      {/* Pagination */}
+      {pages > 1 && (
+        <div style={{ display:'flex', gap:5, marginTop:14, justifyContent:'flex-end', alignItems:'center' }}>
+          <button onClick={() => setPage(p => Math.max(0,p-1))} disabled={safePg===0} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===0?T.muted:T.text, fontSize:13 }}>‹</button>
+          {Array.from({ length:Math.min(pages,8) }, (_,i) => (
+            <button key={i} onClick={() => setPage(i)} style={{ width:30, height:30, borderRadius:6, border:`1px solid ${i===safePg?T.primary:T.border}`, background:i===safePg?T.primary:T.white, color:i===safePg?'#fff':T.text, fontSize:12, fontWeight:i===safePg?700:400 }}>{i+1}</button>
+          ))}
+          <button onClick={() => setPage(p => Math.min(pages-1,p+1))} disabled={safePg===pages-1} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===pages-1?T.muted:T.text, fontSize:13 }}>›</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ════════════════════════════
    VIEWS
 ════════════════════════════ */
 
-/* 1. Bokningsförfrågningar — iframe only */
+/* 1. Bokningsförfrågningar */
 function BookingRequests() {
   const [iframeH, setIframeH] = useState(640);
   return (
@@ -710,7 +1089,7 @@ function Tickets() {
   return (
     <ViewShell stats={[
       { label:'Totalt ärenden',   value:data.length, emoji:'🎫', color:T.info },
-      { label:'Obesvarade',       value:data.filter(r => !r.Answered || r.Answered==='Nej').length, emoji:'❗', color:T.danger, sub:'Kräver svar' },
+      { label:'Obesvarade',       value:data.filter(r => !r.Answered||r.Answered==='Nej').length, emoji:'❗', color:T.danger, sub:'Kräver svar' },
       { label:'Under behandling', value:data.filter(r => r.Answered==='Under behandling').length, emoji:'🔄', color:T.warning },
     ]}>
       <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
@@ -729,49 +1108,22 @@ function Tickets() {
   );
 }
 
-/* 3. Bokningar */
+/* 3. Bokningar — CARD LAYOUT */
 function BookedData() {
   const { data, loading, error, refresh, saveRow } = useSheetData('bookedData', 'booking_data');
+  const [dateRange, setDateRange] = useState(getMonthRange);
   const totalRev = data.reduce((s,r) => s + (parseFloat(r.Total_billable_lc)||0), 0);
   return (
     <ViewShell stats={[
-      { label:'Totalt bokningar', value:data.length, emoji:'📅', color:T.primary },
-      { label:'Hemstädning',      value:data.filter(r => r.Type==='Hemstädning').length, emoji:'🏠', color:T.info },
-      { label:'Flytt / Storstäd', value:data.filter(r => ['Storstädning','Flyttstädning','Speciell Flyttstädning','Flyttstädning 0-50 kvm','Flyttstädning 50+ kvm'].includes(r.Type)).length, emoji:'📦', color:T.warning },
+      { label:'Totalt bokningar',   value:data.length, emoji:'📅', color:T.primary },
+      { label:'Hemstädning',        value:data.filter(r => r.Type==='Hemstädning').length, emoji:'🏠', color:T.info },
+      { label:'Flytt / Storstäd',   value:data.filter(r => ['Storstädning','Flyttstädning','Speciell Flyttstädning','Flyttstädning 0-50 kvm','Flyttstädning 50+ kvm'].includes(r.Type)).length, emoji:'📦', color:T.warning },
       { label:'Total intäkt (efter RUT)', value:totalRev.toLocaleString('sv-SE')+' kr', emoji:'💰', color:T.success },
     ]}>
-      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
-        idKey="unique_ID" onSave={saveRow} editTitle="Bokningar — booking_data"
-        columns={[
-          { key:'created_at', label:'Skapad' },
-          { key:'unique_ID',  label:'Boknings-ID' },
-          { key:'Date',       label:'Datum',   render:renderDate },
-          { key:'Time',       label:'Tid',     render:renderTime },
-          { key:'Type',       label:'Tjänst' },
-          { key:'Duration_h', label:'Timmar',  render:v => v ? `${v} h` : '—' },
-          { key:'Frequency',  label:'Frekvens' },
-          { key:'Name',       label:'Kund' },
-          { key:'Phone',      label:'Telefon' },
-          { key:'Email',      label:'Email' },
-          { key:'City',       label:'Stad' },
-          { key:'Cleaning_supplies', label:'Städmat.',    render:v => <Badge val={v} />, noSort:true },
-          { key:'Ironing_1h',        label:'Strykning',   render:v => <Badge val={v} />, noSort:true },
-          { key:'Fridge_oven',       label:'Kylskåp/ugn', render:v => <Badge val={v} />, noSort:true },
-          { key:'Total_price_for_service',  label:'Tjänstpris',       render:v => v ? `${v} kr` : '—' },
-          { key:'Add_services_total_price', label:'Tilläggstjänster', render:v => v ? `${v} kr` : '—' },
-          { key:'Discount_amount',          label:'Rabatt',           render:v => v ? `${v} kr` : '—' },
-          { key:'Subtotal_ex_VAT',          label:'Subtotal ex. moms',render:v => v ? `${v} kr` : '—' },
-          { key:'VAT_25:percent',           label:'Moms 25%',         render:v => v ? `${v} kr` : '—' },
-          { key:'Subtotal',                 label:'Subtotal',         render:v => v ? `${v} kr` : '—' },
-          { key:'RUT_reduction_50_percent', label:'RUT 50%',          render:v => v ? `${v} kr` : '—' },
-          { key:'Admin_fee',                label:'Adm.avgift',       render:v => v ? `${v} kr` : '—' },
-          { key:'Total_billable_lc',        label:'Att betala',       render:v => v ? `${v} kr` : '—' },
-          { key:'Customer_id',     label:'Kund-ID' },
-          { key:'Discount_code',   label:'Rabattkod' },
-          { key:'Discount_percent',label:'Rabatt %', render:v => v ? `${v*100}%` : '—' },
-          { key:'Discount_exparation', label:'Rabatt giltig t.o.m.' },
-          { key:'Comments', label:'Kommentar' },
-        ]}
+      <BookingCardList
+        rows={data} loading={loading} error={error}
+        onRefresh={refresh} onSave={saveRow}
+        dateRange={dateRange} onDateRangeChange={setDateRange}
       />
     </ViewShell>
   );
@@ -782,10 +1134,10 @@ function Customers() {
   const { data, loading, error, refresh, saveRow } = useSheetData('customers', 'customer_data');
   return (
     <ViewShell stats={[
-      { label:'Totalt kunder',         value:data.length, emoji:'👥', color:T.primary },
-      { label:'Aktiva kontrakt',        value:data.filter(r => r.Is_contract_active==='Ja').length, emoji:'📝', color:T.success },
-      { label:'Utan aktivt kontrakt',   value:data.filter(r => r.Is_contract_active!=='Ja').length, emoji:'⚠️', color:T.warning },
-      { label:'Städer',                 value:[...new Set(data.map(r => r.City).filter(Boolean))].length, emoji:'🏙️', color:T.info },
+      { label:'Totalt kunder',       value:data.length, emoji:'👥', color:T.primary },
+      { label:'Aktiva kontrakt',     value:data.filter(r => r.Is_contract_active==='Ja').length, emoji:'📝', color:T.success },
+      { label:'Utan aktivt kontrakt',value:data.filter(r => r.Is_contract_active!=='Ja').length, emoji:'⚠️', color:T.warning },
+      { label:'Städer',              value:[...new Set(data.map(r => r.City).filter(Boolean))].length, emoji:'🏙️', color:T.info },
     ]}>
       <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
         idKey="Customer_ID" onSave={saveRow} editTitle="Kunder — customer_data"
@@ -798,11 +1150,11 @@ function Customers() {
           { key:'Address',      label:'Adress' },
           { key:'City',         label:'Stad' },
           { key:'PostalCode',   label:'Postnr' },
-          { key:'Is_contract_active',         label:'Kontrakt aktivt', render:v => <Badge val={v} />, noSort:true },
-          { key:'Contract_sent_date',          label:'Kontrakt skickat', render:renderDate },
-          { key:'Contract_start_date',         label:'Kontrakt start',   render:renderDate },
-          { key:'Contract_resignation_date',   label:'Uppsägning',        render:renderDate },
-          { key:'Contract_end_date',           label:'Kontrakt slut',     render:renderDate },
+          { key:'Is_contract_active',       label:'Kontrakt aktivt', render:v => <Badge val={v} />, noSort:true },
+          { key:'Contract_sent_date',        label:'Kontrakt skickat', render:renderDate },
+          { key:'Contract_start_date',       label:'Kontrakt start',   render:renderDate },
+          { key:'Contract_resignation_date', label:'Uppsägning',        render:renderDate },
+          { key:'Contract_end_date',         label:'Kontrakt slut',     render:renderDate },
           { key:'Personnummer', label:'Personnummer' },
           { key:'Signature',    label:'Signatur', render:v => <Badge val={v||'Nej'} />, noSort:true },
         ]}
@@ -824,80 +1176,58 @@ function Employees() {
       <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
         idKey="employee_id" onSave={saveRow} editTitle="Personal — cleaner"
         columns={[
-          { key:'created_at',   label:'Skapad' },
-          { key:'employee_id',  label:'ID' },
-          { key:'Name',         label:'Namn' },
-          { key:'Phone',        label:'Telefon' },
-          { key:'Email',        label:'Email' },
-          { key:'Address',      label:'Adress' },
-          { key:'City',         label:'Stad' },
-          { key:'Postcode',     label:'Postnr' },
-          { key:'is_active',    label:'Aktiv',             render:v => <Badge val={v} />, noSort:true },
-          { key:'Trained',      label:'Utbildad',          render:v => <Badge val={v} />, noSort:true },
+          { key:'created_at',  label:'Skapad' },
+          { key:'employee_id', label:'ID' },
+          { key:'Name',        label:'Namn' },
+          { key:'Phone',       label:'Telefon' },
+          { key:'Email',       label:'Email' },
+          { key:'Address',     label:'Adress' },
+          { key:'City',        label:'Stad' },
+          { key:'Postcode',    label:'Postnr' },
+          { key:'is_active',   label:'Aktiv',             render:v => <Badge val={v} />, noSort:true },
+          { key:'Trained',     label:'Utbildad',          render:v => <Badge val={v} />, noSort:true },
           { key:'uploaded_background_check', label:'Bakgrundskontroll', render:v => <Badge val={v} />, noSort:true },
-          { key:'Payment_rule', label:'Löneregel' },
-          { key:'contract_start_date',  label:'Kontrakt start',  render:renderDate },
-          { key:'6_months_probation',   label:'Provanst. slut',  render:renderDate },
-          { key:'contract_end_date',    label:'Kontrakt slut',   render:renderDate },
-          { key:'Reporting_to_name',    label:'Rapporterar till' },
-          { key:'Reporting_to_phone',   label:'Chef telefon' },
-          { key:'Bank',             label:'Bank' },
-          { key:'Clearing_number',  label:'Clearingnr' },
-          { key:'Account_number',   label:'Kontonr' },
+          { key:'Payment_rule',label:'Löneregel' },
+          { key:'contract_start_date', label:'Kontrakt start', render:renderDate },
+          { key:'6_months_probation',  label:'Provanst. slut', render:renderDate },
+          { key:'contract_end_date',   label:'Kontrakt slut',  render:renderDate },
+          { key:'Reporting_to_name',   label:'Rapporterar till' },
+          { key:'Reporting_to_phone',  label:'Chef telefon' },
+          { key:'Bank',           label:'Bank' },
+          { key:'Clearing_number',label:'Clearingnr' },
+          { key:'Account_number', label:'Kontonr' },
         ]}
       />
     </ViewShell>
   );
 }
 
-/* 6. Arbetspass */
+/* 6. Arbetspass — CARD LAYOUT */
 function Shifts() {
-  const { data, loading, error, refresh, saveRow } = useSheetData('shifts', 'shifts');
-  const today = new Date().toLocaleDateString('sv-SE', { timeZone:'Europe/Stockholm' }); // yyyy-MM-dd in Stockholm
+  const { data, loading, error, refresh, saveRow }           = useSheetData('shifts', 'shifts');
+  const { data: employeeData }                               = useSheetData('employees', 'cleaner');
+  const [dateRange, setDateRange]                            = useState(getMonthRange);
+
+  const cleaners = useMemo(() =>
+    employeeData
+      .filter(e => e.Name && e.Name !== 'Loading...' && e.Email && e.Email !== 'Loading...')
+      .map(e => ({ name: e.Name, email: e.Email })),
+    [employeeData]
+  );
+
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone:'Europe/Stockholm' });
   return (
     <ViewShell stats={[
       { label:'Schemalagda pass',    value:data.length, emoji:'⏰', color:T.primary },
-      { label:'Idag',                value:data.filter(r => r.date===today).length, emoji:'📆', color:T.warning },
+      { label:'Idag',                value:data.filter(r => toYMD(r.date)===today).length, emoji:'📆', color:T.warning },
       { label:'Bekräftelse skickad', value:data.filter(r => r.Confirmation_sent==='Sent').length, emoji:'✅', color:T.success },
-      {
-        // FIX: count rows where Followup_sent is empty/null/undefined (not just !== 'Ja')
-        label:'Uppföljning kvar',
-        value:data.filter(r => !r.Followup_sent || r.Followup_sent.toString().trim() === '').length,
-        emoji:'📤', color:T.info
-      },
+      { label:'Uppföljning kvar',    value:data.filter(r => !r.Followup_sent||r.Followup_sent.toString().trim()==='').length, emoji:'📤', color:T.info },
     ]}>
-      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
-        idKey="shift_id" onSave={saveRow} editTitle="Arbetspass — shifts"
-        columns={[
-          { key:'shift_id',    label:'Pass-ID' },
-          { key:'booking_id',  label:'Boknings-ID' },
-          { key:'customer_id', label:'Kund-ID' },
-          { key:'date',        label:'Datum',  render:renderDate },
-          { key:'start_time',  label:'Start',  render:renderTime },
-          { key:'end_time',    label:'Slut',   render:renderTime },
-          { key:'type',        label:'Tjänst' },
-          { key:'Name',        label:'Kund' },
-          { key:'Phone',       label:'Telefon' },
-          { key:'Address',     label:'Adress' },
-          { key:'City',        label:'Stad' },
-          { key:'Instructions',label:'Instruktioner', maxW:200 },
-          { key:'Cleaning_supplies', label:'Städmat.',  render:v => <Badge val={v} />, noSort:true },
-          { key:'Ironing_1h',        label:'Strykning', render:v => <Badge val={v} />, noSort:true },
-          { key:'Fridge',            label:'Kylskåp',   render:v => <Badge val={v} />, noSort:true },
-          { key:'Window_cleaning',   label:'Fönster',   render:v => <Badge val={v} />, noSort:true },
-          { key:'cleaner_1',    label:'Städare 1' },
-          { key:'cleaner_2',    label:'Städare 2' },
-          { key:'cleaner_3',    label:'Städare 3' },
-          { key:'shift_start_1', label:'Stämplar in 1',  render:renderTime },
-          { key:'shift_end_1',   label:'Stämplar ut 1',  render:renderTime },
-          { key:'shift_start_2', label:'Stämplar in 2',  render:renderTime },
-          { key:'shift_end_2',   label:'Stämplar ut 2',  render:renderTime },
-          { key:'shift_start_3', label:'Stämplar in 3',  render:renderTime },
-          { key:'shift_end_3',   label:'Stämplar ut 3',  render:renderTime },
-          { key:'rating',       label:'Betyg' },
-          { key:'Confirmation_sent', label:'Bekräft. skickad',  render:v => <Badge val={v} />, noSort:true },
-          { key:'Followup_sent',     label:'Uppföljn. skickad', render:v => <Badge val={v||'Nej'} />, noSort:true },
-        ]}
+      <ShiftCardList
+        rows={data} loading={loading} error={error}
+        onRefresh={refresh} onSave={saveRow}
+        cleaners={cleaners}
+        dateRange={dateRange} onDateRangeChange={setDateRange}
       />
     </ViewShell>
   );
