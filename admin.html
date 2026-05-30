@@ -1322,23 +1322,6 @@ function Shifts() {
     </ViewShell>
   );
 }
-  const today = new Date().toLocaleDateString('sv-SE', { timeZone:'Europe/Stockholm' });
-  return (
-    <ViewShell stats={[
-      { label:'Schemalagda pass',    value:data.length, emoji:'⏰', color:T.primary },
-      { label:'Idag',                value:data.filter(r => toYMD(r.date)===today).length, emoji:'📆', color:T.warning },
-      { label:'Bekräftelse skickad', value:data.filter(r => r.Confirmation_sent==='Sent').length, emoji:'✅', color:T.success },
-      { label:'Uppföljning kvar',    value:data.filter(r => !r.Followup_sent||r.Followup_sent.toString().trim()==='').length, emoji:'📤', color:T.info },
-    ]}>
-      <ShiftCardList
-        rows={data} loading={loading} error={error}
-        onRefresh={refresh} onSave={saveRow}
-        cleaners={cleaners}
-        dateRange={dateRange} onDateRangeChange={setDateRange}
-      />
-    </ViewShell>
-  );
-}
 
 /* ════════════════════════════
    NAV
