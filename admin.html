@@ -52,7 +52,6 @@
     transition: box-shadow 0.15s, border-color 0.15s;
   }
   .card-row:hover { box-shadow: 0 4px 18px rgba(0,150,136,0.12); border-color: #80CBC4; }
-  /* Date range picker */
   .date-range-bar {
     display: flex; align-items: center; gap: 8px;
     background: #fff; border: 1px solid #E5E7EB; border-radius: 10px;
@@ -75,9 +74,6 @@
 <script type="text/babel">
 const { useState, useEffect, useMemo, useRef, useCallback } = React;
 
-/* ════════════════════════════
-   CONFIG
-════════════════════════════ */
 const CONFIG = {
   GOOGLE_CLIENT_ID: '362029715087-a2dm4v9gr0g4tda39cqd9pul87s4sq50.apps.googleusercontent.com',
   APPS_SCRIPT_URL:  'https://script.google.com/a/macros/behjarta.com/s/AKfycbwPbyDXmOD0zXQXjNfh1PElVDfOckufbMN-cAviH6AbpliOF0C_IWLyWWeBc5XYMCQL/exec',
@@ -94,26 +90,150 @@ const T = {
   success: '#059669', info: '#2563EB',
 };
 
-/* ════════════════════════════
-   MOCK DATA
-════════════════════════════ */
 const MOCK = {
-  tickets: [
-    { created_at:'Loading...', unique_ID:'Loading...', Name:'Loading...', Phone:'Loading...', Email:'Loading...', Message:'Loading...', Answered:'Loading...' },
-  ],
-  bookedData: [
-    { created_at:'Loading...', unique_ID:'Loading...', Date:'Loading...', Time:'Loading...', Type:'Loading...', Duration_h:0, Frequency:'Loading...', Service_unit_price:0, Total_price_for_service:0, Cleaning_supplies:'Loading...', Ironing_1h:'Loading...', Fridge_oven:'Loading...', s1:0, Single_pane_window:0, Total_s1_price:0, s2:0, Single_pane_window_muntins:0, Total_s2_price:0, d1:0, Double_pane_window:0, Total_d1_price:0, d2:0, Double_pane_window_muntins:0, Total_d2_price:0, t1:0, Triple_pane_window:0, Total_t1_price:0, t2:0, Triple_pane_window_muntins:0, Total_t2_price:0, b1:0, Balcony_door:0, Total_b1_price:0, b2:0, Balcony_door_muntins:0, Total_b2_price:0, Add_services_total_price:0, Deep_cleaning_sqm:0, Deep_cleaning_unit_price:0, Total_price_Deep_cleaning:0, Moving_cleaning_sqm:0, Moving_cleaning_unit_price:0, Total_price_Moving_cleaning:0, Discount_amount:0, Subtotal_ex_VAT:0, 'VAT_25:percent':0, Subtotal:0, RUT_reduction_50_percent:0, Admin_fee:0, Total_billable_lc:0, Name:'Loading...', Phone:'Loading...', Email:'Loading...', Address:'Loading...', City:'Loading...', PostalCode:'Loading...', Comments:'Loading...', Customer_id:'Loading...', Discount_code:'Loading...', Discount_percent:0, Discount_exparation:'Loading...' },
-  ],
-  customers: [
-    { created_at:'Loading...', Customer_ID:'Loading...', Name:'Loading...', Phone:'Loading...', Email:'Loading...', Address:'Loading...', City:'Loading...', PostalCode:'Loading...', lanlot:'Loading...', WKT:'Loading...', Is_contract_active:'Loading...', Contract_sent_date:'Loading...', Contract_start_date:'Loading...', Contract_resignation_date:'Loading...', Contract_end_date:'Loading...', Personnummer:'Loading...', Signature:'Loading...' },
-  ],
-  employees: [
-    { created_at:'Loading...', employee_id:'Loading...', Name:'Loading...', Phone:'Loading...', Email:'Loading...', Address:'Loading...', City:'Loading...', Postcode:'Loading...', uploaded_background_check:'Loading...', Trained:'Loading...', contract_start_date:'Loading...', '6_months_probation':'Loading...', contract_end_date:'Loading...', is_active:'Loading...', Payment_rule:'Loading...', img:'Loading...', Reporting_to:'Loading...', Reporting_to_name:'Loading...', Reporting_to_phone:'Loading...', Reporting_to_mail:'Loading...', Bank:'Loading...', Clearing_number:'Loading...', Account_number:'Loading...' },
-  ],
-  shifts: [
-    { created_at:'Loading...', booking_id:'Loading...', customer_id:'Loading...', Name:'Loading...', Phone:'Loading...', Email:'Loading...', Address:'Loading...', City:'Loading...', PostalCode:'Loading...', Instructions:'Loading...', lanlot:'Loading...', shift_id:'Loading...', type:'Loading...', date:'Loading...', start_time:'Loading...', end_time:'Loading...', Cleaning_supplies:'Loading...', Ironing_1h:'Loading...', Fridge:'Loading...', Window_cleaning:'Loading...', shift_start_1:'Loading...', current_location_1:'Loading...', shift_end_1:'Loading...', shift_start_2:'Loading...', current_location_2:'Loading...', shift_end_2:'Loading...', shift_start_3:'Loading...', current_location_3:'Loading...', shift_end_3:'Loading...', cleaner_1:'Loading...', cleaner_2:'Loading...', cleaner_3:'Loading...', rating:'Loading...', Confirmation_sent:'Loading...', Followup_sent:'Loading...' },
-  ],
+  tickets: [{ created_at:'Loading...', unique_ID:'Loading...', Name:'Loading...', Phone:'Loading...', Email:'Loading...', Message:'Loading...', Answered:'Loading...' }],
+  bookedData: [{ created_at:'Loading...', unique_ID:'Loading...', Date:'Loading...', Time:'Loading...', Type:'Loading...', Duration_h:0, Frequency:'Loading...', Service_unit_price:0, Total_price_for_service:0, Cleaning_supplies:'Loading...', Ironing_1h:'Loading...', Fridge_oven:'Loading...', s1:0, Single_pane_window:0, Total_s1_price:0, s2:0, Single_pane_window_muntins:0, Total_s2_price:0, d1:0, Double_pane_window:0, Total_d1_price:0, d2:0, Double_pane_window_muntins:0, Total_d2_price:0, t1:0, Triple_pane_window:0, Total_t1_price:0, t2:0, Triple_pane_window_muntins:0, Total_t2_price:0, b1:0, Balcony_door:0, Total_b1_price:0, b2:0, Balcony_door_muntins:0, Total_b2_price:0, Add_services_total_price:0, Deep_cleaning_sqm:0, Deep_cleaning_unit_price:0, Total_price_Deep_cleaning:0, Moving_cleaning_sqm:0, Moving_cleaning_unit_price:0, Total_price_Moving_cleaning:0, Discount_amount:0, Subtotal_ex_VAT:0, 'VAT_25:percent':0, Subtotal:0, RUT_reduction_50_percent:0, Admin_fee:0, Total_billable_lc:0, Name:'Loading...', Phone:'Loading...', Email:'Loading...', Address:'Loading...', City:'Loading...', PostalCode:'Loading...', Comments:'Loading...', Customer_id:'Loading...', Discount_code:'Loading...', Discount_percent:0, Discount_exparation:'Loading...' }],
+  customers: [{ created_at:'Loading...', Customer_ID:'Loading...', Name:'Loading...', Phone:'Loading...', Email:'Loading...', Address:'Loading...', City:'Loading...', PostalCode:'Loading...', lanlot:'Loading...', WKT:'Loading...', Is_contract_active:'Loading...', Contract_sent_date:'Loading...', Contract_start_date:'Loading...', Contract_resignation_date:'Loading...', Contract_end_date:'Loading...', Personnummer:'Loading...', Signature:'Loading...' }],
+  employees: [{ created_at:'Loading...', employee_id:'Loading...', Name:'Loading...', Phone:'Loading...', Email:'Loading...', Address:'Loading...', City:'Loading...', Postcode:'Loading...', uploaded_background_check:'Loading...', Trained:'Loading...', contract_start_date:'Loading...', '6_months_probation':'Loading...', contract_end_date:'Loading...', is_active:'Loading...', Payment_rule:'Loading...', img:'Loading...', Reporting_to:'Loading...', Reporting_to_name:'Loading...', Reporting_to_phone:'Loading...', Reporting_to_mail:'Loading...', Bank:'Loading...', Clearing_number:'Loading...', Account_number:'Loading...' }],
+  shifts: [{ created_at:'Loading...', booking_id:'Loading...', customer_id:'Loading...', Name:'Loading...', Phone:'Loading...', Email:'Loading...', Address:'Loading...', City:'Loading...', PostalCode:'Loading...', Instructions:'Loading...', lanlot:'Loading...', shift_id:'Loading...', type:'Loading...', date:'Loading...', start_time:'Loading...', end_time:'Loading...', Cleaning_supplies:'Loading...', Ironing_1h:'Loading...', Fridge:'Loading...', Window_cleaning:'Loading...', shift_start_1:'Loading...', current_location_1:'Loading...', shift_end_1:'Loading...', shift_start_2:'Loading...', current_location_2:'Loading...', shift_end_2:'Loading...', shift_start_3:'Loading...', current_location_3:'Loading...', shift_end_3:'Loading...', cleaner_1:'Loading...', cleaner_2:'Loading...', cleaner_3:'Loading...', rating:'Loading...', Confirmation_sent:'Loading...', Followup_sent:'Loading...' }],
 };
+
+/* ════════════════════════════
+   DATE / TIME HELPERS
+   
+   Core problem: Google Sheets serialises dates as ISO strings like
+   "2026-05-31T00:00:00.000Z" and times as "1899-12-30T08:00:00.000Z".
+   When JavaScript parses these with `new Date()` it treats them as UTC,
+   then any call to getHours() / toLocaleDateString() converts to the
+   browser's local timezone (Europe/Stockholm = UTC+1 or UTC+2 in summer),
+   causing times to appear 1 hour EARLIER and midnight-dates to appear
+   1 day EARLIER.
+
+   Fix: always read the RAW UTC components (getUTC*) – never the local ones.
+════════════════════════════ */
+
+/** Render a date value as yyyy-MM-dd, always using UTC parts. */
+function renderDate(val) {
+  if (val == null || val === '') return '—';
+  const s = String(val).trim();
+  // Already a plain yyyy-MM-dd string → use as-is
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // ISO datetime or Sheets epoch → parse and read UTC date parts
+  const d = new Date(s.includes('T') ? s : s.replace(' ', 'T'));
+  if (isNaN(d)) return s;
+  const y  = d.getUTCFullYear();
+  const mo = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dy = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${mo}-${dy}`;
+}
+
+/** Render a time value as HH:mm, always using UTC parts (Sheets stores
+ *  time-only values as a 1899-12-30T... UTC epoch). */
+function renderTime(val) {
+  if (val == null || val === '') return '—';
+  const s = String(val).trim();
+  // Already plain HH:mm or HH:mm:ss
+  if (/^\d{2}:\d{2}/.test(s)) return s.slice(0, 5);
+  if (s.includes('T')) {
+    const d = new Date(s);
+    if (isNaN(d)) return s;
+    // Always read UTC hours/minutes – this is correct for both the
+    // Sheets time epoch (1899-12-30) and for real datetimes sent as UTC.
+    const hh = String(d.getUTCHours()).padStart(2, '0');
+    const mm = String(d.getUTCMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  }
+  return s.slice(0, 5);
+}
+
+/** Convert any date-ish value to a plain yyyy-MM-dd string (for filtering
+ *  and date-input population), always using UTC parts. */
+function toYMD(val) {
+  if (!val || val === '—') return '';
+  const s = String(val).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const d = new Date(s.includes('T') ? s : s.replace(' ', 'T'));
+  if (isNaN(d)) return '';
+  const y  = d.getUTCFullYear();
+  const mo = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dy = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${mo}-${dy}`;
+}
+
+/** Convert any time-ish value to a plain HH:mm string for time-input
+ *  population, always using UTC parts. */
+function toHHMM(val) {
+  if (!val || val === '—') return '';
+  const s = String(val).trim();
+  if (/^\d{2}:\d{2}/.test(s)) return s.slice(0, 5);
+  if (s.includes('T')) {
+    const d = new Date(s);
+    if (isNaN(d)) return '';
+    return `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
+  }
+  return s.slice(0, 5);
+}
+
+/* ════════════════════════════
+   FIELD CLASSIFICATION
+════════════════════════════ */
+const DATE_KEYS = new Set([
+  'Date','Contract_sent_date','Contract_start_date',
+  'Contract_resignation_date','Contract_end_date','contract_start_date',
+  '6_months_probation','contract_end_date','Discount_exparation','date'
+]);
+const TIME_KEYS = new Set([
+  'Time','start_time','end_time',
+  'shift_start_1','shift_end_1','shift_start_2','shift_end_2','shift_start_3','shift_end_3'
+]);
+// created_at is a full datetime – keep it read-only, no conversion needed for saving
+const READONLY_FIELDS = new Set(['created_at']);
+const LONG_FIELDS     = new Set(['Message','Comments','Instructions','WKT','lanlot']);
+
+/** Return the clean display value for a field when populating an edit input.
+ *  – date fields  → yyyy-MM-dd   (from UTC parts)
+ *  – time fields  → HH:mm        (from UTC parts)
+ *  – everything else → raw string
+ */
+function editValue(key, val) {
+  if (val == null || val === '') return '';
+  if (DATE_KEYS.has(key)) return toYMD(val) || String(val);
+  if (TIME_KEYS.has(key)) return toHHMM(val) || String(val);
+  return String(val);
+}
+
+/* ════════════════════════════
+   FORMAT ROW FOR SAVE
+   Normalises edited values back to the format Sheets expects.
+════════════════════════════ */
+function formatForSheet(key, val) {
+  if (val == null || val === '') return val;
+  const s = String(val).trim();
+  if (TIME_KEYS.has(key)) {
+    if (/^\d{2}:\d{2}(:\d{2})?$/.test(s)) return s.length === 5 ? s + ':00' : s;
+    if (s.includes('T')) {
+      const timePart = s.split('T')[1] || '';
+      return timePart.slice(0, 8) || s;
+    }
+    return s;
+  }
+  if (DATE_KEYS.has(key)) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    if (s.includes('T')) return s.split('T')[0];
+    const d = new Date(s.replace(' ', 'T'));
+    if (!isNaN(d)) {
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+    }
+    return s;
+  }
+  return val;
+}
+
+function formatRowForSheet(row) {
+  const out = {};
+  for (const [k, v] of Object.entries(row)) out[k] = formatForSheet(k, v);
+  return out;
+}
 
 /* ════════════════════════════
    API HELPERS — JSONP
@@ -175,110 +295,6 @@ function Badge({ val }) {
 }
 
 /* ════════════════════════════
-   DATE / TIME HELPERS
-════════════════════════════ */
-function renderDate(val) {
-  if (val == null || val === '') return '—';
-  const s = String(val).trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  const d = new Date(s.includes('T') ? s : s.replace(' ', 'T'));
-  if (isNaN(d)) return s;
-  return d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' });
-}
-function renderTime(val) {
-  if (val == null || val === '') return '—';
-  const s = String(val).trim();
-  if (/^\d{2}:\d{2}/.test(s)) return s.slice(0, 5);
-  if (s.includes('T')) {
-    if (s.startsWith('1899-12-30') || s.startsWith('1899-12-29')) return s.split('T')[1].slice(0, 5);
-    const d = new Date(s);
-    if (isNaN(d)) return s;
-    return d.toLocaleTimeString('sv-SE', { hour:'2-digit', minute:'2-digit', timeZone:'Europe/Stockholm' });
-  }
-  return s.slice(0, 5);
-}
-
- /* ════════════════════════════
-   FORMAT ROW FOR SAVE
-   Normalises date/time/datetime fields before writing back to the sheet.
-   - date fields  → yyyy-MM-dd
-   - time fields  → HH:mm:ss
-   - datetime fields → M/d/yyyy HH:mm:ss
-════════════════════════════ */
-const DATE_KEYS = new Set([
-  'Date','created_at','Contract_sent_date','Contract_start_date',
-  'Contract_resignation_date','Contract_end_date','contract_start_date',
-  '6_months_probation','contract_end_date','Discount_exparation','date'
-]);
-const TIME_KEYS = new Set([
-  'Time','start_time','end_time',
-  'shift_start_1','shift_end_1','shift_start_2','shift_end_2','shift_start_3','shift_end_3'
-]);
-const DATETIME_KEYS = new Set(['created_at']); // add more if needed
-
-function formatForSheet(key, val) {
-  if (val == null || val === '') return val;
-  const s = String(val).trim();
-
-  if (TIME_KEYS.has(key)) {
-    // Already clean HH:mm or HH:mm:ss
-    if (/^\d{2}:\d{2}(:\d{2})?$/.test(s)) return s.length === 5 ? s + ':00' : s;
-    // Sheets epoch 1899-12-30THH:mm:ss.000Z
-    if (s.includes('T')) {
-      const timePart = s.split('T')[1] || '';
-      const hms = timePart.slice(0, 8); // HH:mm:ss
-      return hms || s;
-    }
-    return s;
-  }
-
-  if (DATE_KEYS.has(key) && !DATETIME_KEYS.has(key)) {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-    // ISO datetime → strip time
-    if (s.includes('T')) return s.split('T')[0];
-    // Try parsing
-    const d = new Date(s.replace(' ', 'T'));
-    if (!isNaN(d)) return d.toLocaleDateString('sv-SE', { timeZone:'Europe/Stockholm' }); // yyyy-MM-dd
-    return s;
-  }
-
-  // datetime: M/d/yyyy HH:mm:ss  (Sheets default import format)
-  if (DATETIME_KEYS.has(key)) {
-    const d = new Date(s.includes('T') ? s : s.replace(' ', 'T'));
-    if (!isNaN(d)) {
-      const mo = d.getMonth() + 1;
-      const dy = d.getDate();
-      const yr = d.getFullYear();
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mm = String(d.getMinutes()).padStart(2,'0');
-      const ss = String(d.getSeconds()).padStart(2,'0');
-      return `${mo}/${dy}/${yr} ${hh}:${mm}:${ss}`;
-    }
-    return s;
-  }
-
-  return val;
-}
-
-function formatRowForSheet(row) {
-  const out = {};
-  for (const [k, v] of Object.entries(row)) {
-    out[k] = formatForSheet(k, v);
-  }
-  return out;
-}
-
-/* parse a date field into a yyyy-MM-dd string or '' */
-function toYMD(val) {
-  if (!val || val === '—') return '';
-  const s = String(val).trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  const d = new Date(s.includes('T') ? s : s.replace(' ', 'T'));
-  if (isNaN(d)) return '';
-  return d.toLocaleDateString('sv-SE', { timeZone:'Europe/Stockholm' });
-}
-
-/* ════════════════════════════
    DATE RANGE PICKER
 ════════════════════════════ */
 function getMonthRange() {
@@ -296,59 +312,39 @@ const SV_DAYS   = ['Mån','Tis','Ons','Tor','Fre','Lör','Sön'];
 
 function MiniCalendar({ year, month, selectedFrom, selectedTo, hoverDate, onDateClick, onDateHover }) {
   const firstDay = new Date(year, month, 1);
-  // Monday-first: 0=Mon..6=Sun
-  let startDow = firstDay.getDay(); // 0=Sun..6=Sat
+  let startDow = firstDay.getDay();
   startDow = startDow === 0 ? 6 : startDow - 1;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const cells = [];
   for (let i = 0; i < startDow; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) {
-    const ymd = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    cells.push(ymd);
+    cells.push(`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
   }
-
   const inRange = (ymd) => {
-    if (!ymd) return false;
-    const lo = selectedFrom || '';
-    const hi = (hoverDate && selectedFrom && !selectedTo)
-      ? (hoverDate >= selectedFrom ? hoverDate : selectedFrom)
-      : (selectedTo || '');
-    const hiReal = (hoverDate && selectedFrom && !selectedTo)
-      ? (hoverDate >= selectedFrom ? hoverDate : selectedFrom)
-      : selectedTo;
-    if (!lo || !hiReal) return false;
-    return ymd > lo && ymd < hiReal;
+    if (!ymd || !selectedFrom) return false;
+    const hi = (hoverDate && !selectedTo && hoverDate >= selectedFrom) ? hoverDate : selectedTo;
+    if (!hi) return false;
+    return ymd > selectedFrom && ymd < hi;
   };
-  const isFrom  = ymd => ymd && ymd === selectedFrom;
-  const isTo    = ymd => ymd && ymd === selectedTo;
-  const isHov   = ymd => ymd && !selectedTo && hoverDate === ymd && selectedFrom;
-
+  const isFrom = ymd => ymd && ymd === selectedFrom;
+  const isTo   = ymd => ymd && ymd === selectedTo;
+  const isHov  = ymd => ymd && !selectedTo && hoverDate === ymd && selectedFrom;
   return (
     <div style={{ width:220 }}>
-      <div style={{ textAlign:'center', fontWeight:700, fontSize:13, color:T.text, marginBottom:10 }}>
-        {SV_MONTHS[month]} {year}
-      </div>
+      <div style={{ textAlign:'center', fontWeight:700, fontSize:13, color:T.text, marginBottom:10 }}>{SV_MONTHS[month]} {year}</div>
       <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:2, marginBottom:4 }}>
-        {SV_DAYS.map(d => (
-          <div key={d} style={{ textAlign:'center', fontSize:10, fontWeight:700, color:T.muted }}>{d}</div>
-        ))}
+        {SV_DAYS.map(d => <div key={d} style={{ textAlign:'center', fontSize:10, fontWeight:700, color:T.muted }}>{d}</div>)}
       </div>
       <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:2 }}>
         {cells.map((ymd, i) => {
           if (!ymd) return <div key={`e${i}`} />;
-          const from  = isFrom(ymd);
-          const to    = isTo(ymd);
-          const range = inRange(ymd);
-          const hov   = isHov(ymd);
-          let bg = 'transparent', color = T.text, br = 6, fw = 400;
+          const from = isFrom(ymd), to = isTo(ymd), range = inRange(ymd), hov = isHov(ymd);
+          let bg = 'transparent', color = T.text, fw = 400;
           if (from || to) { bg = T.primary; color = '#fff'; fw = 700; }
           else if (range || hov) { bg = T.primaryLight; color = T.primaryDark; }
           return (
-            <div key={ymd}
-              onClick={() => onDateClick(ymd)}
-              onMouseEnter={() => onDateHover(ymd)}
-              style={{ textAlign:'center', fontSize:12, padding:'5px 2px', borderRadius:br,
-                background:bg, color, fontWeight:fw, cursor:'pointer', transition:'background 0.1s' }}
+            <div key={ymd} onClick={() => onDateClick(ymd)} onMouseEnter={() => onDateHover(ymd)}
+              style={{ textAlign:'center', fontSize:12, padding:'5px 2px', borderRadius:6, background:bg, color, fontWeight:fw, cursor:'pointer', transition:'background 0.1s' }}
               onMouseDown={e => e.preventDefault()}>
               {parseInt(ymd.split('-')[2])}
             </div>
@@ -362,21 +358,17 @@ function MiniCalendar({ year, month, selectedFrom, selectedTo, hoverDate, onDate
 function DateRangePicker({ from, to, onChange }) {
   const [open, setOpen]       = useState(false);
   const [hoverDate, setHover] = useState(null);
-  const [selecting, setSelecting] = useState(false); // false=picking from, true=picking to
+  const [selecting, setSelecting] = useState(false);
   const [tempFrom, setTempFrom]   = useState(from);
   const [tempTo, setTempTo]       = useState(to);
-  const [viewYear1, setVY1]       = useState(() => { const d = new Date(); return d.getFullYear(); });
-  const [viewMonth1, setVM1]      = useState(() => { const d = new Date(); return d.getMonth(); });
+  const [viewYear1, setVY1] = useState(() => new Date().getFullYear());
+  const [viewMonth1, setVM1] = useState(() => new Date().getMonth());
   const popRef = useRef(null);
   const btnRef = useRef(null);
   const [pos, setPos] = useState({ top:0, left:0 });
-
-  // Month 2 is always month1+1
   const month2 = viewMonth1 === 11 ? 0 : viewMonth1 + 1;
   const year2  = viewMonth1 === 11 ? viewYear1 + 1 : viewYear1;
-
   useEffect(() => { setTempFrom(from); setTempTo(to); }, [from, to]);
-
   useEffect(() => {
     if (!open) return;
     const handler = e => {
@@ -385,82 +377,41 @@ function DateRangePicker({ from, to, onChange }) {
     setTimeout(() => document.addEventListener('mousedown', handler), 0);
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
-
   const openPicker = () => {
-    if (btnRef.current) {
-      const r = btnRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + 6, left: r.left });
-    }
-    setSelecting(false);
-    setOpen(o => !o);
+    if (btnRef.current) { const r = btnRef.current.getBoundingClientRect(); setPos({ top:r.bottom+6, left:r.left }); }
+    setSelecting(false); setOpen(o => !o);
   };
-
   const handleDateClick = (ymd) => {
-    if (!selecting) {
-      setTempFrom(ymd); setTempTo(null); setSelecting(true);
-    } else {
-      if (ymd < tempFrom) { setTempFrom(ymd); setTempTo(tempFrom); }
-      else { setTempTo(ymd); }
-      setSelecting(false);
-    }
+    if (!selecting) { setTempFrom(ymd); setTempTo(null); setSelecting(true); }
+    else { if (ymd < tempFrom) { setTempFrom(ymd); setTempTo(tempFrom); } else { setTempTo(ymd); } setSelecting(false); }
   };
-
-  const apply = () => {
-    if (tempFrom && tempTo) { onChange({ from: tempFrom, to: tempTo }); setOpen(false); }
-  };
-  const reset = () => {
-    const def = getMonthRange();
-    setTempFrom(def.from); setTempTo(def.to);
-    onChange(def); setOpen(false);
-  };
-
-  const prevMonth = () => {
-    if (viewMonth1 === 0) { setVM1(11); setVY1(y => y - 1); }
-    else setVM1(m => m - 1);
-  };
-  const nextMonth = () => {
-    if (viewMonth1 === 11) { setVM1(0); setVY1(y => y + 1); }
-    else setVM1(m => m + 1);
-  };
-
-  const label = (from && to)
-    ? `${from}  →  ${to}`
-    : 'Välj datumintervall';
-
+  const apply = () => { if (tempFrom && tempTo) { onChange({ from:tempFrom, to:tempTo }); setOpen(false); } };
+  const reset = () => { const def = getMonthRange(); setTempFrom(def.from); setTempTo(def.to); onChange(def); setOpen(false); };
+  const prevMonth = () => { if (viewMonth1===0){setVM1(11);setVY1(y=>y-1);}else setVM1(m=>m-1); };
+  const nextMonth = () => { if (viewMonth1===11){setVM1(0);setVY1(y=>y+1);}else setVM1(m=>m+1); };
+  const label = (from && to) ? `${from}  →  ${to}` : 'Välj datumintervall';
   return (
     <>
-      <div ref={btnRef} className="date-range-bar" onClick={openPicker}
-        style={{ display:'flex', alignItems:'center', gap:8, minWidth:240 }}>
+      <div ref={btnRef} className="date-range-bar" onClick={openPicker} style={{ display:'flex', alignItems:'center', gap:8, minWidth:240 }}>
         <span style={{ fontSize:14 }}>📅</span>
-        <span style={{ flex:1, fontSize:13, color: (from&&to) ? T.text : T.muted }}>{label}</span>
+        <span style={{ flex:1, fontSize:13, color:(from&&to)?T.text:T.muted }}>{label}</span>
         <span style={{ fontSize:10, color:T.muted }}>▾</span>
       </div>
       {open && ReactDOM.createPortal(
         <div ref={popRef} className="date-picker-popup" style={{ top:pos.top, left:pos.left }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
             <button onClick={prevMonth} style={{ background:'none', border:`1px solid ${T.border}`, borderRadius:7, padding:'4px 10px', color:T.muted, fontSize:14, cursor:'pointer' }}>‹</button>
-            <div style={{ fontSize:12, color:T.muted, fontWeight:600 }}>
-              {selecting ? '📌 Välj slutdatum' : '📌 Välj startdatum'}
-            </div>
+            <div style={{ fontSize:12, color:T.muted, fontWeight:600 }}>{selecting?'📌 Välj slutdatum':'📌 Välj startdatum'}</div>
             <button onClick={nextMonth} style={{ background:'none', border:`1px solid ${T.border}`, borderRadius:7, padding:'4px 10px', color:T.muted, fontSize:14, cursor:'pointer' }}>›</button>
           </div>
           <div style={{ display:'flex', gap:28 }}>
-            <MiniCalendar year={viewYear1} month={viewMonth1}
-              selectedFrom={tempFrom} selectedTo={tempTo} hoverDate={hoverDate}
-              onDateClick={handleDateClick} onDateHover={setHover} />
-            <MiniCalendar year={year2} month={month2}
-              selectedFrom={tempFrom} selectedTo={tempTo} hoverDate={hoverDate}
-              onDateClick={handleDateClick} onDateHover={setHover} />
+            <MiniCalendar year={viewYear1} month={viewMonth1} selectedFrom={tempFrom} selectedTo={tempTo} hoverDate={hoverDate} onDateClick={handleDateClick} onDateHover={setHover} />
+            <MiniCalendar year={year2} month={month2} selectedFrom={tempFrom} selectedTo={tempTo} hoverDate={hoverDate} onDateClick={handleDateClick} onDateHover={setHover} />
           </div>
           <div style={{ display:'flex', gap:8, marginTop:14, paddingTop:12, borderTop:`1px solid ${T.border}`, alignItems:'center' }}>
-            <span style={{ fontSize:12, color:T.muted, flex:1 }}>
-              {tempFrom && tempTo ? `${tempFrom}  →  ${tempTo}` : tempFrom ? `${tempFrom}  →  …` : 'Inget intervall valt'}
-            </span>
+            <span style={{ fontSize:12, color:T.muted, flex:1 }}>{tempFrom&&tempTo?`${tempFrom}  →  ${tempTo}`:tempFrom?`${tempFrom}  →  …`:'Inget intervall valt'}</span>
             <button onClick={reset} style={{ padding:'6px 14px', border:`1px solid ${T.border}`, borderRadius:8, background:'#F9FAFB', color:T.muted, fontSize:12, fontWeight:600, cursor:'pointer' }}>Denna månad</button>
-            <button onClick={apply} disabled={!tempFrom || !tempTo}
-              style={{ padding:'6px 16px', border:'none', borderRadius:8, background:(!tempFrom||!tempTo)?T.border:T.primary, color:'#fff', fontSize:12, fontWeight:600, cursor:(!tempFrom||!tempTo)?'not-allowed':'pointer' }}>
-              Använd
-            </button>
+            <button onClick={apply} disabled={!tempFrom||!tempTo} style={{ padding:'6px 16px', border:'none', borderRadius:8, background:(!tempFrom||!tempTo)?T.border:T.primary, color:'#fff', fontSize:12, fontWeight:600, cursor:(!tempFrom||!tempTo)?'not-allowed':'pointer' }}>Använd</button>
           </div>
         </div>,
         document.body
@@ -470,35 +421,36 @@ function DateRangePicker({ from, to, onChange }) {
 }
 
 /* ════════════════════════════
-   VIEW MODAL (read-only → editable)
+   VIEW/EDIT MODAL
+   Uses editValue() to populate fields so dates/times are always shown
+   in clean yyyy-MM-dd / HH:mm format regardless of what Sheets sent.
 ════════════════════════════ */
-const LONG_FIELDS    = new Set(['Message','Comments','Instructions','WKT','lanlot']);
-const READONLY_FIELDS = new Set(['created_at']);
-
 function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys }) {
   const [editMode, setEditMode] = useState(false);
-  const [form, setForm]         = useState({ ...row });
-  const [saving, setSaving]     = useState(false);
-  const [err, setErr]           = useState('');
+  // Populate form with clean display values right away
+  const [form, setForm] = useState(() => {
+    const out = {};
+    for (const [k, v] of Object.entries(row)) out[k] = editValue(k, v);
+    return out;
+  });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr]       = useState('');
   const keys = Object.keys(row);
 
   const handleSave = async () => {
     setSaving(true); setErr('');
-    try { await onSave(formatRowForSheet(form)); setEditMode(false); } catch(e) { setErr(e.message); }    setSaving(false);
+    try { await onSave(formatRowForSheet(form)); setEditMode(false); } catch(e) { setErr(e.message); }
+    setSaving(false);
   };
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-
-  const isCleanerField = (k) => cleanerFieldKeys && cleanerFieldKeys.includes(k);
+  const isCleanerField = k => cleanerFieldKeys && cleanerFieldKeys.includes(k);
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-box">
-        {/* Header */}
         <div style={{ padding:'18px 24px 15px', borderBottom:`1px solid ${T.border}`, display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
           <div>
-            <div style={{ fontSize:15, fontWeight:700, color:T.text }}>
-              {editMode ? '✎ Redigera' : '🔍 Detaljvy'}
-            </div>
+            <div style={{ fontSize:15, fontWeight:700, color:T.text }}>{editMode ? '✎ Redigera' : '🔍 Detaljvy'}</div>
             <div style={{ fontSize:11, color:T.muted, marginTop:2 }}>{title}</div>
           </div>
           <div style={{ display:'flex', gap:8, alignItems:'center' }}>
@@ -513,8 +465,6 @@ function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys
             <button onClick={onClose} style={{ border:'none', background:'none', fontSize:22, color:T.muted, padding:'0 4px', lineHeight:1 }}>×</button>
           </div>
         </div>
-
-        {/* Body */}
         <div className="modal-body">
           {err && <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', color:T.danger, padding:'8px 12px', borderRadius:8, fontSize:13, marginBottom:14 }}>⚠️ {err}</div>}
           <div className="field-grid">
@@ -522,17 +472,20 @@ function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys
               const isLong    = LONG_FIELDS.has(k);
               const isRO      = READONLY_FIELDS.has(k) || !editMode;
               const isCleaner = isCleanerField(k);
-              const displayLabel = k.replace(/_/g,' ');
+              const isDate    = DATE_KEYS.has(k) && editMode && !READONLY_FIELDS.has(k);
+              const isTime    = TIME_KEYS.has(k) && editMode && !READONLY_FIELDS.has(k);
               return (
                 <div key={k} className={`field-group${isLong?' field-full':''}${isRO?' field-readonly':''}`}>
-                  <label>{displayLabel}</label>
+                  <label>{k.replace(/_/g,' ')}</label>
                   {isCleaner && editMode ? (
                     <select value={form[k]??''} onChange={e => set(k, e.target.value)}>
                       <option value="">— Ingen städare —</option>
-                      {cleaners.map(c => (
-                        <option key={c.email} value={c.email}>{c.name}</option>
-                      ))}
+                      {cleaners.map(c => <option key={c.email} value={c.email}>{c.name}</option>)}
                     </select>
+                  ) : isDate ? (
+                    <input type="date" value={form[k]??''} onChange={e => set(k, e.target.value)} />
+                  ) : isTime ? (
+                    <input type="time" value={form[k]??''} onChange={e => set(k, e.target.value)} />
                   ) : isLong ? (
                     <textarea value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
                   ) : (
@@ -543,15 +496,11 @@ function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys
             })}
           </div>
         </div>
-
-        {/* Footer */}
         <div style={{ padding:'14px 24px', borderTop:`1px solid ${T.border}`, display:'flex', gap:10, justifyContent:'flex-end', flexShrink:0 }}>
           {editMode ? (
             <>
-              <button onClick={() => { setEditMode(false); setForm({...row}); setErr(''); }}
-                style={{ padding:'9px 20px', border:`1px solid ${T.border}`, borderRadius:8, background:T.white, color:T.muted, fontSize:13, fontWeight:600 }}>
-                Avbryt
-              </button>
+              <button onClick={() => { setEditMode(false); setForm(()=>{ const o={}; for(const[k,v] of Object.entries(row)) o[k]=editValue(k,v); return o; }); setErr(''); }}
+                style={{ padding:'9px 20px', border:`1px solid ${T.border}`, borderRadius:8, background:T.white, color:T.muted, fontSize:13, fontWeight:600 }}>Avbryt</button>
               <button onClick={handleSave} disabled={saving}
                 style={{ padding:'9px 22px', border:'none', borderRadius:8, background:T.primary, color:'#fff', fontSize:13, fontWeight:600, display:'flex', alignItems:'center', gap:8, opacity:saving?0.75:1 }}>
                 {saving ? <><span className="spin" style={{ width:13, height:13, border:'2px solid rgba(255,255,255,0.3)', borderTopColor:'#fff', borderRadius:'50%' }} />Sparar...</> : '💾 Spara ändringar'}
@@ -567,12 +516,16 @@ function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys
 }
 
 /* ════════════════════════════
-   EDIT MODAL (classic — for other tables)
+   CLASSIC EDIT MODAL (for other tables)
 ════════════════════════════ */
 function EditModal({ row, title, onClose, onSave }) {
-  const [form, setForm]   = useState({ ...row });
+  const [form, setForm] = useState(() => {
+    const out = {};
+    for (const [k, v] of Object.entries(row)) out[k] = editValue(k, v);
+    return out;
+  });
   const [saving, setSaving] = useState(false);
-  const [err, setErr]     = useState('');
+  const [err, setErr]       = useState('');
   const keys = Object.keys(row);
   const handleSave = async () => {
     setSaving(true); setErr('');
@@ -595,13 +548,20 @@ function EditModal({ row, title, onClose, onSave }) {
             {keys.map(k => {
               const isLong = LONG_FIELDS.has(k);
               const isRO   = READONLY_FIELDS.has(k);
+              const isDate = DATE_KEYS.has(k) && !READONLY_FIELDS.has(k);
+              const isTime = TIME_KEYS.has(k) && !READONLY_FIELDS.has(k);
               return (
                 <div key={k} className={`field-group${isLong?' field-full':''}${isRO?' field-readonly':''}`}>
                   <label>{k.replace(/_/g,' ')}</label>
-                  {isLong
-                    ? <textarea value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
-                    : <input type="text" value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
-                  }
+                  {isDate ? (
+                    <input type="date" value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
+                  ) : isTime ? (
+                    <input type="time" value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
+                  ) : isLong ? (
+                    <textarea value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
+                  ) : (
+                    <input type="text" value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
+                  )}
                 </div>
               );
             })}
@@ -625,18 +585,13 @@ function EditModal({ row, title, onClose, onSave }) {
 function FilterPopover({ colKey, colLabel, allValues, currentFilter, onSort, onSetFilter, onClose, anchor }) {
   const ref = useRef(null);
   const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState(() =>
-    currentFilter ? new Set(currentFilter) : new Set(allValues)
-  );
+  const [selected, setSelected] = useState(() => currentFilter ? new Set(currentFilter) : new Set(allValues));
   useEffect(() => {
     const handler = e => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
     const id = setTimeout(() => document.addEventListener('mousedown', handler), 0);
     return () => { clearTimeout(id); document.removeEventListener('mousedown', handler); };
   }, [onClose]);
-  const displayValues = useMemo(() =>
-    allValues.filter(v => String(v).toLowerCase().includes(search.toLowerCase())),
-    [allValues, search]
-  );
+  const displayValues = useMemo(() => allValues.filter(v => String(v).toLowerCase().includes(search.toLowerCase())), [allValues, search]);
   const allChecked  = displayValues.length > 0 && displayValues.every(v => selected.has(v));
   const someChecked = !allChecked && displayValues.some(v => selected.has(v));
   const toggleValue = v => setSelected(prev => { const next = new Set(prev); next.has(v) ? next.delete(v) : next.add(v); return next; });
@@ -645,22 +600,14 @@ function FilterPopover({ colKey, colLabel, allValues, currentFilter, onSort, onS
   const top  = anchor.bottom + 3;
   const SortBtn = ({ dir, label }) => {
     const [hov, setHov] = useState(false);
-    return (
-      <button onClick={() => { onSort(colKey, dir); onClose(); }} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-        style={{ display:'flex', alignItems:'center', gap:8, width:'100%', padding:'5px 8px', background:hov?T.primaryLight:'transparent', border:'none', borderRadius:6, textAlign:'left', fontSize:13, color:hov?T.primaryDark:T.text, cursor:'pointer', fontFamily:'inherit', fontWeight:500 }}>
-        {label}
-      </button>
-    );
+    return <button onClick={() => { onSort(colKey, dir); onClose(); }} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{ display:'flex', alignItems:'center', gap:8, width:'100%', padding:'5px 8px', background:hov?T.primaryLight:'transparent', border:'none', borderRadius:6, textAlign:'left', fontSize:13, color:hov?T.primaryDark:T.text, cursor:'pointer', fontFamily:'inherit', fontWeight:500 }}>{label}</button>;
   };
   return ReactDOM.createPortal(
     <div ref={ref} style={{ position:'fixed', top, left, width:242, zIndex:999999, background:'#fff', border:`1px solid ${T.border}`, borderRadius:10, boxShadow:'0 10px 36px rgba(0,0,0,0.18)', fontFamily:"'Plus Jakarta Sans',sans-serif", overflow:'hidden' }}>
-      <div style={{ padding:'8px 10px 6px', background:T.primaryLight, borderBottom:`1px solid ${T.border}` }}>
-        <div style={{ fontSize:11, fontWeight:700, color:T.primaryDark, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{colLabel}</div>
-      </div>
+      <div style={{ padding:'8px 10px 6px', background:T.primaryLight, borderBottom:`1px solid ${T.border}` }}><div style={{ fontSize:11, fontWeight:700, color:T.primaryDark, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{colLabel}</div></div>
       <div style={{ padding:'6px 6px 4px', borderBottom:`1px solid ${T.border}` }}>
         <div style={{ fontSize:10, fontWeight:700, color:T.muted, textTransform:'uppercase', letterSpacing:'0.06em', padding:'0 4px 4px' }}>Sortering</div>
-        <SortBtn dir="asc" label="↑  A → Ö  (stigande)" />
-        <SortBtn dir="desc" label="↓  Ö → A  (fallande)" />
+        <SortBtn dir="asc" label="↑  A → Ö  (stigande)" /><SortBtn dir="desc" label="↓  Ö → A  (fallande)" />
       </div>
       <div style={{ padding:'6px 8px 4px' }}>
         <div style={{ fontSize:10, fontWeight:700, color:T.muted, textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:5 }}>Filter</div>
@@ -669,15 +616,10 @@ function FilterPopover({ colKey, colLabel, allValues, currentFilter, onSort, onS
           onFocus={e => e.target.style.borderColor=T.primary} onBlur={e => e.target.style.borderColor=T.border} />
         <div style={{ maxHeight:170, overflowY:'auto', marginRight:-2, paddingRight:2 }}>
           <label style={{ display:'flex', alignItems:'center', gap:7, padding:'4px 4px 5px', borderBottom:`1px solid ${T.border}`, marginBottom:3, cursor:'pointer', fontSize:12, color:T.text, fontWeight:700 }}>
-            <input type="checkbox" checked={allChecked} ref={el => { if (el) el.indeterminate = someChecked; }}
-              onChange={() => { if (allChecked) setSelected(new Set()); else setSelected(new Set(displayValues)); }}
-              style={{ accentColor:T.primary, width:13, height:13, flexShrink:0 }} />
-            (Välj alla)
+            <input type="checkbox" checked={allChecked} ref={el => { if (el) el.indeterminate = someChecked; }} onChange={() => { if (allChecked) setSelected(new Set()); else setSelected(new Set(displayValues)); }} style={{ accentColor:T.primary, width:13, height:13, flexShrink:0 }} />(Välj alla)
           </label>
           {displayValues.map(v => (
-            <label key={v} style={{ display:'flex', alignItems:'center', gap:7, padding:'3px 4px', borderRadius:5, cursor:'pointer', fontSize:12, color:T.text }}
-              onMouseEnter={e => e.currentTarget.style.background=T.primaryLight}
-              onMouseLeave={e => e.currentTarget.style.background='none'}>
+            <label key={v} style={{ display:'flex', alignItems:'center', gap:7, padding:'3px 4px', borderRadius:5, cursor:'pointer', fontSize:12, color:T.text }} onMouseEnter={e => e.currentTarget.style.background=T.primaryLight} onMouseLeave={e => e.currentTarget.style.background='none'}>
               <input type="checkbox" checked={selected.has(v)} onChange={() => toggleValue(v)} style={{ accentColor:T.primary, width:13, height:13, flexShrink:0 }} />
               <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{v}</span>
             </label>
@@ -686,18 +628,8 @@ function FilterPopover({ colKey, colLabel, allValues, currentFilter, onSort, onS
         </div>
       </div>
       <div style={{ padding:'7px 8px 8px', borderTop:`1px solid ${T.border}`, display:'flex', gap:6 }}>
-        <button onClick={() => { onSetFilter(colKey, null); onClose(); }}
-          style={{ flex:1, padding:'6px 8px', border:`1px solid ${T.border}`, borderRadius:7, background:'#F9FAFB', color:T.muted, fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}
-          onMouseEnter={e => { e.currentTarget.style.background='#F3F4F6'; e.currentTarget.style.color=T.text; }}
-          onMouseLeave={e => { e.currentTarget.style.background='#F9FAFB'; e.currentTarget.style.color=T.muted; }}>
-          Rensa
-        </button>
-        <button onClick={applyFilter}
-          style={{ flex:2, padding:'6px 8px', border:'none', borderRadius:7, background:T.primary, color:'#fff', fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }}
-          onMouseEnter={e => e.currentTarget.style.background=T.primaryDark}
-          onMouseLeave={e => e.currentTarget.style.background=T.primary}>
-          Använd filter
-        </button>
+        <button onClick={() => { onSetFilter(colKey, null); onClose(); }} style={{ flex:1, padding:'6px 8px', border:`1px solid ${T.border}`, borderRadius:7, background:'#F9FAFB', color:T.muted, fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }} onMouseEnter={e => { e.currentTarget.style.background='#F3F4F6'; e.currentTarget.style.color=T.text; }} onMouseLeave={e => { e.currentTarget.style.background='#F9FAFB'; e.currentTarget.style.color=T.muted; }}>Rensa</button>
+        <button onClick={applyFilter} style={{ flex:2, padding:'6px 8px', border:'none', borderRadius:7, background:T.primary, color:'#fff', fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }} onMouseEnter={e => e.currentTarget.style.background=T.primaryDark} onMouseLeave={e => e.currentTarget.style.background=T.primary}>Använd filter</button>
       </div>
     </div>,
     document.body
@@ -718,136 +650,79 @@ function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, ed
   const [filters, setFilters]   = useState({});
   const [openFilter, setOpenFilter]     = useState(null);
   const [filterAnchor, setFilterAnchor] = useState(null);
-
   const columnValues = useMemo(() => {
     const result = {};
-    columns.forEach(col => {
-      const vals = [...new Set(rows.map(r => { const v = r[col.key]; return (v==null||v==='') ? '(tom)' : String(v); }))].sort((a,b) => a.localeCompare(b,'sv'));
-      result[col.key] = vals;
-    });
+    columns.forEach(col => { result[col.key] = [...new Set(rows.map(r => { const v=r[col.key]; return (v==null||v==='')?'(tom)':String(v); }))].sort((a,b)=>a.localeCompare(b,'sv')); });
     return result;
   }, [rows, columns]);
-
   const filtered = useMemo(() => {
     const lq = q.toLowerCase();
     return rows.filter(r => {
       if (lq && !Object.values(r).some(v => String(v).toLowerCase().includes(lq))) return false;
       for (const [colKey, allowed] of Object.entries(filters)) {
         if (!allowed) continue;
-        const v = r[colKey]; const sv = (v==null||v==='') ? '(tom)' : String(v);
+        const v=r[colKey]; const sv=(v==null||v==='')?'(tom)':String(v);
         if (!allowed.has(sv)) return false;
       }
       return true;
     });
   }, [rows, q, filters]);
-
   const sorted = useMemo(() => {
     if (!sortCol) return filtered;
-    return [...filtered].sort((a,b) => { const av=String(a[sortCol]??''), bv=String(b[sortCol]??''); return sortDir==='asc' ? av.localeCompare(bv,'sv') : bv.localeCompare(av,'sv'); });
+    return [...filtered].sort((a,b) => { const av=String(a[sortCol]??''),bv=String(b[sortCol]??''); return sortDir==='asc'?av.localeCompare(bv,'sv'):bv.localeCompare(av,'sv'); });
   }, [filtered, sortCol, sortDir]);
-
   const pages  = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const safePg = Math.min(page, pages - 1);
   const paged  = sorted.slice(safePg * PAGE_SIZE, (safePg + 1) * PAGE_SIZE);
-
-  const handleLabelSort = colKey => { setSortDir(prev => sortCol===colKey?(prev==='asc'?'desc':'asc'):'asc'); setSortCol(colKey); setPage(0); };
+  const handleLabelSort   = colKey => { setSortDir(prev => sortCol===colKey?(prev==='asc'?'desc':'asc'):'asc'); setSortCol(colKey); setPage(0); };
   const handlePopoverSort = (colKey, dir) => { setSortCol(colKey); setSortDir(dir); setPage(0); };
-  const handleSetFilter   = (colKey, setOrNull) => { setFilters(prev => ({ ...prev, [colKey]: setOrNull })); setPage(0); };
+  const handleSetFilter   = (colKey, setOrNull) => { setFilters(prev => ({...prev,[colKey]:setOrNull})); setPage(0); };
   const clearAllFilters   = () => { setFilters({}); setPage(0); };
-  const openFilterPopover = (e, colKey) => {
-    e.stopPropagation();
-    if (openFilter === colKey) { setOpenFilter(null); setFilterAnchor(null); return; }
-    setFilterAnchor(e.currentTarget.getBoundingClientRect()); setOpenFilter(colKey);
-  };
-  const activeFilterCount = Object.values(filters).filter(v => v!==null).length;
+  const openFilterPopover = (e, colKey) => { e.stopPropagation(); if(openFilter===colKey){setOpenFilter(null);setFilterAnchor(null);return;} setFilterAnchor(e.currentTarget.getBoundingClientRect()); setOpenFilter(colKey); };
+  const activeFilterCount = Object.values(filters).filter(v=>v!==null).length;
   const TH_BASE = { padding:'0', textAlign:'left', fontSize:11, fontWeight:700, color:T.primaryDark, textTransform:'uppercase', letterSpacing:'0.06em', whiteSpace:'nowrap', background:T.primaryLight, borderBottom:`1px solid ${T.primaryMid}` };
-
   return (
     <>
-      {openFilter && filterAnchor && (
-        <FilterPopover colKey={openFilter} colLabel={columns.find(c=>c.key===openFilter)?.label||openFilter}
-          allValues={columnValues[openFilter]||[]} currentFilter={filters[openFilter]||null}
-          onSort={handlePopoverSort} onSetFilter={handleSetFilter}
-          onClose={() => { setOpenFilter(null); setFilterAnchor(null); }} anchor={filterAnchor} />
-      )}
-      {editRow && (
-        <EditModal row={editRow} title={editTitle} onClose={() => setEditRow(null)}
-          onSave={async updated => { await onSave(idKey, editRow[idKey], updated); setEditRow(null); }} />
-      )}
+      {openFilter && filterAnchor && <FilterPopover colKey={openFilter} colLabel={columns.find(c=>c.key===openFilter)?.label||openFilter} allValues={columnValues[openFilter]||[]} currentFilter={filters[openFilter]||null} onSort={handlePopoverSort} onSetFilter={handleSetFilter} onClose={()=>{setOpenFilter(null);setFilterAnchor(null);}} anchor={filterAnchor} />}
+      {editRow && <EditModal row={editRow} title={editTitle} onClose={()=>setEditRow(null)} onSave={async updated=>{await onSave(idKey,editRow[idKey],updated);setEditRow(null);}} />}
       <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14, flexWrap:'wrap' }}>
         <div style={{ position:'relative', flex:'1 1 200px', maxWidth:280 }}>
           <span style={{ position:'absolute', left:9, top:'50%', transform:'translateY(-50%)', color:T.muted, fontSize:12, pointerEvents:'none' }}>🔍</span>
-          <input value={q} onChange={e => { setQ(e.target.value); setPage(0); }} placeholder="Sök i tabellen..."
-            style={{ paddingLeft:30, paddingRight:10, paddingTop:8, paddingBottom:8, border:`1px solid ${T.border}`, borderRadius:8, fontSize:13, width:'100%', outline:'none', transition:'border-color 0.15s' }}
-            onFocus={e => e.target.style.borderColor=T.primary} onBlur={e => e.target.style.borderColor=T.border} />
+          <input value={q} onChange={e=>{setQ(e.target.value);setPage(0);}} placeholder="Sök i tabellen..." style={{ paddingLeft:30, paddingRight:10, paddingTop:8, paddingBottom:8, border:`1px solid ${T.border}`, borderRadius:8, fontSize:13, width:'100%', outline:'none' }} onFocus={e=>e.target.style.borderColor=T.primary} onBlur={e=>e.target.style.borderColor=T.border} />
         </div>
         <span style={{ fontSize:12, color:T.muted }}>{sorted.length} poster</span>
-        {activeFilterCount > 0 && (
-          <div style={{ display:'flex', alignItems:'center', gap:6, background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:8, padding:'4px 10px', fontSize:12, color:'#92400E', fontWeight:600 }}>
-            <span>🔽 {activeFilterCount} filter aktiva</span>
-            <button onClick={clearAllFilters} style={{ background:'none', border:'none', color:'#92400E', cursor:'pointer', fontWeight:700, fontSize:13, padding:'0 2px', lineHeight:1 }}>×</button>
-          </div>
-        )}
+        {activeFilterCount > 0 && <div style={{ display:'flex', alignItems:'center', gap:6, background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:8, padding:'4px 10px', fontSize:12, color:'#92400E', fontWeight:600 }}><span>🔽 {activeFilterCount} filter aktiva</span><button onClick={clearAllFilters} style={{ background:'none', border:'none', color:'#92400E', cursor:'pointer', fontWeight:700, fontSize:13, padding:'0 2px', lineHeight:1 }}>×</button></div>}
         {loading && <span className="spin" style={{ width:14, height:14, border:`2px solid ${T.border}`, borderTopColor:T.primary, borderRadius:'50%' }} />}
-        {error   && <span style={{ fontSize:12, color:T.danger }}>⚠️ {error}</span>}
-        <button onClick={onRefresh}
-          style={{ marginLeft:'auto', padding:'7px 14px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:8, color:T.primaryDark, fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:5, transition:'all 0.15s' }}
-          onMouseEnter={e => { e.currentTarget.style.background=T.primaryMid; e.currentTarget.style.color='#fff'; }}
-          onMouseLeave={e => { e.currentTarget.style.background=T.primaryLight; e.currentTarget.style.color=T.primaryDark; }}>
-          ↻ Uppdatera
-        </button>
+        {error && <span style={{ fontSize:12, color:T.danger }}>⚠️ {error}</span>}
+        <button onClick={onRefresh} style={{ marginLeft:'auto', padding:'7px 14px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:8, color:T.primaryDark, fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:5 }} onMouseEnter={e=>{e.currentTarget.style.background=T.primaryMid;e.currentTarget.style.color='#fff';}} onMouseLeave={e=>{e.currentTarget.style.background=T.primaryLight;e.currentTarget.style.color=T.primaryDark;}}>↻ Uppdatera</button>
       </div>
       <div style={{ border:`1px solid ${T.border}`, borderRadius:10, overflow:'hidden' }}>
         <div style={{ overflowX:'auto' }}>
           <table style={{ borderCollapse:'collapse', fontSize:13, width:'100%', minWidth:'max-content' }}>
-            <thead>
-              <tr>
-                {columns.map(col => {
-                  const isFiltered = !!(filters[col.key]) && filters[col.key] !== null;
-                  return (
-                    <th key={col.key} style={{ ...TH_BASE }}>
-                      <div style={{ display:'flex', alignItems:'center', padding:'9px 10px 9px 14px', gap:4 }}>
-                        <span onClick={() => !col.noSort && handleLabelSort(col.key)} style={{ flex:1, cursor:col.noSort?'default':'pointer', userSelect:'none' }}>
-                          {col.label}{sortCol===col.key?(sortDir==='asc'?' ↑':' ↓'):''}
-                        </span>
-                        <button onClick={e => openFilterPopover(e, col.key)}
-                          style={{ background:isFiltered?T.primary:'transparent', border:isFiltered?`1px solid ${T.primaryDark}`:'1px solid transparent', borderRadius:5, padding:'1px 4px', cursor:'pointer', color:isFiltered?'#fff':T.primaryDark, fontSize:10, lineHeight:1.4, flexShrink:0, transition:'all 0.12s' }}
-                          onMouseEnter={e => { if(!isFiltered){e.currentTarget.style.background=T.primaryMid;e.currentTarget.style.color='#fff';e.currentTarget.style.borderColor=T.primaryMid;} }}
-                          onMouseLeave={e => { if(!isFiltered){e.currentTarget.style.background='transparent';e.currentTarget.style.color=T.primaryDark;e.currentTarget.style.borderColor='transparent';} }}>
-                          {isFiltered?'🔽':'▾'}
-                        </button>
-                      </div>
-                    </th>
-                  );
-                })}
-                <th className="sticky-edit" style={{ ...TH_BASE, right:0, borderLeft:`2px solid ${T.primaryMid}`, textAlign:'center', width:94, minWidth:94, boxShadow:'-3px 0 8px rgba(0,0,0,0.06)' }}>
-                  <div style={{ padding:'9px 10px' }}>Åtgärd</div>
-                </th>
-              </tr>
-            </thead>
+            <thead><tr>
+              {columns.map(col => {
+                const isFiltered = !!(filters[col.key]) && filters[col.key] !== null;
+                return (
+                  <th key={col.key} style={{ ...TH_BASE }}>
+                    <div style={{ display:'flex', alignItems:'center', padding:'9px 10px 9px 14px', gap:4 }}>
+                      <span onClick={() => !col.noSort && handleLabelSort(col.key)} style={{ flex:1, cursor:col.noSort?'default':'pointer', userSelect:'none' }}>{col.label}{sortCol===col.key?(sortDir==='asc'?' ↑':' ↓'):''}</span>
+                      <button onClick={e=>openFilterPopover(e,col.key)} style={{ background:isFiltered?T.primary:'transparent', border:isFiltered?`1px solid ${T.primaryDark}`:'1px solid transparent', borderRadius:5, padding:'1px 4px', cursor:'pointer', color:isFiltered?'#fff':T.primaryDark, fontSize:10, lineHeight:1.4, flexShrink:0 }} onMouseEnter={e=>{if(!isFiltered){e.currentTarget.style.background=T.primaryMid;e.currentTarget.style.color='#fff';e.currentTarget.style.borderColor=T.primaryMid;}}} onMouseLeave={e=>{if(!isFiltered){e.currentTarget.style.background='transparent';e.currentTarget.style.color=T.primaryDark;e.currentTarget.style.borderColor='transparent';}}}>{isFiltered?'🔽':'▾'}</button>
+                    </div>
+                  </th>
+                );
+              })}
+              <th className="sticky-edit" style={{ ...TH_BASE, right:0, borderLeft:`2px solid ${T.primaryMid}`, textAlign:'center', width:94, minWidth:94, boxShadow:'-3px 0 8px rgba(0,0,0,0.06)' }}><div style={{ padding:'9px 10px' }}>Åtgärd</div></th>
+            </tr></thead>
             <tbody>
               {paged.length === 0
                 ? <tr><td colSpan={columns.length+1} style={{ padding:48, textAlign:'center', color:T.muted }}>Inga poster hittades</td></tr>
                 : paged.map((row, i) => {
-                    const bg = i%2===0 ? T.white : '#FAFAFA';
+                    const bg = i%2===0?T.white:'#FAFAFA';
                     return (
-                      <tr key={row[idKey]??i} style={{ backgroundColor:bg, borderTop:`1px solid ${T.border}` }}
-                        onMouseEnter={e => e.currentTarget.style.backgroundColor='#ECFDF5'}
-                        onMouseLeave={e => e.currentTarget.style.backgroundColor=bg}>
-                        {columns.map(col => (
-                          <td key={col.key} style={{ padding:'9px 14px', whiteSpace:'nowrap', maxWidth:col.maxW||260, overflow:'hidden', textOverflow:'ellipsis', color:T.text }}>
-                            {col.render ? col.render(row[col.key], row) : (row[col.key]!=null&&row[col.key]!==''?String(row[col.key]):'—')}
-                          </td>
-                        ))}
-                        <td className="sticky-edit" style={{ right:0, backgroundColor:bg, borderLeft:`2px solid ${T.border}`, padding:'7px 10px', textAlign:'center', width:94, minWidth:94, boxShadow:'-3px 0 8px rgba(0,0,0,0.05)' }}
-                          onMouseEnter={e => e.currentTarget.style.backgroundColor='#ECFDF5'}
-                          onMouseLeave={e => e.currentTarget.style.backgroundColor=bg}>
-                          <button onClick={() => setEditRow(row)}
-                            style={{ padding:'5px 11px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:7, color:T.primaryDark, fontSize:12, fontWeight:600, whiteSpace:'nowrap', transition:'all 0.13s' }}
-                            onMouseEnter={e => { e.currentTarget.style.background=T.primary; e.currentTarget.style.color='#fff'; e.currentTarget.style.borderColor=T.primary; }}
-                            onMouseLeave={e => { e.currentTarget.style.background=T.primaryLight; e.currentTarget.style.color=T.primaryDark; e.currentTarget.style.borderColor=T.primaryMid; }}>
-                            ✎ Redigera
-                          </button>
+                      <tr key={row[idKey]??i} style={{ backgroundColor:bg, borderTop:`1px solid ${T.border}` }} onMouseEnter={e=>e.currentTarget.style.backgroundColor='#ECFDF5'} onMouseLeave={e=>e.currentTarget.style.backgroundColor=bg}>
+                        {columns.map(col => <td key={col.key} style={{ padding:'9px 14px', whiteSpace:'nowrap', maxWidth:col.maxW||260, overflow:'hidden', textOverflow:'ellipsis', color:T.text }}>{col.render?col.render(row[col.key],row):(row[col.key]!=null&&row[col.key]!==''?String(row[col.key]):'—')}</td>)}
+                        <td className="sticky-edit" style={{ right:0, backgroundColor:bg, borderLeft:`2px solid ${T.border}`, padding:'7px 10px', textAlign:'center', width:94, minWidth:94, boxShadow:'-3px 0 8px rgba(0,0,0,0.05)' }} onMouseEnter={e=>e.currentTarget.style.backgroundColor='#ECFDF5'} onMouseLeave={e=>e.currentTarget.style.backgroundColor=bg}>
+                          <button onClick={()=>setEditRow(row)} style={{ padding:'5px 11px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:7, color:T.primaryDark, fontSize:12, fontWeight:600, whiteSpace:'nowrap' }} onMouseEnter={e=>{e.currentTarget.style.background=T.primary;e.currentTarget.style.color='#fff';e.currentTarget.style.borderColor=T.primary;}} onMouseLeave={e=>{e.currentTarget.style.background=T.primaryLight;e.currentTarget.style.color=T.primaryDark;e.currentTarget.style.borderColor=T.primaryMid;}}>✎ Redigera</button>
                         </td>
                       </tr>
                     );
@@ -859,11 +734,9 @@ function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, ed
       </div>
       {pages > 1 && (
         <div style={{ display:'flex', gap:5, marginTop:12, justifyContent:'flex-end', alignItems:'center' }}>
-          <button onClick={() => setPage(p => Math.max(0,p-1))} disabled={safePg===0} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===0?T.muted:T.text, fontSize:13 }}>‹</button>
-          {Array.from({ length:Math.min(pages,8) }, (_,i) => (
-            <button key={i} onClick={() => setPage(i)} style={{ width:30, height:30, borderRadius:6, border:`1px solid ${i===safePg?T.primary:T.border}`, background:i===safePg?T.primary:T.white, color:i===safePg?'#fff':T.text, fontSize:12, fontWeight:i===safePg?700:400 }}>{i+1}</button>
-          ))}
-          <button onClick={() => setPage(p => Math.min(pages-1,p+1))} disabled={safePg===pages-1} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===pages-1?T.muted:T.text, fontSize:13 }}>›</button>
+          <button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={safePg===0} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===0?T.muted:T.text, fontSize:13 }}>‹</button>
+          {Array.from({length:Math.min(pages,8)},(_,i)=><button key={i} onClick={()=>setPage(i)} style={{ width:30, height:30, borderRadius:6, border:`1px solid ${i===safePg?T.primary:T.border}`, background:i===safePg?T.primary:T.white, color:i===safePg?'#fff':T.text, fontSize:12, fontWeight:i===safePg?700:400 }}>{i+1}</button>)}
+          <button onClick={()=>setPage(p=>Math.min(pages-1,p+1))} disabled={safePg===pages-1} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===pages-1?T.muted:T.text, fontSize:13 }}>›</button>
         </div>
       )}
     </>
@@ -886,11 +759,7 @@ function StatCard({ label, value, sub, color, emoji }) {
 function ViewShell({ stats, children }) {
   return (
     <div className="fade-in">
-      {stats && (
-        <div style={{ display:'grid', gridTemplateColumns:`repeat(${stats.length}, minmax(0,1fr))`, gap:12, marginBottom:20 }}>
-          {stats.map((s,i) => <StatCard key={i} {...s} />)}
-        </div>
-      )}
+      {stats && <div style={{ display:'grid', gridTemplateColumns:`repeat(${stats.length}, minmax(0,1fr))`, gap:12, marginBottom:20 }}>{stats.map((s,i)=><StatCard key={i} {...s}/>)}</div>}
       {children}
     </div>
   );
@@ -903,96 +772,59 @@ function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, o
   const [q, setQ]           = useState('');
   const [page, setPage]     = useState(0);
   const [viewRow, setViewRow] = useState(null);
-
   const filtered = useMemo(() => {
     const lq = q.toLowerCase();
     return rows.filter(r => {
-      // Date filter
       const d = toYMD(r.Date);
-      if (d && dateRange.from && dateRange.to) {
-        if (d < dateRange.from || d > dateRange.to) return false;
-      }
-      // Text search
+      if (d && dateRange.from && dateRange.to) { if (d < dateRange.from || d > dateRange.to) return false; }
       if (lq && !Object.values(r).some(v => String(v).toLowerCase().includes(lq))) return false;
       return true;
     });
   }, [rows, q, dateRange]);
-
   const pages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePg = Math.min(page, pages - 1);
   const paged  = filtered.slice(safePg * PAGE_SIZE, (safePg + 1) * PAGE_SIZE);
-
   return (
     <>
-      {/* Modal */}
-      {viewRow && (
-        <ViewEditModal
-          row={viewRow} title={`Bokning — ${viewRow.unique_ID}`}
-          onClose={() => setViewRow(null)}
-          onSave={async updated => { await onSave('unique_ID', viewRow.unique_ID, updated); setViewRow({...viewRow, ...updated}); }}
-          cleaners={[]} cleanerFieldKeys={[]}
-        />
-      )}
-
-      {/* Toolbar */}
+      {viewRow && <ViewEditModal row={viewRow} title={`Bokning — ${viewRow.unique_ID}`} onClose={()=>setViewRow(null)} onSave={async updated=>{await onSave('unique_ID',viewRow.unique_ID,updated);setViewRow({...viewRow,...updated});}} cleaners={[]} cleanerFieldKeys={[]} />}
       <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14, flexWrap:'wrap' }}>
         <DateRangePicker from={dateRange.from} to={dateRange.to} onChange={onDateRangeChange} />
         <div style={{ position:'relative', flex:'1 1 180px', maxWidth:260 }}>
           <span style={{ position:'absolute', left:9, top:'50%', transform:'translateY(-50%)', color:T.muted, fontSize:12, pointerEvents:'none' }}>🔍</span>
-          <input value={q} onChange={e => { setQ(e.target.value); setPage(0); }} placeholder="Sök bokningar..."
-            style={{ paddingLeft:30, paddingRight:10, paddingTop:8, paddingBottom:8, border:`1px solid ${T.border}`, borderRadius:8, fontSize:13, width:'100%', outline:'none' }}
-            onFocus={e => e.target.style.borderColor=T.primary} onBlur={e => e.target.style.borderColor=T.border} />
+          <input value={q} onChange={e=>{setQ(e.target.value);setPage(0);}} placeholder="Sök bokningar..." style={{ paddingLeft:30, paddingRight:10, paddingTop:8, paddingBottom:8, border:`1px solid ${T.border}`, borderRadius:8, fontSize:13, width:'100%', outline:'none' }} onFocus={e=>e.target.style.borderColor=T.primary} onBlur={e=>e.target.style.borderColor=T.border} />
         </div>
         <span style={{ fontSize:12, color:T.muted }}>{filtered.length} bokningar</span>
         {loading && <span className="spin" style={{ width:14, height:14, border:`2px solid ${T.border}`, borderTopColor:T.primary, borderRadius:'50%' }} />}
         {error && <span style={{ fontSize:12, color:T.danger }}>⚠️ {error}</span>}
-        <button onClick={onRefresh}
-          style={{ marginLeft:'auto', padding:'7px 14px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:8, color:T.primaryDark, fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:5 }}
-          onMouseEnter={e => { e.currentTarget.style.background=T.primaryMid; e.currentTarget.style.color='#fff'; }}
-          onMouseLeave={e => { e.currentTarget.style.background=T.primaryLight; e.currentTarget.style.color=T.primaryDark; }}>
-          ↻ Uppdatera
-        </button>
+        <button onClick={onRefresh} style={{ marginLeft:'auto', padding:'7px 14px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:8, color:T.primaryDark, fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:5 }} onMouseEnter={e=>{e.currentTarget.style.background=T.primaryMid;e.currentTarget.style.color='#fff';}} onMouseLeave={e=>{e.currentTarget.style.background=T.primaryLight;e.currentTarget.style.color=T.primaryDark;}}>↻ Uppdatera</button>
       </div>
-
-      {/* Cards */}
-      {paged.length === 0 ? (
-        <div style={{ textAlign:'center', padding:48, color:T.muted, fontSize:13 }}>Inga bokningar hittades</div>
-      ) : (
-        paged.map((row, i) => {
-          const price = row.Total_billable_lc ? `${parseFloat(row.Total_billable_lc).toLocaleString('sv-SE')} kr` : '—';
-          return (
-            <div key={row.unique_ID ?? i} className="card-row" onClick={() => setViewRow(row)}>
-              {/* Left accent bar */}
-              <div style={{ width:4, background:T.primary, flexShrink:0 }} />
-              {/* Main content */}
-              <div style={{ flex:1, padding:'14px 16px' }}>
-                <div style={{ fontSize:14, fontWeight:700, color:T.text, marginBottom:3 }}>{row.Name || '—'}</div>
-                <div style={{ fontSize:12, color:T.primaryDark, fontWeight:600, marginBottom:6 }}>{row.Type || '—'}</div>
-                <div style={{ fontSize:12, color:T.muted, marginBottom:2 }}>{row.Address || '—'}</div>
-                <div style={{ fontSize:12, color:T.muted, display:'flex', gap:8 }}>
-                  <span>{row.PostalCode || '—'}</span>
-                  <span>{row.City || '—'}</span>
+      {paged.length === 0
+        ? <div style={{ textAlign:'center', padding:48, color:T.muted, fontSize:13 }}>Inga bokningar hittades</div>
+        : paged.map((row, i) => {
+            const price = row.Total_billable_lc ? `${parseFloat(row.Total_billable_lc).toLocaleString('sv-SE')} kr` : '—';
+            return (
+              <div key={row.unique_ID??i} className="card-row" onClick={()=>setViewRow(row)}>
+                <div style={{ width:4, background:T.primary, flexShrink:0 }} />
+                <div style={{ flex:1, padding:'14px 16px' }}>
+                  <div style={{ fontSize:14, fontWeight:700, color:T.text, marginBottom:3 }}>{row.Name||'—'}</div>
+                  <div style={{ fontSize:12, color:T.primaryDark, fontWeight:600, marginBottom:6 }}>{row.Type||'—'}</div>
+                  <div style={{ fontSize:12, color:T.muted, marginBottom:2 }}>{row.Address||'—'}</div>
+                  <div style={{ fontSize:12, color:T.muted, display:'flex', gap:8 }}><span>{row.PostalCode||'—'}</span><span>{row.City||'—'}</span></div>
+                </div>
+                <div style={{ padding:'14px 18px', display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', gap:6, flexShrink:0, borderLeft:`1px solid ${T.border}`, minWidth:130 }}>
+                  <span style={{ fontSize:11, color:T.muted, fontWeight:600 }}>{renderDate(row.Date)}</span>
+                  <span style={{ fontSize:11, fontWeight:700, color:T.muted, background:'#F3F4F6', padding:'2px 9px', borderRadius:999 }}>{row.unique_ID||'—'}</span>
+                  <span style={{ fontSize:14, fontWeight:700, color:T.success }}>{price}</span>
                 </div>
               </div>
-              {/* Right side */}
-              <div style={{ padding:'14px 18px', display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', gap:6, flexShrink:0, borderLeft:`1px solid ${T.border}`, minWidth:130 }}>
-                <span style={{ fontSize:11, color:T.muted, fontWeight:600 }}>{renderDate(row.Date)}</span>
-                <span style={{ fontSize:11, fontWeight:700, color:T.muted, background:'#F3F4F6', padding:'2px 9px', borderRadius:999, letterSpacing:'0.03em' }}>{row.unique_ID || '—'}</span>
-                <span style={{ fontSize:14, fontWeight:700, color:T.success }}>{price}</span>
-              </div>
-            </div>
-          );
-        })
-      )}
-
-      {/* Pagination */}
+            );
+          })
+      }
       {pages > 1 && (
         <div style={{ display:'flex', gap:5, marginTop:14, justifyContent:'flex-end', alignItems:'center' }}>
-          <button onClick={() => setPage(p => Math.max(0,p-1))} disabled={safePg===0} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===0?T.muted:T.text, fontSize:13 }}>‹</button>
-          {Array.from({ length:Math.min(pages,8) }, (_,i) => (
-            <button key={i} onClick={() => setPage(i)} style={{ width:30, height:30, borderRadius:6, border:`1px solid ${i===safePg?T.primary:T.border}`, background:i===safePg?T.primary:T.white, color:i===safePg?'#fff':T.text, fontSize:12, fontWeight:i===safePg?700:400 }}>{i+1}</button>
-          ))}
-          <button onClick={() => setPage(p => Math.min(pages-1,p+1))} disabled={safePg===pages-1} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===pages-1?T.muted:T.text, fontSize:13 }}>›</button>
+          <button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={safePg===0} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===0?T.muted:T.text, fontSize:13 }}>‹</button>
+          {Array.from({length:Math.min(pages,8)},(_,i)=><button key={i} onClick={()=>setPage(i)} style={{ width:30, height:30, borderRadius:6, border:`1px solid ${i===safePg?T.primary:T.border}`, background:i===safePg?T.primary:T.white, color:i===safePg?'#fff':T.text, fontSize:12, fontWeight:i===safePg?700:400 }}>{i+1}</button>)}
+          <button onClick={()=>setPage(p=>Math.min(pages-1,p+1))} disabled={safePg===pages-1} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===pages-1?T.muted:T.text, fontSize:13 }}>›</button>
         </div>
       )}
     </>
@@ -1003,13 +835,11 @@ function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, o
    SHIFT STATUS CIRCLES
 ════════════════════════════ */
 function ShiftCircles({ row }) {
-  // Determine how many cleaners there are
   const cleaners = [];
   if (row.cleaner_1 && String(row.cleaner_1).trim() !== '' && String(row.cleaner_1).trim() !== '—') cleaners.push(1);
   if (row.cleaner_2 && String(row.cleaner_2).trim() !== '' && String(row.cleaner_2).trim() !== '—') cleaners.push(2);
   if (row.cleaner_3 && String(row.cleaner_3).trim() !== '' && String(row.cleaner_3).trim() !== '—') cleaners.push(3);
-  if (cleaners.length === 0) cleaners.push(1); // show at least 1
-
+  if (cleaners.length === 0) cleaners.push(1);
   return (
     <div style={{ display:'flex', gap:4, marginTop:4 }}>
       {cleaners.map(n => {
@@ -1017,8 +847,7 @@ function ShiftCircles({ row }) {
         const stamOut = row[`shift_end_${n}`];
         const hasIn  = stamIn  && String(stamIn).trim()  !== '' && String(stamIn).trim()  !== '—' && String(stamIn).trim()  !== 'Loading...';
         const hasOut = stamOut && String(stamOut).trim() !== '' && String(stamOut).trim() !== '—' && String(stamOut).trim() !== 'Loading...';
-        const emoji = hasOut ? '🟢' : hasIn ? '🟡' : '🔴';
-        return <span key={n} style={{ fontSize:14 }} title={`Städare ${n}: ${hasOut?'Utcheckad':hasIn?'Incheckad':'Ej startad'}`}>{emoji}</span>;
+        return <span key={n} style={{ fontSize:14 }} title={`Städare ${n}: ${hasOut?'Utcheckad':hasIn?'Incheckad':'Ej startad'}`}>{hasOut?'🟢':hasIn?'🟡':'🔴'}</span>;
       })}
     </div>
   );
@@ -1031,96 +860,56 @@ function ShiftCardList({ rows, loading, error, onRefresh, onSave, cleaners, date
   const [q, setQ]           = useState('');
   const [page, setPage]     = useState(0);
   const [viewRow, setViewRow] = useState(null);
-
   const filtered = useMemo(() => {
     const lq = q.toLowerCase();
     return rows.filter(r => {
       const d = toYMD(r.date);
-      if (d && dateRange.from && dateRange.to) {
-        if (d < dateRange.from || d > dateRange.to) return false;
-      }
+      if (d && dateRange.from && dateRange.to) { if (d < dateRange.from || d > dateRange.to) return false; }
       if (lq && !Object.values(r).some(v => String(v).toLowerCase().includes(lq))) return false;
       return true;
     });
   }, [rows, q, dateRange]);
-
   const pages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePg = Math.min(page, pages - 1);
   const paged  = filtered.slice(safePg * PAGE_SIZE, (safePg + 1) * PAGE_SIZE);
-
   return (
     <>
-      {viewRow && (
-        <ViewEditModal
-          row={viewRow} title={`Arbetspass — ${viewRow.shift_id}`}
-          onClose={() => setViewRow(null)}
-          onSave={async updated => { await onSave('shift_id', viewRow.shift_id, updated); setViewRow({...viewRow, ...updated}); }}
-          cleaners={cleaners}
-          cleanerFieldKeys={['cleaner_1','cleaner_2','cleaner_3']}
-        />
-      )}
-
-      {/* Toolbar */}
+      {viewRow && <ViewEditModal row={viewRow} title={`Arbetspass — ${viewRow.shift_id}`} onClose={()=>setViewRow(null)} onSave={async updated=>{await onSave('shift_id',viewRow.shift_id,updated);setViewRow({...viewRow,...updated});}} cleaners={cleaners} cleanerFieldKeys={['cleaner_1','cleaner_2','cleaner_3']} />}
       <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14, flexWrap:'wrap' }}>
         <DateRangePicker from={dateRange.from} to={dateRange.to} onChange={onDateRangeChange} />
         <div style={{ position:'relative', flex:'1 1 180px', maxWidth:260 }}>
           <span style={{ position:'absolute', left:9, top:'50%', transform:'translateY(-50%)', color:T.muted, fontSize:12, pointerEvents:'none' }}>🔍</span>
-          <input value={q} onChange={e => { setQ(e.target.value); setPage(0); }} placeholder="Sök arbetspass..."
-            style={{ paddingLeft:30, paddingRight:10, paddingTop:8, paddingBottom:8, border:`1px solid ${T.border}`, borderRadius:8, fontSize:13, width:'100%', outline:'none' }}
-            onFocus={e => e.target.style.borderColor=T.primary} onBlur={e => e.target.style.borderColor=T.border} />
+          <input value={q} onChange={e=>{setQ(e.target.value);setPage(0);}} placeholder="Sök arbetspass..." style={{ paddingLeft:30, paddingRight:10, paddingTop:8, paddingBottom:8, border:`1px solid ${T.border}`, borderRadius:8, fontSize:13, width:'100%', outline:'none' }} onFocus={e=>e.target.style.borderColor=T.primary} onBlur={e=>e.target.style.borderColor=T.border} />
         </div>
         <span style={{ fontSize:12, color:T.muted }}>{filtered.length} pass</span>
         {loading && <span className="spin" style={{ width:14, height:14, border:`2px solid ${T.border}`, borderTopColor:T.primary, borderRadius:'50%' }} />}
         {error && <span style={{ fontSize:12, color:T.danger }}>⚠️ {error}</span>}
-        <button onClick={onRefresh}
-          style={{ marginLeft:'auto', padding:'7px 14px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:8, color:T.primaryDark, fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:5 }}
-          onMouseEnter={e => { e.currentTarget.style.background=T.primaryMid; e.currentTarget.style.color='#fff'; }}
-          onMouseLeave={e => { e.currentTarget.style.background=T.primaryLight; e.currentTarget.style.color=T.primaryDark; }}>
-          ↻ Uppdatera
-        </button>
+        <button onClick={onRefresh} style={{ marginLeft:'auto', padding:'7px 14px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:8, color:T.primaryDark, fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:5 }} onMouseEnter={e=>{e.currentTarget.style.background=T.primaryMid;e.currentTarget.style.color='#fff';}} onMouseLeave={e=>{e.currentTarget.style.background=T.primaryLight;e.currentTarget.style.color=T.primaryDark;}}>↻ Uppdatera</button>
       </div>
-
-      {/* Cards */}
-      {paged.length === 0 ? (
-        <div style={{ textAlign:'center', padding:48, color:T.muted, fontSize:13 }}>Inga arbetspass hittades</div>
-      ) : (
-        paged.map((row, i) => {
-          const dateStr  = renderDate(row.date);
-          const startStr = renderTime(row.start_time);
-          const endStr   = renderTime(row.end_time);
-          return (
-            <div key={row.shift_id ?? i} className="card-row" onClick={() => setViewRow(row)}>
-              {/* Left accent */}
+      {paged.length === 0
+        ? <div style={{ textAlign:'center', padding:48, color:T.muted, fontSize:13 }}>Inga arbetspass hittades</div>
+        : paged.map((row, i) => (
+            <div key={row.shift_id??i} className="card-row" onClick={()=>setViewRow(row)}>
               <div style={{ width:4, background:T.info, flexShrink:0 }} />
-              {/* Main content */}
               <div style={{ flex:1, padding:'14px 16px' }}>
-                <div style={{ fontSize:14, fontWeight:700, color:T.text, marginBottom:3 }}>{row.shift_id || '—'}</div>
-                <div style={{ fontSize:12, color:T.info, fontWeight:600, marginBottom:5 }}>{row.type || '—'}</div>
-                <div style={{ fontSize:12, color:T.muted, marginBottom:2 }}>{row.Address || '—'}</div>
-                <div style={{ fontSize:12, color:T.muted, display:'flex', gap:8 }}>
-                  <span>{row.PostalCode || '—'}</span>
-                  <span>{row.City || '—'}</span>
-                </div>
+                <div style={{ fontSize:14, fontWeight:700, color:T.text, marginBottom:3 }}>{row.shift_id||'—'}</div>
+                <div style={{ fontSize:12, color:T.info, fontWeight:600, marginBottom:5 }}>{row.type||'—'}</div>
+                <div style={{ fontSize:12, color:T.muted, marginBottom:2 }}>{row.Address||'—'}</div>
+                <div style={{ fontSize:12, color:T.muted, display:'flex', gap:8 }}><span>{row.PostalCode||'—'}</span><span>{row.City||'—'}</span></div>
                 <ShiftCircles row={row} />
               </div>
-              {/* Right side */}
               <div style={{ padding:'14px 18px', display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', gap:5, flexShrink:0, borderLeft:`1px solid ${T.border}`, minWidth:130 }}>
-                <span style={{ fontSize:13, fontWeight:700, color:T.text }}>{dateStr}</span>
-                <span style={{ fontSize:12, color:T.muted, fontWeight:600 }}>{startStr} – {endStr}</span>
+                <span style={{ fontSize:13, fontWeight:700, color:T.text }}>{renderDate(row.date)}</span>
+                <span style={{ fontSize:12, color:T.muted, fontWeight:600 }}>{renderTime(row.start_time)} – {renderTime(row.end_time)}</span>
               </div>
             </div>
-          );
-        })
-      )}
-
-      {/* Pagination */}
+          ))
+      }
       {pages > 1 && (
         <div style={{ display:'flex', gap:5, marginTop:14, justifyContent:'flex-end', alignItems:'center' }}>
-          <button onClick={() => setPage(p => Math.max(0,p-1))} disabled={safePg===0} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===0?T.muted:T.text, fontSize:13 }}>‹</button>
-          {Array.from({ length:Math.min(pages,8) }, (_,i) => (
-            <button key={i} onClick={() => setPage(i)} style={{ width:30, height:30, borderRadius:6, border:`1px solid ${i===safePg?T.primary:T.border}`, background:i===safePg?T.primary:T.white, color:i===safePg?'#fff':T.text, fontSize:12, fontWeight:i===safePg?700:400 }}>{i+1}</button>
-          ))}
-          <button onClick={() => setPage(p => Math.min(pages-1,p+1))} disabled={safePg===pages-1} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===pages-1?T.muted:T.text, fontSize:13 }}>›</button>
+          <button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={safePg===0} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===0?T.muted:T.text, fontSize:13 }}>‹</button>
+          {Array.from({length:Math.min(pages,8)},(_,i)=><button key={i} onClick={()=>setPage(i)} style={{ width:30, height:30, borderRadius:6, border:`1px solid ${i===safePg?T.primary:T.border}`, background:i===safePg?T.primary:T.white, color:i===safePg?'#fff':T.text, fontSize:12, fontWeight:i===safePg?700:400 }}>{i+1}</button>)}
+          <button onClick={()=>setPage(p=>Math.min(pages-1,p+1))} disabled={safePg===pages-1} style={{ padding:'5px 10px', border:`1px solid ${T.border}`, borderRadius:6, background:T.white, color:safePg===pages-1?T.muted:T.text, fontSize:13 }}>›</button>
         </div>
       )}
     </>
@@ -1130,8 +919,6 @@ function ShiftCardList({ rows, loading, error, onRefresh, onSave, cleaners, date
 /* ════════════════════════════
    VIEWS
 ════════════════════════════ */
-
-/* 1. Bokningsförfrågningar */
 function BookingRequests() {
   const [iframeH, setIframeH] = useState(640);
   return (
@@ -1140,30 +927,26 @@ function BookingRequests() {
         <p style={{ fontSize:13, color:T.muted, flex:1 }}>Bokningsförfrågningar hanteras direkt via formuläret nedan (Google Apps Script).</p>
         <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
           <span style={{ fontSize:12, color:T.muted }}>Höjd:</span>
-          <input type="range" min={400} max={1400} step={50} value={iframeH} onChange={e => setIframeH(+e.target.value)} style={{ width:90 }} />
+          <input type="range" min={400} max={1400} step={50} value={iframeH} onChange={e=>setIframeH(+e.target.value)} style={{ width:90 }} />
           <span style={{ fontSize:12, color:T.muted, minWidth:38 }}>{iframeH}px</span>
         </div>
       </div>
       <div style={{ border:`1px solid ${T.border}`, borderRadius:10, overflow:'hidden' }}>
-        <iframe src={CONFIG.BOOKING_FORM_URL} width="100%" height={iframeH}
-          style={{ display:'block', border:'none' }} title="Bokningsförfrågningar — Apps Script"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups" />
+        <iframe src={CONFIG.BOOKING_FORM_URL} width="100%" height={iframeH} style={{ display:'block', border:'none' }} title="Bokningsförfrågningar — Apps Script" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" />
       </div>
     </div>
   );
 }
 
-/* 2. Tickets */
 function Tickets() {
   const { data, loading, error, refresh, saveRow } = useSheetData('tickets', 'contact-data');
   return (
     <ViewShell stats={[
       { label:'Totalt ärenden',   value:data.length, emoji:'🎫', color:T.info },
-      { label:'Obesvarade',       value:data.filter(r => !r.Answered||r.Answered==='Nej').length, emoji:'❗', color:T.danger, sub:'Kräver svar' },
-      { label:'Under behandling', value:data.filter(r => r.Answered==='Under behandling').length, emoji:'🔄', color:T.warning },
+      { label:'Obesvarade',       value:data.filter(r=>!r.Answered||r.Answered==='Nej').length, emoji:'❗', color:T.danger, sub:'Kräver svar' },
+      { label:'Under behandling', value:data.filter(r=>r.Answered==='Under behandling').length, emoji:'🔄', color:T.warning },
     ]}>
-      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
-        idKey="unique_ID" onSave={saveRow} editTitle="Obesvarade ärenden — contact-data"
+      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh} idKey="unique_ID" onSave={saveRow} editTitle="Obesvarade ärenden — contact-data"
         columns={[
           { key:'created_at', label:'Datum' },
           { key:'unique_ID',  label:'Ärende-ID' },
@@ -1171,56 +954,40 @@ function Tickets() {
           { key:'Phone',      label:'Telefon' },
           { key:'Email',      label:'Email' },
           { key:'Message',    label:'Meddelande', maxW:300 },
-          { key:'Answered',   label:'Besvarat', render:v => <Badge val={v||'Nej'} />, noSort:true },
+          { key:'Answered',   label:'Besvarat', render:v=><Badge val={v||'Nej'}/>, noSort:true },
         ]}
       />
     </ViewShell>
   );
 }
 
-/* 3. Bokningar — CARD LAYOUT */
 function BookedData() {
   const { data, loading, error, refresh, saveRow } = useSheetData('bookedData', 'booking_data');
   const [dateRange, setDateRange] = useState(getMonthRange);
-
-  const filteredData = useMemo(() =>
-    data.filter(r => {
-      const d = toYMD(r.Date);
-      if (!d || !dateRange.from || !dateRange.to) return true;
-      return d >= dateRange.from && d <= dateRange.to;
-    }),
-    [data, dateRange]
-  );
-
-  const totalRev = filteredData.reduce((s,r) => s + (parseFloat(r.Total_billable_lc)||0), 0);
+  const filteredData = useMemo(() => data.filter(r => { const d=toYMD(r.Date); if(!d||!dateRange.from||!dateRange.to)return true; return d>=dateRange.from&&d<=dateRange.to; }), [data, dateRange]);
+  const totalRev = filteredData.reduce((s,r) => s+(parseFloat(r.Total_billable_lc)||0), 0);
   return (
     <ViewShell stats={[
-      { label:'Totalt bokningar',   value:filteredData.length, emoji:'📅', color:T.primary },
-      { label:'Hemstädning',        value:filteredData.filter(r => r.Type==='Hemstädning').length, emoji:'🏠', color:T.info },
-      { label:'Flytt / Storstäd',   value:filteredData.filter(r => ['Storstädning','Flyttstädning','Speciell Flyttstädning','Flyttstädning 0-50 kvm','Flyttstädning 50+ kvm'].includes(r.Type)).length, emoji:'📦', color:T.warning },
+      { label:'Totalt bokningar', value:filteredData.length, emoji:'📅', color:T.primary },
+      { label:'Hemstädning',      value:filteredData.filter(r=>r.Type==='Hemstädning').length, emoji:'🏠', color:T.info },
+      { label:'Flytt / Storstäd', value:filteredData.filter(r=>['Storstädning','Flyttstädning','Speciell Flyttstädning','Flyttstädning 0-50 kvm','Flyttstädning 50+ kvm'].includes(r.Type)).length, emoji:'📦', color:T.warning },
       { label:'Total intäkt (efter RUT)', value:totalRev.toLocaleString('sv-SE')+' kr', emoji:'💰', color:T.success },
     ]}>
-      <BookingCardList
-        rows={data} loading={loading} error={error}
-        onRefresh={refresh} onSave={saveRow}
-        dateRange={dateRange} onDateRangeChange={setDateRange}
-      />
+      <BookingCardList rows={data} loading={loading} error={error} onRefresh={refresh} onSave={saveRow} dateRange={dateRange} onDateRangeChange={setDateRange} />
     </ViewShell>
   );
 }
 
-/* 4. Kunder */
 function Customers() {
   const { data, loading, error, refresh, saveRow } = useSheetData('customers', 'customer_data');
   return (
     <ViewShell stats={[
-      { label:'Totalt kunder',       value:data.length, emoji:'👥', color:T.primary },
-      { label:'Aktiva kontrakt',     value:data.filter(r => r.Is_contract_active==='Ja').length, emoji:'📝', color:T.success },
-      { label:'Utan aktivt kontrakt',value:data.filter(r => r.Is_contract_active!=='Ja').length, emoji:'⚠️', color:T.warning },
-      { label:'Städer',              value:[...new Set(data.map(r => r.City).filter(Boolean))].length, emoji:'🏙️', color:T.info },
+      { label:'Totalt kunder',        value:data.length, emoji:'👥', color:T.primary },
+      { label:'Aktiva kontrakt',      value:data.filter(r=>r.Is_contract_active==='Ja').length, emoji:'📝', color:T.success },
+      { label:'Utan aktivt kontrakt', value:data.filter(r=>r.Is_contract_active!=='Ja').length, emoji:'⚠️', color:T.warning },
+      { label:'Städer',               value:[...new Set(data.map(r=>r.City).filter(Boolean))].length, emoji:'🏙️', color:T.info },
     ]}>
-      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
-        idKey="Customer_ID" onSave={saveRow} editTitle="Kunder — customer_data"
+      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh} idKey="Customer_ID" onSave={saveRow} editTitle="Kunder — customer_data"
         columns={[
           { key:'created_at',   label:'Skapad' },
           { key:'Customer_ID',  label:'Kund-ID' },
@@ -1230,31 +997,29 @@ function Customers() {
           { key:'Address',      label:'Adress' },
           { key:'City',         label:'Stad' },
           { key:'PostalCode',   label:'Postnr' },
-          { key:'Is_contract_active',       label:'Kontrakt aktivt', render:v => <Badge val={v} />, noSort:true },
+          { key:'Is_contract_active',        label:'Kontrakt aktivt', render:v=><Badge val={v}/>, noSort:true },
           { key:'Contract_sent_date',        label:'Kontrakt skickat', render:renderDate },
           { key:'Contract_start_date',       label:'Kontrakt start',   render:renderDate },
-          { key:'Contract_resignation_date', label:'Uppsägning',        render:renderDate },
-          { key:'Contract_end_date',         label:'Kontrakt slut',     render:renderDate },
+          { key:'Contract_resignation_date', label:'Uppsägning',       render:renderDate },
+          { key:'Contract_end_date',         label:'Kontrakt slut',    render:renderDate },
           { key:'Personnummer', label:'Personnummer' },
-          { key:'Signature',    label:'Signatur', render:v => <Badge val={v||'Nej'} />, noSort:true },
+          { key:'Signature',    label:'Signatur', render:v=><Badge val={v||'Nej'}/>, noSort:true },
         ]}
       />
     </ViewShell>
   );
 }
 
-/* 5. Personal */
 function Employees() {
   const { data, loading, error, refresh, saveRow } = useSheetData('employees', 'cleaner');
   return (
     <ViewShell stats={[
       { label:'Total personal', value:data.length, emoji:'🧹', color:T.primary },
-      { label:'Aktiva',         value:data.filter(r => r.is_active==='Ja').length, emoji:'✅', color:T.success },
-      { label:'Inaktiva',       value:data.filter(r => r.is_active!=='Ja').length, emoji:'🔴', color:T.danger },
-      { label:'Utbildade',      value:data.filter(r => r.Trained==='Ja').length,   emoji:'🎓', color:T.info },
+      { label:'Aktiva',         value:data.filter(r=>r.is_active==='Ja').length, emoji:'✅', color:T.success },
+      { label:'Inaktiva',       value:data.filter(r=>r.is_active!=='Ja').length, emoji:'🔴', color:T.danger },
+      { label:'Utbildade',      value:data.filter(r=>r.Trained==='Ja').length,   emoji:'🎓', color:T.info },
     ]}>
-      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh}
-        idKey="employee_id" onSave={saveRow} editTitle="Personal — cleaner"
+      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh} idKey="employee_id" onSave={saveRow} editTitle="Personal — cleaner"
         columns={[
           { key:'created_at',  label:'Skapad' },
           { key:'employee_id', label:'ID' },
@@ -1264,67 +1029,45 @@ function Employees() {
           { key:'Address',     label:'Adress' },
           { key:'City',        label:'Stad' },
           { key:'Postcode',    label:'Postnr' },
-          { key:'is_active',   label:'Aktiv',             render:v => <Badge val={v} />, noSort:true },
-          { key:'Trained',     label:'Utbildad',          render:v => <Badge val={v} />, noSort:true },
-          { key:'uploaded_background_check', label:'Bakgrundskontroll', render:v => <Badge val={v} />, noSort:true },
+          { key:'is_active',   label:'Aktiv',             render:v=><Badge val={v}/>, noSort:true },
+          { key:'Trained',     label:'Utbildad',          render:v=><Badge val={v}/>, noSort:true },
+          { key:'uploaded_background_check', label:'Bakgrundskontroll', render:v=><Badge val={v}/>, noSort:true },
           { key:'Payment_rule',label:'Löneregel' },
           { key:'contract_start_date', label:'Kontrakt start', render:renderDate },
           { key:'6_months_probation',  label:'Provanst. slut', render:renderDate },
           { key:'contract_end_date',   label:'Kontrakt slut',  render:renderDate },
           { key:'Reporting_to_name',   label:'Rapporterar till' },
           { key:'Reporting_to_phone',  label:'Chef telefon' },
-          { key:'Bank',           label:'Bank' },
-          { key:'Clearing_number',label:'Clearingnr' },
-          { key:'Account_number', label:'Kontonr' },
+          { key:'Bank',            label:'Bank' },
+          { key:'Clearing_number', label:'Clearingnr' },
+          { key:'Account_number',  label:'Kontonr' },
         ]}
       />
     </ViewShell>
   );
 }
 
-/* 6. Arbetspass — CARD LAYOUT */
 function Shifts() {
-  const { data, loading, error, refresh, saveRow }  = useSheetData('shifts', 'shifts');
-  const { data: employeeData }                      = useSheetData('employees', 'cleaner');
-  const [dateRange, setDateRange]                   = useState(getMonthRange);
-
-  const cleaners = useMemo(() =>
-    employeeData
-      .filter(e => e.Name && e.Name !== 'Loading...' && e.Email && e.Email !== 'Loading...')
-      .map(e => ({ name: e.Name, email: e.Email })),
-    [employeeData]
-  );
-
+  const { data, loading, error, refresh, saveRow } = useSheetData('shifts', 'shifts');
+  const { data: employeeData }                     = useSheetData('employees', 'cleaner');
+  const [dateRange, setDateRange]                  = useState(getMonthRange);
+  const cleaners = useMemo(() => employeeData.filter(e=>e.Name&&e.Name!=='Loading...'&&e.Email&&e.Email!=='Loading...').map(e=>({name:e.Name,email:e.Email})), [employeeData]);
   const today = new Date().toLocaleDateString('sv-SE', { timeZone:'Europe/Stockholm' });
-
-  const filteredData = useMemo(() =>
-    data.filter(r => {
-      const d = toYMD(r.date);
-      if (!d || !dateRange.from || !dateRange.to) return true;
-      return d >= dateRange.from && d <= dateRange.to;
-    }),
-    [data, dateRange]
-  );
-
+  const filteredData = useMemo(() => data.filter(r=>{const d=toYMD(r.date);if(!d||!dateRange.from||!dateRange.to)return true;return d>=dateRange.from&&d<=dateRange.to;}), [data, dateRange]);
   return (
     <ViewShell stats={[
       { label:'Schemalagda pass',    value:filteredData.length, emoji:'⏰', color:T.primary },
-      { label:'Idag',                value:filteredData.filter(r => toYMD(r.date)===today).length, emoji:'📆', color:T.warning },
-      { label:'Bekräftelse skickad', value:filteredData.filter(r => r.Confirmation_sent==='Sent').length, emoji:'✅', color:T.success },
-      { label:'Uppföljning kvar',    value:filteredData.filter(r => !r.Followup_sent||r.Followup_sent.toString().trim()==='').length, emoji:'📤', color:T.info },
+      { label:'Idag',                value:filteredData.filter(r=>toYMD(r.date)===today).length, emoji:'📆', color:T.warning },
+      { label:'Bekräftelse skickad', value:filteredData.filter(r=>r.Confirmation_sent==='Sent').length, emoji:'✅', color:T.success },
+      { label:'Uppföljning kvar',    value:filteredData.filter(r=>!r.Followup_sent||r.Followup_sent.toString().trim()==='').length, emoji:'📤', color:T.info },
     ]}>
-      <ShiftCardList
-        rows={data} loading={loading} error={error}
-        onRefresh={refresh} onSave={saveRow}
-        cleaners={cleaners}
-        dateRange={dateRange} onDateRangeChange={setDateRange}
-      />
+      <ShiftCardList rows={data} loading={loading} error={error} onRefresh={refresh} onSave={saveRow} cleaners={cleaners} dateRange={dateRange} onDateRangeChange={setDateRange} />
     </ViewShell>
   );
 }
 
 /* ════════════════════════════
-   NAV
+   NAV + SIDEBAR + LOGIN + APP  (unchanged)
 ════════════════════════════ */
 const NAV = [
   { id:'booking-requests', label:'Bokningsförfrågningar', emoji:'📋', title:'Bokningsförfrågningar', subtitle:'Inkommande förfrågningar via behjarta.com (Apps Script)', Component:BookingRequests },
@@ -1335,31 +1078,22 @@ const NAV = [
   { id:'shifts',           label:'Arbetspass',           emoji:'⏰', title:'Arbetspass',            subtitle:'Schema — shifts',                  Component:Shifts },
 ];
 
-/* ════════════════════════════
-   SIDEBAR
-════════════════════════════ */
 function Sidebar({ active, setActive, user, onLogout }) {
   return (
     <div style={{ width:236, minWidth:236, background:T.sidebar, display:'flex', flexDirection:'column', height:'100vh', position:'sticky', top:0, zIndex:20 }}>
       <div style={{ padding:'20px 18px 16px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
-        <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height:30, display:'block' }} onError={e => { e.target.style.display='none'; }} />
+        <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height:30, display:'block' }} onError={e=>{e.target.style.display='none';}} />
         <div style={{ fontSize:10, color:'rgba(255,255,255,0.27)', letterSpacing:'0.18em', textTransform:'uppercase', fontWeight:700, marginTop:6 }}>Admin Portal</div>
       </div>
-      {CONFIG.DEMO_MODE && (
-        <div style={{ margin:'10px 12px 0', padding:'6px 10px', background:'rgba(251,191,36,0.1)', border:'1px solid rgba(251,191,36,0.2)', borderRadius:7, fontSize:11, color:'#FCD34D', fontWeight:600 }}>
-          ⚠️ Demo-läge aktiv
-        </div>
-      )}
+      {CONFIG.DEMO_MODE && <div style={{ margin:'10px 12px 0', padding:'6px 10px', background:'rgba(251,191,36,0.1)', border:'1px solid rgba(251,191,36,0.2)', borderRadius:7, fontSize:11, color:'#FCD34D', fontWeight:600 }}>⚠️ Demo-läge aktiv</div>}
       <nav style={{ flex:1, paddingTop:8, overflowY:'auto' }}>
         {NAV.map(item => {
           const isActive = active === item.id;
           return (
-            <button key={item.id} onClick={() => setActive(item.id)}
+            <button key={item.id} onClick={()=>setActive(item.id)}
               style={{ display:'flex', alignItems:'center', gap:9, width:'100%', padding:'10px 18px', background:isActive?'rgba(0,150,136,0.18)':'transparent', border:'none', borderLeft:`3px solid ${isActive?T.primary:'transparent'}`, color:isActive?'#fff':'rgba(255,255,255,0.44)', fontSize:13, fontWeight:isActive?600:400, textAlign:'left', fontFamily:'inherit', transition:'all 0.13s', cursor:'pointer' }}
-              onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.color='rgba(255,255,255,0.72)'; } }}
-              onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='rgba(255,255,255,0.44)'; } }}>
-              <span style={{ fontSize:14, flexShrink:0 }}>{item.emoji}</span>
-              <span style={{ flex:1 }}>{item.label}</span>
+              onMouseEnter={e=>{if(!isActive){e.currentTarget.style.background='rgba(255,255,255,0.04)';e.currentTarget.style.color='rgba(255,255,255,0.72)';}}}
+              onMouseLeave={e=>{if(!isActive){e.currentTarget.style.background='transparent';e.currentTarget.style.color='rgba(255,255,255,0.44)';}}}><span style={{ fontSize:14, flexShrink:0 }}>{item.emoji}</span><span style={{ flex:1 }}>{item.label}</span>
             </button>
           );
         })}
@@ -1372,69 +1106,39 @@ function Sidebar({ active, setActive, user, onLogout }) {
             <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user?.email}</div>
           </div>
         </div>
-        <button onClick={onLogout}
-          style={{ width:'100%', padding:'7px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:8, color:'rgba(255,255,255,0.38)', fontSize:12, fontFamily:'inherit', transition:'all 0.14s' }}
-          onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.1)'; e.currentTarget.style.color='#fff'; }}
-          onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.05)'; e.currentTarget.style.color='rgba(255,255,255,0.38)'; }}>
-          Logga ut
-        </button>
+        <button onClick={onLogout} style={{ width:'100%', padding:'7px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:8, color:'rgba(255,255,255,0.38)', fontSize:12, fontFamily:'inherit', transition:'all 0.14s' }} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.1)';e.currentTarget.style.color='#fff';}} onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.05)';e.currentTarget.style.color='rgba(255,255,255,0.38)';}}>Logga ut</button>
       </div>
     </div>
   );
 }
 
-/* ════════════════════════════
-   LOGIN
-════════════════════════════ */
 function LoginPage({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
   const btnRef = useRef(null);
   useEffect(() => {
     if (!window.google?.accounts?.id) return;
-    window.google.accounts.id.initialize({
-      client_id: CONFIG.GOOGLE_CLIENT_ID,
-      hosted_domain: CONFIG.ALLOWED_DOMAIN,
-      callback: (resp) => {
-        try {
-          const pl = JSON.parse(atob(resp.credential.split('.')[1]));
-          if (!pl.email.endsWith('@' + CONFIG.ALLOWED_DOMAIN)) { setError('Åtkomst nekad. Endast @' + CONFIG.ALLOWED_DOMAIN + '-konton tillåts.'); return; }
-          onLogin({ name:pl.name, email:pl.email, avatar:(pl.name||'?').split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase() });
-        } catch { setError('Inloggning misslyckades.'); }
-      }
-    });
+    window.google.accounts.id.initialize({ client_id:CONFIG.GOOGLE_CLIENT_ID, hosted_domain:CONFIG.ALLOWED_DOMAIN, callback:(resp)=>{ try { const pl=JSON.parse(atob(resp.credential.split('.')[1])); if(!pl.email.endsWith('@'+CONFIG.ALLOWED_DOMAIN)){setError('Åtkomst nekad. Endast @'+CONFIG.ALLOWED_DOMAIN+'-konton tillåts.');return;} onLogin({name:pl.name,email:pl.email,avatar:(pl.name||'?').split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase()}); } catch { setError('Inloggning misslyckades.'); } } });
     if (btnRef.current) window.google.accounts.id.renderButton(btnRef.current, { theme:'outline', size:'large', width:340, locale:'sv' });
   }, []);
-  const demoLogin = () => { setLoading(true); setTimeout(() => onLogin({ name:'Admin Behjärta', email:'admin@behjarta.com', avatar:'AB' }), 900); };
+  const demoLogin = () => { setLoading(true); setTimeout(()=>onLogin({name:'Admin Behjärta',email:'admin@behjarta.com',avatar:'AB'}),900); };
   return (
     <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(140deg,#003D35 0%,#00695C 40%,#009688 70%,#26A69A 100%)', position:'relative', overflow:'hidden' }}>
-      {[350,550,750].map((s,i) => <div key={i} style={{ position:'absolute', width:s, height:s, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.05)', top:'50%', left:'50%', transform:`translate(-${30+i*10}%,-${50+i*5}%)`, pointerEvents:'none' }} />)}
+      {[350,550,750].map((s,i)=><div key={i} style={{ position:'absolute', width:s, height:s, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.05)', top:'50%', left:'50%', transform:`translate(-${30+i*10}%,-${50+i*5}%)`, pointerEvents:'none' }}/>)}
       <div style={{ background:T.white, borderRadius:20, padding:'44px 40px', width:'100%', maxWidth:420, boxShadow:'0 30px 80px rgba(0,0,0,0.35)', textAlign:'center', position:'relative', zIndex:1 }}>
-        <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height:42, marginBottom:8 }} onError={e => e.target.style.display='none'} />
+        <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height:42, marginBottom:8 }} onError={e=>e.target.style.display='none'}/>
         <div style={{ fontSize:10, color:T.muted, letterSpacing:'0.18em', textTransform:'uppercase', fontWeight:700, marginBottom:28 }}>Administrationsportal</div>
         <h1 style={{ fontSize:22, fontWeight:700, color:T.text, marginBottom:8 }}>Välkommen tillbaka</h1>
         <p style={{ fontSize:13, color:T.muted, marginBottom:28, lineHeight:1.65 }}>Logga in med ditt <strong style={{ color:T.primaryDark }}>@behjarta.com</strong>-konto.</p>
         {error && <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', color:T.danger, padding:'10px 14px', borderRadius:10, fontSize:13, marginBottom:18, textAlign:'left' }}>⚠️ {error}</div>}
         <div ref={btnRef} style={{ display:'flex', justifyContent:'center', marginBottom:10 }} />
-        {CONFIG.DEMO_MODE && (
-          <button onClick={demoLogin} disabled={loading}
-            style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', padding:'12px', background:T.white, border:`1.5px dashed ${T.primaryMid}`, borderRadius:10, cursor:loading?'not-allowed':'pointer', fontSize:13, fontWeight:600, color:T.primaryDark, fontFamily:'inherit', transition:'all 0.15s', opacity:loading?0.7:1 }}
-            onMouseEnter={e=>{ if(!loading) e.currentTarget.style.background=T.primaryLight; }}
-            onMouseLeave={e=>{ if(!loading) e.currentTarget.style.background=T.white; }}>
-            {loading ? <><span className="spin" style={{ width:14,height:14,border:`2px solid ${T.border}`,borderTopColor:T.primary,borderRadius:'50%'}}/>Loggar in...</> : '🧪 Demo-inloggning'}
-          </button>
-        )}
-        <div style={{ marginTop:22, padding:'11px', background:'#F8FAFC', borderRadius:10, fontSize:11, color:T.muted }}>
-          🔒 Åtkomst begränsad till <strong>@{CONFIG.ALLOWED_DOMAIN}</strong>
-        </div>
+        {CONFIG.DEMO_MODE && <button onClick={demoLogin} disabled={loading} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', padding:'12px', background:T.white, border:`1.5px dashed ${T.primaryMid}`, borderRadius:10, cursor:loading?'not-allowed':'pointer', fontSize:13, fontWeight:600, color:T.primaryDark, fontFamily:'inherit', opacity:loading?0.7:1 }} onMouseEnter={e=>{if(!loading)e.currentTarget.style.background=T.primaryLight;}} onMouseLeave={e=>{if(!loading)e.currentTarget.style.background=T.white;}}>{loading?<><span className="spin" style={{ width:14,height:14,border:`2px solid ${T.border}`,borderTopColor:T.primary,borderRadius:'50%'}}/>Loggar in...</>:'🧪 Demo-inloggning'}</button>}
+        <div style={{ marginTop:22, padding:'11px', background:'#F8FAFC', borderRadius:10, fontSize:11, color:T.muted }}>🔒 Åtkomst begränsad till <strong>@{CONFIG.ALLOWED_DOMAIN}</strong></div>
       </div>
     </div>
   );
 }
 
-/* ════════════════════════════
-   APP
-════════════════════════════ */
 function App() {
   const [user, setUser]     = useState(null);
   const [active, setActive] = useState('booking-requests');
@@ -1443,7 +1147,7 @@ function App() {
   if (!user) return <LoginPage onLogin={setUser} />;
   return (
     <div style={{ display:'flex', height:'100vh' }}>
-      <Sidebar active={active} setActive={setActive} user={user} onLogout={() => setUser(null)} />
+      <Sidebar active={active} setActive={setActive} user={user} onLogout={()=>setUser(null)} />
       <main style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
         <div style={{ background:T.white, borderBottom:`1px solid ${T.border}`, padding:'13px 26px', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
           <div>
@@ -1451,7 +1155,7 @@ function App() {
             <p style={{ fontSize:11, color:T.muted, marginTop:1 }}>{activeNav.subtitle}</p>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <span style={{ fontSize:11, color:T.muted }}>{new Date().toLocaleDateString('sv-SE', { weekday:'long', day:'numeric', month:'long', year:'numeric', timeZone:'Europe/Stockholm' })}</span>
+            <span style={{ fontSize:11, color:T.muted }}>{new Date().toLocaleDateString('sv-SE',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Stockholm'})}</span>
             <div style={{ width:32, height:32, borderRadius:'50%', background:T.primaryLight, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:T.primaryDark, border:`2px solid ${T.primary}` }}>{user.avatar}</div>
           </div>
         </div>
