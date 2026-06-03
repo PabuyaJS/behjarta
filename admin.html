@@ -577,10 +577,258 @@ function DateRangePicker({ from, to, onChange }) {
 }
 
 /* ════════════════════════════
-   VIEW/EDIT MODAL  —  supports optional offset mode for Bookings & Shifts
-   Pass useOffset={true} to get +1 day / +1 hour display and -1 on save.
+   SECTION SCHEMAS
+   Each section has: label, accent color, emoji, and an array of field rows.
+   A row is an array of field keys — 1 key = full width, 2 keys = side by side, etc.
+   'cleaner' type fields handled via cleanerFieldKeys prop as before.
 ════════════════════════════ */
-function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys, useOffset }) {
+const BOOKING_SECTIONS = [
+  {
+    label: 'Systeminformation', emoji: '🆔', color: '#6B7280',
+    rows: [
+      ['created_at', 'unique_ID'],
+      ['Customer_id', 'Discount_code'],
+    ]
+  },
+  {
+    label: 'Kund', emoji: '👤', color: '#2563EB',
+    rows: [
+      ['Name', 'Phone'],
+      ['Email'],
+      ['Address'],
+      ['PostalCode', 'City'],
+    ]
+  },
+  {
+    label: 'Bokningstid', emoji: '📅', color: '#009688',
+    rows: [
+      ['Date', 'Time'],
+      ['Duration_h', 'Frequency'],
+    ]
+  },
+  {
+    label: 'Tjänst & Pris', emoji: '🧹', color: '#7C3AED',
+    rows: [
+      ['Type', 'Cleaning_supplies'],
+      ['Ironing_1h', 'Fridge_oven'],
+      ['Service_unit_price', 'Total_price_for_service'],
+      ['Deep_cleaning_sqm', 'Deep_cleaning_unit_price'],
+      ['Total_price_Deep_cleaning'],
+      ['Moving_cleaning_sqm', 'Moving_cleaning_unit_price'],
+      ['Total_price_Moving_cleaning'],
+    ]
+  },
+  {
+    label: 'Fönsterputs', emoji: '🪟', color: '#0891B2',
+    rows: [
+      ['s1', 'Single_pane_window', 'Total_s1_price'],
+      ['s2', 'Single_pane_window_muntins', 'Total_s2_price'],
+      ['d1', 'Double_pane_window', 'Total_d1_price'],
+      ['d2', 'Double_pane_window_muntins', 'Total_d2_price'],
+      ['t1', 'Triple_pane_window', 'Total_t1_price'],
+      ['t2', 'Triple_pane_window_muntins', 'Total_t2_price'],
+      ['b1', 'Balcony_door', 'Total_b1_price'],
+      ['b2', 'Balcony_door_muntins', 'Total_b2_price'],
+      ['Add_services_total_price'],
+    ]
+  },
+  {
+    label: 'Rabatt & Ekonomi', emoji: '💰', color: '#059669',
+    rows: [
+      ['Discount_code', 'Discount_percent'],
+      ['Discount_amount', 'Discount_exparation'],
+      ['Subtotal_ex_VAT', 'VAT_25:percent'],
+      ['Subtotal', 'RUT_reduction_50_percent'],
+      ['Admin_fee', 'Total_billable_lc'],
+    ]
+  },
+  {
+    label: 'Kommentarer', emoji: '💬', color: '#D97706',
+    rows: [['Comments']]
+  },
+];
+
+const SHIFT_SECTIONS = [
+  {
+    label: 'Systeminformation', emoji: '🆔', color: '#6B7280',
+    rows: [
+      ['created_at', 'shift_id'],
+      ['booking_id', 'customer_id'],
+    ]
+  },
+  {
+    label: 'Kund & Plats', emoji: '📍', color: '#2563EB',
+    rows: [
+      ['Name', 'Phone'],
+      ['Email'],
+      ['Address'],
+      ['PostalCode', 'City'],
+    ]
+  },
+  {
+    label: 'Pass & Tjänst', emoji: '📅', color: '#009688',
+    rows: [
+      ['date', 'type'],
+      ['start_time', 'end_time'],
+      ['Cleaning_supplies', 'Ironing_1h'],
+      ['Fridge', 'Window_cleaning'],
+    ]
+  },
+  {
+    label: 'Städare', emoji: '🧹', color: '#7C3AED',
+    rows: [
+      ['cleaner_1'],
+      ['cleaner_2'],
+      ['cleaner_3'],
+    ]
+  },
+  {
+    label: 'Instämpling — Städare 1', emoji: '🟡', color: '#D97706',
+    rows: [
+      ['shift_start_1', 'shift_end_1'],
+      ['current_location_1'],
+    ]
+  },
+  {
+    label: 'Instämpling — Städare 2', emoji: '🟡', color: '#D97706',
+    rows: [
+      ['shift_start_2', 'shift_end_2'],
+      ['current_location_2'],
+    ]
+  },
+  {
+    label: 'Instämpling — Städare 3', emoji: '🟡', color: '#D97706',
+    rows: [
+      ['shift_start_3', 'shift_end_3'],
+      ['current_location_3'],
+    ]
+  },
+  {
+    label: 'Status & Uppföljning', emoji: '✅', color: '#059669',
+    rows: [
+      ['Confirmation_sent', 'Followup_sent'],
+      ['rating'],
+    ]
+  },
+  {
+    label: 'Instruktioner', emoji: '📋', color: '#0891B2',
+    rows: [['Instructions']]
+  },
+  {
+    label: 'Intern data', emoji: '🗺️', color: '#6B7280',
+    rows: [['lanlot']]
+  },
+];
+
+/* ════════════════════════════
+   SECTIONED FIELD RENDERER — shared by ViewEditModal
+════════════════════════════ */
+function SectionedFields({ sections, form, set, editMode, cleaners, cleanerFieldKeys, rowKeys }) {
+  const rendered = new Set();
+  const isCleanerField = k => cleanerFieldKeys && cleanerFieldKeys.includes(k);
+
+  const renderField = (k) => {
+    if (!rowKeys.includes(k)) return null;
+    rendered.add(k);
+    const isLong    = LONG_FIELDS.has(k);
+    const isRO      = READONLY_FIELDS.has(k) || !editMode;
+    const isCleaner = isCleanerField(k);
+    const isDate    = DATE_KEYS.has(k) && editMode && !READONLY_FIELDS.has(k);
+    const isTime    = TIME_KEYS.has(k) && editMode && !READONLY_FIELDS.has(k);
+    return (
+      <div key={k} className={`field-group${isRO ? ' field-readonly' : ''}`} style={{ flex:1, minWidth:0 }}>
+        <label>{k.replace(/_/g,' ')}</label>
+        {isCleaner && editMode ? (
+          <select value={form[k]??''} onChange={e => set(k, e.target.value)}>
+            <option value="">— Ingen städare —</option>
+            {cleaners.map(c => <option key={c.email} value={c.email}>{c.name}</option>)}
+          </select>
+        ) : isDate ? (
+          <input type="date" value={form[k]??''} onChange={e => set(k, e.target.value)} />
+        ) : isTime ? (
+          <input type="time" value={form[k]??''} onChange={e => set(k, e.target.value)} />
+        ) : isLong ? (
+          <textarea value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
+        ) : (
+          <input type="text" value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <>
+      {sections.map((sec, si) => {
+        // Only render sections that have at least one key present in this row
+        const secKeys = sec.rows.flat();
+        if (!secKeys.some(k => rowKeys.includes(k))) return null;
+        return (
+          <div key={si} style={{ marginBottom:18 }}>
+            {/* Section header */}
+            <div style={{
+              display:'flex', alignItems:'center', gap:7, marginBottom:10,
+              paddingBottom:7, borderBottom:`2px solid ${sec.color}22`,
+            }}>
+              <span style={{ fontSize:13 }}>{sec.emoji}</span>
+              <span style={{
+                fontSize:10, fontWeight:700, color:sec.color,
+                textTransform:'uppercase', letterSpacing:'0.1em',
+              }}>{sec.label}</span>
+            </div>
+            {/* Rows within the section */}
+            {sec.rows.map((rowKeys2, ri) => {
+              const presentKeys = rowKeys2.filter(k => rowKeys.includes(k));
+              if (presentKeys.length === 0) return null;
+              // Full-width if single long field
+              const isSingleLong = presentKeys.length === 1 && LONG_FIELDS.has(presentKeys[0]);
+              return (
+                <div key={ri} style={{ display:'flex', gap:10, marginBottom:10, alignItems:'flex-start', flexWrap: isSingleLong ? 'wrap' : 'nowrap' }}>
+                  {presentKeys.map(k => renderField(k))}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+      {/* Fallback: any keys not covered by sections */}
+      {(() => {
+        const missed = rowKeys.filter(k => !rendered.has(k));
+        if (missed.length === 0) return null;
+        return (
+          <div style={{ marginBottom:18 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:10, paddingBottom:7, borderBottom:`2px solid #6B728022` }}>
+              <span style={{ fontSize:10, fontWeight:700, color:'#6B7280', textTransform:'uppercase', letterSpacing:'0.1em' }}>Övriga fält</span>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              {missed.map(k => {
+                const isLong = LONG_FIELDS.has(k);
+                const isRO   = READONLY_FIELDS.has(k) || !editMode;
+                const isDate = DATE_KEYS.has(k) && editMode && !READONLY_FIELDS.has(k);
+                const isTime = TIME_KEYS.has(k) && editMode && !READONLY_FIELDS.has(k);
+                return (
+                  <div key={k} className={`field-group${isLong?' field-full':''}${isRO?' field-readonly':''}`}>
+                    <label>{k.replace(/_/g,' ')}</label>
+                    {isDate ? <input type="date" value={form[k]??''} onChange={e => set(k, e.target.value)} />
+                    : isTime ? <input type="time" value={form[k]??''} onChange={e => set(k, e.target.value)} />
+                    : isLong ? <textarea value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
+                    : <input type="text" value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+    </>
+  );
+}
+
+/* ════════════════════════════
+   VIEW/EDIT MODAL  —  supports optional offset mode for Bookings & Shifts
+   Pass useOffset={true} and sections={BOOKING_SECTIONS|SHIFT_SECTIONS} for
+   the clean sectioned layout. Other modals fall back to the flat grid.
+════════════════════════════ */
+function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys, useOffset, sections }) {
   const [editMode, setEditMode] = useState(false);
   const evFn = useOffset ? editValueOffset : editValue;
   const [form, setForm] = useState(() => {
@@ -590,7 +838,7 @@ function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys
   });
   const [saving, setSaving] = useState(false);
   const [err, setErr]       = useState('');
-  const keys = Object.keys(row);
+  const rowKeys = Object.keys(row);
 
   const handleSave = async () => {
     setSaving(true); setErr('');
@@ -602,11 +850,11 @@ function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys
     setSaving(false);
   };
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const isCleanerField = k => cleanerFieldKeys && cleanerFieldKeys.includes(k);
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal-box">
+      <div className="modal-box" style={{ maxWidth: sections ? 760 : 700 }}>
+        {/* Header */}
         <div style={{ padding:'18px 24px 15px', borderBottom:`1px solid ${T.border}`, display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
           <div>
             <div style={{ fontSize:15, fontWeight:700, color:T.text }}>{editMode ? '✎ Redigera' : '🔍 Detaljvy'}</div>
@@ -624,37 +872,54 @@ function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys
             <button onClick={onClose} style={{ border:'none', background:'none', fontSize:22, color:T.muted, padding:'0 4px', lineHeight:1 }}>×</button>
           </div>
         </div>
+
+        {/* Body */}
         <div className="modal-body">
           {err && <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', color:T.danger, padding:'8px 12px', borderRadius:8, fontSize:13, marginBottom:14 }}>⚠️ {err}</div>}
-          <div className="field-grid">
-            {keys.map(k => {
-              const isLong    = LONG_FIELDS.has(k);
-              const isRO      = READONLY_FIELDS.has(k) || !editMode;
-              const isCleaner = isCleanerField(k);
-              const isDate    = DATE_KEYS.has(k) && editMode && !READONLY_FIELDS.has(k);
-              const isTime    = TIME_KEYS.has(k) && editMode && !READONLY_FIELDS.has(k);
-              return (
-                <div key={k} className={`field-group${isLong?' field-full':''}${isRO?' field-readonly':''}`}>
-                  <label>{k.replace(/_/g,' ')}</label>
-                  {isCleaner && editMode ? (
-                    <select value={form[k]??''} onChange={e => set(k, e.target.value)}>
-                      <option value="">— Ingen städare —</option>
-                      {cleaners.map(c => <option key={c.email} value={c.email}>{c.name}</option>)}
-                    </select>
-                  ) : isDate ? (
-                    <input type="date" value={form[k]??''} onChange={e => set(k, e.target.value)} />
-                  ) : isTime ? (
-                    <input type="time" value={form[k]??''} onChange={e => set(k, e.target.value)} />
-                  ) : isLong ? (
-                    <textarea value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
-                  ) : (
-                    <input type="text" value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          {sections ? (
+            <SectionedFields
+              sections={sections}
+              form={form}
+              set={set}
+              editMode={editMode}
+              cleaners={cleaners}
+              cleanerFieldKeys={cleanerFieldKeys}
+              rowKeys={rowKeys}
+            />
+          ) : (
+            /* Fallback flat grid for non-sectioned modals */
+            <div className="field-grid">
+              {rowKeys.map(k => {
+                const isLong    = LONG_FIELDS.has(k);
+                const isRO      = READONLY_FIELDS.has(k) || !editMode;
+                const isCleaner = cleanerFieldKeys && cleanerFieldKeys.includes(k);
+                const isDate    = DATE_KEYS.has(k) && editMode && !READONLY_FIELDS.has(k);
+                const isTime    = TIME_KEYS.has(k) && editMode && !READONLY_FIELDS.has(k);
+                return (
+                  <div key={k} className={`field-group${isLong?' field-full':''}${isRO?' field-readonly':''}`}>
+                    <label>{k.replace(/_/g,' ')}</label>
+                    {isCleaner && editMode ? (
+                      <select value={form[k]??''} onChange={e => set(k, e.target.value)}>
+                        <option value="">— Ingen städare —</option>
+                        {cleaners.map(c => <option key={c.email} value={c.email}>{c.name}</option>)}
+                      </select>
+                    ) : isDate ? (
+                      <input type="date" value={form[k]??''} onChange={e => set(k, e.target.value)} />
+                    ) : isTime ? (
+                      <input type="time" value={form[k]??''} onChange={e => set(k, e.target.value)} />
+                    ) : isLong ? (
+                      <textarea value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
+                    ) : (
+                      <input type="text" value={form[k]??''} readOnly={isRO} onChange={e => set(k, e.target.value)} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
+
+        {/* Footer */}
         <div style={{ padding:'14px 24px', borderTop:`1px solid ${T.border}`, display:'flex', gap:10, justifyContent:'flex-end', flexShrink:0 }}>
           {editMode ? (
             <>
