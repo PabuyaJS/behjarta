@@ -1370,12 +1370,15 @@ function ShiftCardList({ rows, loading, error, onRefresh, onSave, cleaners, date
    VIEWS
 ════════════════════════════ */
 function BookingRequests() {
+  const [iframeH, setIframeH] = useState("100%");
   return (
     <div className="fade-in">
       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:14, flexWrap:'wrap' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:2, flexShrink:0 }}>
+        </div>
       </div>
       <div style={{ border:`1px solid ${T.border}`, borderRadius:10, overflow:'hidden' }}>
-        <iframe src={CONFIG.BOOKING_FORM_URL} width="100%" height="100%" style={{ display:'block', border:'none' }} title="Bokningsförfrågningar — Apps Script" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" />
+        <iframe src={CONFIG.BOOKING_FORM_URL} width="100%" height={iframeH} style={{ display:'block', border:'none' }} title="Bokningsförfrågningar — Apps Script" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" />
       </div>
     </div>
   );
