@@ -110,40 +110,111 @@ const MOCK = {
    1 day EARLIER.
 
    Fix: always read the RAW UTC components (getUTC*) – never the local ones.
+
+   Offset variants (+1 day / +1 hour) are used exclusively in Bookings and
+   Shifts views so the displayed value matches what is stored in the Sheet.
 ════════════════════════════ */
 
-/** Render a date value as yyyy-MM-dd, always using UTC parts. */
-function renderDate(val) {
-  if (val == null || val === '') return '—';
+/** Parse any date/datetime string into a Date object (UTC-safe). */
+function parseToDate(val) {
+  if (val == null || val === '') return null;
   const s = String(val).trim();
-  // Already a plain yyyy-MM-dd string → use as-is
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  // ISO datetime or Sheets epoch → parse and read UTC date parts
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    // Plain date string — treat as UTC midnight
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1, d));
+  }
+  // ISO datetime or anything with a T — parse directly
   const d = new Date(s.includes('T') ? s : s.replace(' ', 'T'));
-  if (isNaN(d)) return s;
+  return isNaN(d) ? null : d;
+}
+
+/** Format a Date as "yyyy-MM-dd" using UTC parts. */
+function fmtDateUTC(d) {
   const y  = d.getUTCFullYear();
   const mo = String(d.getUTCMonth() + 1).padStart(2, '0');
   const dy = String(d.getUTCDate()).padStart(2, '0');
   return `${y}-${mo}-${dy}`;
 }
 
-/** Render a time value as HH:mm, always using UTC parts (Sheets stores
- *  time-only values as a 1899-12-30T... UTC epoch). */
+/** Format a Date as "HH:mm" using UTC parts. */
+function fmtTimeUTC(d) {
+  return `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
+}
+
+/** Format a full datetime as "yyyy-MM-dd HH:mm:ss" (no T) using UTC parts.
+ *  Used for created_at-style timestamps. */
+function fmtDatetimeUTC(d) {
+  const date = fmtDateUTC(d);
+  const hh   = String(d.getUTCHours()).padStart(2,'0');
+  const mm   = String(d.getUTCMinutes()).padStart(2,'0');
+  const ss   = String(d.getUTCSeconds()).padStart(2,'0');
+  return `${date} ${hh}:${mm}:${ss}`;
+}
+
+/** Render a date value as yyyy-MM-dd, always using UTC parts. */
+function renderDate(val) {
+  if (val == null || val === '') return '—';
+  const s = String(val).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const d = parseToDate(s);
+  if (!d) return s;
+  return fmtDateUTC(d);
+}
+
+/** Render a date value as yyyy-MM-dd with +1 day offset.
+ *  Used in Bookings and Shifts card/overview/edit views. */
+function renderDateOffset(val) {
+  if (val == null || val === '') return '—';
+  const s = String(val).trim();
+  const d = parseToDate(s);
+  if (!d) return s;
+  d.setUTCDate(d.getUTCDate() + 1);
+  return fmtDateUTC(d);
+}
+
+/** Render a time value as HH:mm, always using UTC parts. */
 function renderTime(val) {
   if (val == null || val === '') return '—';
   const s = String(val).trim();
-  // Already plain HH:mm or HH:mm:ss
   if (/^\d{2}:\d{2}/.test(s)) return s.slice(0, 5);
   if (s.includes('T')) {
-    const d = new Date(s);
-    if (isNaN(d)) return s;
-    // Always read UTC hours/minutes – this is correct for both the
-    // Sheets time epoch (1899-12-30) and for real datetimes sent as UTC.
-    const hh = String(d.getUTCHours()).padStart(2, '0');
-    const mm = String(d.getUTCMinutes()).padStart(2, '0');
-    return `${hh}:${mm}`;
+    const d = parseToDate(s);
+    if (!d) return s;
+    return fmtTimeUTC(d);
   }
   return s.slice(0, 5);
+}
+
+/** Render a time value as HH:mm with +1 hour offset.
+ *  Used in Bookings and Shifts card/overview/edit views. */
+function renderTimeOffset(val) {
+  if (val == null || val === '') return '—';
+  const s = String(val).trim();
+  let d;
+  if (/^\d{2}:\d{2}/.test(s)) {
+    // Plain HH:mm — build a synthetic UTC Date so we can add 1 hour
+    const [hh, mm] = s.split(':').map(Number);
+    d = new Date(Date.UTC(1970, 0, 1, hh, mm, 0));
+  } else if (s.includes('T')) {
+    d = parseToDate(s);
+    if (!d) return s;
+  } else {
+    return s.slice(0, 5);
+  }
+  d.setUTCHours(d.getUTCHours() + 1);
+  return fmtTimeUTC(d);
+}
+
+/** Render a full datetime (created_at style) as "yyyy-MM-dd HH:mm:ss" — no T. */
+function renderDatetime(val) {
+  if (val == null || val === '') return '—';
+  const s = String(val).trim();
+  // Already formatted without T
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(s)) return s.slice(0, 19);
+  const d = parseToDate(s);
+  if (!d) return s;
+  return fmtDatetimeUTC(d);
 }
 
 /** Convert any date-ish value to a plain yyyy-MM-dd string (for filtering
@@ -152,12 +223,20 @@ function toYMD(val) {
   if (!val || val === '—') return '';
   const s = String(val).trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  const d = new Date(s.includes('T') ? s : s.replace(' ', 'T'));
-  if (isNaN(d)) return '';
-  const y  = d.getUTCFullYear();
-  const mo = String(d.getUTCMonth() + 1).padStart(2, '0');
-  const dy = String(d.getUTCDate()).padStart(2, '0');
-  return `${y}-${mo}-${dy}`;
+  const d = parseToDate(s);
+  if (!d) return '';
+  return fmtDateUTC(d);
+}
+
+/** toYMD with +1 day — used for filtering in Bookings/Shifts
+ *  so the filter range matches what the user sees on screen. */
+function toYMDOffset(val) {
+  if (!val || val === '—') return '';
+  const s = String(val).trim();
+  const d = parseToDate(s);
+  if (!d) return '';
+  d.setUTCDate(d.getUTCDate() + 1);
+  return fmtDateUTC(d);
 }
 
 /** Convert any time-ish value to a plain HH:mm string for time-input
@@ -167,11 +246,39 @@ function toHHMM(val) {
   const s = String(val).trim();
   if (/^\d{2}:\d{2}/.test(s)) return s.slice(0, 5);
   if (s.includes('T')) {
-    const d = new Date(s);
-    if (isNaN(d)) return '';
-    return `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
+    const d = parseToDate(s);
+    if (!d) return '';
+    return fmtTimeUTC(d);
   }
   return s.slice(0, 5);
+}
+
+/** toHHMM with +1 hour — for pre-filling time inputs in Bookings/Shifts edit modals. */
+function toHHMMOffset(val) {
+  if (!val || val === '—') return '';
+  const s = String(val).trim();
+  let d;
+  if (/^\d{2}:\d{2}/.test(s)) {
+    const [hh, mm] = s.split(':').map(Number);
+    d = new Date(Date.UTC(1970, 0, 1, hh, mm, 0));
+  } else if (s.includes('T')) {
+    d = parseToDate(s);
+    if (!d) return '';
+  } else {
+    return s.slice(0, 5);
+  }
+  d.setUTCHours(d.getUTCHours() + 1);
+  return fmtTimeUTC(d);
+}
+
+/** toYMD +1 day for date inputs in Bookings/Shifts edit modals. */
+function toYMDOffsetInput(val) {
+  if (!val || val === '—') return '';
+  const s = String(val).trim();
+  const d = parseToDate(s);
+  if (!d) return '';
+  d.setUTCDate(d.getUTCDate() + 1);
+  return fmtDateUTC(d);
 }
 
 /* ════════════════════════════
@@ -199,12 +306,24 @@ function editValue(key, val) {
   if (val == null || val === '') return '';
   if (DATE_KEYS.has(key)) return toYMD(val) || String(val);
   if (TIME_KEYS.has(key)) return toHHMM(val) || String(val);
+  if (key === 'created_at') return renderDatetime(val);
+  return String(val);
+}
+
+/** editValue with +1 day / +1 hour offsets for Bookings and Shifts modals. */
+function editValueOffset(key, val) {
+  if (val == null || val === '') return '';
+  if (DATE_KEYS.has(key)) return toYMDOffsetInput(val) || String(val);
+  if (TIME_KEYS.has(key)) return toHHMMOffset(val) || String(val);
+  if (key === 'created_at') return renderDatetime(val);
   return String(val);
 }
 
 /* ════════════════════════════
    FORMAT ROW FOR SAVE
    Normalises edited values back to the format Sheets expects.
+   When the user has seen +1 day / +1 hour, we subtract it back out
+   before sending to the sheet.
 ════════════════════════════ */
 function formatForSheet(key, val) {
   if (val == null || val === '') return val;
@@ -220,18 +339,55 @@ function formatForSheet(key, val) {
   if (DATE_KEYS.has(key)) {
     if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
     if (s.includes('T')) return s.split('T')[0];
-    const d = new Date(s.replace(' ', 'T'));
-    if (!isNaN(d)) {
-      return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
-    }
+    const d = parseToDate(s);
+    if (d) return fmtDateUTC(d);
     return s;
   }
   return val;
 }
 
+/** formatForSheet but subtracts the +1 day / +1 hour offset before saving,
+ *  so the Sheet always receives the original UTC value. */
+function formatForSheetOffset(key, val) {
+  if (val == null || val === '') return val;
+  const s = String(val).trim();
+  if (DATE_KEYS.has(key)) {
+    // The user edited a yyyy-MM-dd value that was already +1 day; subtract 1 day back
+    const d = parseToDate(s);
+    if (d) {
+      d.setUTCDate(d.getUTCDate() - 1);
+      return fmtDateUTC(d);
+    }
+    return formatForSheet(key, val);
+  }
+  if (TIME_KEYS.has(key)) {
+    // The user edited an HH:mm value that was already +1 hour; subtract 1 hour back
+    let d;
+    if (/^\d{2}:\d{2}/.test(s)) {
+      const [hh, mm] = s.split(':').map(Number);
+      d = new Date(Date.UTC(1970, 0, 1, hh, mm, 0));
+    } else if (s.includes('T')) {
+      d = parseToDate(s);
+    }
+    if (d) {
+      d.setUTCHours(d.getUTCHours() - 1);
+      const result = fmtTimeUTC(d) + ':00';
+      return result;
+    }
+    return formatForSheet(key, val);
+  }
+  return formatForSheet(key, val);
+}
+
 function formatRowForSheet(row) {
   const out = {};
   for (const [k, v] of Object.entries(row)) out[k] = formatForSheet(k, v);
+  return out;
+}
+
+function formatRowForSheetOffset(row) {
+  const out = {};
+  for (const [k, v] of Object.entries(row)) out[k] = formatForSheetOffset(k, v);
   return out;
 }
 
@@ -421,16 +577,15 @@ function DateRangePicker({ from, to, onChange }) {
 }
 
 /* ════════════════════════════
-   VIEW/EDIT MODAL
-   Uses editValue() to populate fields so dates/times are always shown
-   in clean yyyy-MM-dd / HH:mm format regardless of what Sheets sent.
+   VIEW/EDIT MODAL  —  supports optional offset mode for Bookings & Shifts
+   Pass useOffset={true} to get +1 day / +1 hour display and -1 on save.
 ════════════════════════════ */
-function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys }) {
+function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys, useOffset }) {
   const [editMode, setEditMode] = useState(false);
-  // Populate form with clean display values right away
+  const evFn = useOffset ? editValueOffset : editValue;
   const [form, setForm] = useState(() => {
     const out = {};
-    for (const [k, v] of Object.entries(row)) out[k] = editValue(k, v);
+    for (const [k, v] of Object.entries(row)) out[k] = evFn(k, v);
     return out;
   });
   const [saving, setSaving] = useState(false);
@@ -439,7 +594,11 @@ function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys
 
   const handleSave = async () => {
     setSaving(true); setErr('');
-    try { await onSave(formatRowForSheet(form)); setEditMode(false); } catch(e) { setErr(e.message); }
+    try {
+      const formatter = useOffset ? formatRowForSheetOffset : formatRowForSheet;
+      await onSave(formatter(form));
+      setEditMode(false);
+    } catch(e) { setErr(e.message); }
     setSaving(false);
   };
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -499,7 +658,7 @@ function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys
         <div style={{ padding:'14px 24px', borderTop:`1px solid ${T.border}`, display:'flex', gap:10, justifyContent:'flex-end', flexShrink:0 }}>
           {editMode ? (
             <>
-              <button onClick={() => { setEditMode(false); setForm(()=>{ const o={}; for(const[k,v] of Object.entries(row)) o[k]=editValue(k,v); return o; }); setErr(''); }}
+              <button onClick={() => { setEditMode(false); setForm(()=>{ const o={}; for(const[k,v] of Object.entries(row)) o[k]=evFn(k,v); return o; }); setErr(''); }}
                 style={{ padding:'9px 20px', border:`1px solid ${T.border}`, borderRadius:8, background:T.white, color:T.muted, fontSize:13, fontWeight:600 }}>Avbryt</button>
               <button onClick={handleSave} disabled={saving}
                 style={{ padding:'9px 22px', border:'none', borderRadius:8, background:T.primary, color:'#fff', fontSize:13, fontWeight:600, display:'flex', alignItems:'center', gap:8, opacity:saving?0.75:1 }}>
@@ -516,7 +675,7 @@ function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys
 }
 
 /* ════════════════════════════
-   CLASSIC EDIT MODAL (for other tables)
+   CLASSIC EDIT MODAL (for other tables — no offset)
 ════════════════════════════ */
 function EditModal({ row, title, onClose, onSave }) {
   const [form, setForm] = useState(() => {
@@ -637,7 +796,7 @@ function FilterPopover({ colKey, colLabel, allValues, currentFilter, onSort, onS
 }
 
 /* ════════════════════════════
-   DATA TABLE
+   DATA TABLE  (Tickets / Customers / Employees — no offset)
 ════════════════════════════ */
 const PAGE_SIZE = 15;
 
@@ -767,6 +926,9 @@ function ViewShell({ stats, children }) {
 
 /* ════════════════════════════
    BOOKING CARD LIST
+   — uses renderDateOffset / renderTimeOffset for card display
+   — passes useOffset={true} to ViewEditModal
+   — filters on toYMDOffset so the date range matches what user sees
 ════════════════════════════ */
 function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, onDateRangeChange }) {
   const [q, setQ]           = useState('');
@@ -775,7 +937,8 @@ function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, o
   const filtered = useMemo(() => {
     const lq = q.toLowerCase();
     return rows.filter(r => {
-      const d = toYMD(r.Date);
+      // Use offset date for range filtering so it matches what the user sees
+      const d = toYMDOffset(r.Date);
       if (d && dateRange.from && dateRange.to) { if (d < dateRange.from || d > dateRange.to) return false; }
       if (lq && !Object.values(r).some(v => String(v).toLowerCase().includes(lq))) return false;
       return true;
@@ -786,7 +949,15 @@ function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, o
   const paged  = filtered.slice(safePg * PAGE_SIZE, (safePg + 1) * PAGE_SIZE);
   return (
     <>
-      {viewRow && <ViewEditModal row={viewRow} title={`Bokning — ${viewRow.unique_ID}`} onClose={()=>setViewRow(null)} onSave={async updated=>{await onSave('unique_ID',viewRow.unique_ID,updated);setViewRow({...viewRow,...updated});}} cleaners={[]} cleanerFieldKeys={[]} />}
+      {viewRow && <ViewEditModal
+        row={viewRow}
+        title={`Bokning — ${viewRow.unique_ID}`}
+        onClose={()=>setViewRow(null)}
+        onSave={async updated=>{await onSave('unique_ID',viewRow.unique_ID,updated);setViewRow({...viewRow,...updated});}}
+        cleaners={[]}
+        cleanerFieldKeys={[]}
+        useOffset={true}
+      />}
       <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14, flexWrap:'wrap' }}>
         <DateRangePicker from={dateRange.from} to={dateRange.to} onChange={onDateRangeChange} />
         <div style={{ position:'relative', flex:'1 1 180px', maxWidth:260 }}>
@@ -812,7 +983,8 @@ function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, o
                   <div style={{ fontSize:12, color:T.muted, display:'flex', gap:8 }}><span>{row.PostalCode||'—'}</span><span>{row.City||'—'}</span></div>
                 </div>
                 <div style={{ padding:'14px 18px', display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', gap:6, flexShrink:0, borderLeft:`1px solid ${T.border}`, minWidth:130 }}>
-                  <span style={{ fontSize:11, color:T.muted, fontWeight:600 }}>{renderDate(row.Date)}</span>
+                  {/* +1 day on card */}
+                  <span style={{ fontSize:11, color:T.muted, fontWeight:600 }}>{renderDateOffset(row.Date)}</span>
                   <span style={{ fontSize:11, fontWeight:700, color:T.muted, background:'#F3F4F6', padding:'2px 9px', borderRadius:999 }}>{row.unique_ID||'—'}</span>
                   <span style={{ fontSize:14, fontWeight:700, color:T.success }}>{price}</span>
                 </div>
@@ -855,6 +1027,9 @@ function ShiftCircles({ row }) {
 
 /* ════════════════════════════
    SHIFT CARD LIST
+   — uses renderDateOffset / renderTimeOffset for card display
+   — passes useOffset={true} to ViewEditModal
+   — filters on toYMDOffset so the date range matches what user sees
 ════════════════════════════ */
 function ShiftCardList({ rows, loading, error, onRefresh, onSave, cleaners, dateRange, onDateRangeChange }) {
   const [q, setQ]           = useState('');
@@ -863,7 +1038,8 @@ function ShiftCardList({ rows, loading, error, onRefresh, onSave, cleaners, date
   const filtered = useMemo(() => {
     const lq = q.toLowerCase();
     return rows.filter(r => {
-      const d = toYMD(r.date);
+      // Use offset date for range filtering so it matches what the user sees
+      const d = toYMDOffset(r.date);
       if (d && dateRange.from && dateRange.to) { if (d < dateRange.from || d > dateRange.to) return false; }
       if (lq && !Object.values(r).some(v => String(v).toLowerCase().includes(lq))) return false;
       return true;
@@ -874,7 +1050,15 @@ function ShiftCardList({ rows, loading, error, onRefresh, onSave, cleaners, date
   const paged  = filtered.slice(safePg * PAGE_SIZE, (safePg + 1) * PAGE_SIZE);
   return (
     <>
-      {viewRow && <ViewEditModal row={viewRow} title={`Arbetspass — ${viewRow.shift_id}`} onClose={()=>setViewRow(null)} onSave={async updated=>{await onSave('shift_id',viewRow.shift_id,updated);setViewRow({...viewRow,...updated});}} cleaners={cleaners} cleanerFieldKeys={['cleaner_1','cleaner_2','cleaner_3']} />}
+      {viewRow && <ViewEditModal
+        row={viewRow}
+        title={`Arbetspass — ${viewRow.shift_id}`}
+        onClose={()=>setViewRow(null)}
+        onSave={async updated=>{await onSave('shift_id',viewRow.shift_id,updated);setViewRow({...viewRow,...updated});}}
+        cleaners={cleaners}
+        cleanerFieldKeys={['cleaner_1','cleaner_2','cleaner_3']}
+        useOffset={true}
+      />}
       <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14, flexWrap:'wrap' }}>
         <DateRangePicker from={dateRange.from} to={dateRange.to} onChange={onDateRangeChange} />
         <div style={{ position:'relative', flex:'1 1 180px', maxWidth:260 }}>
@@ -899,8 +1083,9 @@ function ShiftCardList({ rows, loading, error, onRefresh, onSave, cleaners, date
                 <ShiftCircles row={row} />
               </div>
               <div style={{ padding:'14px 18px', display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', gap:5, flexShrink:0, borderLeft:`1px solid ${T.border}`, minWidth:130 }}>
-                <span style={{ fontSize:13, fontWeight:700, color:T.text }}>{renderDate(row.date)}</span>
-                <span style={{ fontSize:12, color:T.muted, fontWeight:600 }}>{renderTime(row.start_time)} – {renderTime(row.end_time)}</span>
+                {/* +1 day and +1 hour on card */}
+                <span style={{ fontSize:13, fontWeight:700, color:T.text }}>{renderDateOffset(row.date)}</span>
+                <span style={{ fontSize:12, color:T.muted, fontWeight:600 }}>{renderTimeOffset(row.start_time)} – {renderTimeOffset(row.end_time)}</span>
               </div>
             </div>
           ))
@@ -948,7 +1133,7 @@ function Tickets() {
     ]}>
       <DataTable rows={data} loading={loading} error={error} onRefresh={refresh} idKey="unique_ID" onSave={saveRow} editTitle="Obesvarade ärenden — contact-data"
         columns={[
-          { key:'created_at', label:'Datum' },
+          { key:'created_at', label:'Datum', render: v => renderDatetime(v) },
           { key:'unique_ID',  label:'Ärende-ID' },
           { key:'Name',       label:'Namn' },
           { key:'Phone',      label:'Telefon' },
@@ -964,7 +1149,8 @@ function Tickets() {
 function BookedData() {
   const { data, loading, error, refresh, saveRow } = useSheetData('bookedData', 'booking_data');
   const [dateRange, setDateRange] = useState(getMonthRange);
-  const filteredData = useMemo(() => data.filter(r => { const d=toYMD(r.Date); if(!d||!dateRange.from||!dateRange.to)return true; return d>=dateRange.from&&d<=dateRange.to; }), [data, dateRange]);
+  // Stats count uses offset date for consistency with card display
+  const filteredData = useMemo(() => data.filter(r => { const d=toYMDOffset(r.Date); if(!d||!dateRange.from||!dateRange.to)return true; return d>=dateRange.from&&d<=dateRange.to; }), [data, dateRange]);
   const totalRev = filteredData.reduce((s,r) => s+(parseFloat(r.Total_billable_lc)||0), 0);
   return (
     <ViewShell stats={[
@@ -989,7 +1175,7 @@ function Customers() {
     ]}>
       <DataTable rows={data} loading={loading} error={error} onRefresh={refresh} idKey="Customer_ID" onSave={saveRow} editTitle="Kunder — customer_data"
         columns={[
-          { key:'created_at',   label:'Skapad' },
+          { key:'created_at',   label:'Skapad', render: v => renderDatetime(v) },
           { key:'Customer_ID',  label:'Kund-ID' },
           { key:'Name',         label:'Namn' },
           { key:'Phone',        label:'Telefon' },
@@ -1021,7 +1207,7 @@ function Employees() {
     ]}>
       <DataTable rows={data} loading={loading} error={error} onRefresh={refresh} idKey="employee_id" onSave={saveRow} editTitle="Personal — cleaner"
         columns={[
-          { key:'created_at',  label:'Skapad' },
+          { key:'created_at',  label:'Skapad', render: v => renderDatetime(v) },
           { key:'employee_id', label:'ID' },
           { key:'Name',        label:'Namn' },
           { key:'Phone',       label:'Telefon' },
@@ -1053,11 +1239,12 @@ function Shifts() {
   const [dateRange, setDateRange]                  = useState(getMonthRange);
   const cleaners = useMemo(() => employeeData.filter(e=>e.Name&&e.Name!=='Loading...'&&e.Email&&e.Email!=='Loading...').map(e=>({name:e.Name,email:e.Email})), [employeeData]);
   const today = new Date().toLocaleDateString('sv-SE', { timeZone:'Europe/Stockholm' });
-  const filteredData = useMemo(() => data.filter(r=>{const d=toYMD(r.date);if(!d||!dateRange.from||!dateRange.to)return true;return d>=dateRange.from&&d<=dateRange.to;}), [data, dateRange]);
+  // Stats count uses offset date for consistency with card display
+  const filteredData = useMemo(() => data.filter(r=>{const d=toYMDOffset(r.date);if(!d||!dateRange.from||!dateRange.to)return true;return d>=dateRange.from&&d<=dateRange.to;}), [data, dateRange]);
   return (
     <ViewShell stats={[
       { label:'Schemalagda pass',    value:filteredData.length, emoji:'⏰', color:T.primary },
-      { label:'Idag',                value:filteredData.filter(r=>toYMD(r.date)===today).length, emoji:'📆', color:T.warning },
+      { label:'Idag',                value:filteredData.filter(r=>toYMDOffset(r.date)===today).length, emoji:'📆', color:T.warning },
       { label:'Bekräftelse skickad', value:filteredData.filter(r=>r.Confirmation_sent==='Sent').length, emoji:'✅', color:T.success },
       { label:'Uppföljning kvar',    value:filteredData.filter(r=>!r.Followup_sent||r.Followup_sent.toString().trim()==='').length, emoji:'📤', color:T.info },
     ]}>
@@ -1067,7 +1254,7 @@ function Shifts() {
 }
 
 /* ════════════════════════════
-   NAV + SIDEBAR + LOGIN + APP  (unchanged)
+   NAV + SIDEBAR + LOGIN + APP
 ════════════════════════════ */
 const NAV = [
   { id:'booking-requests', label:'Bokningsförfrågningar', emoji:'📋', title:'Bokningsförfrågningar', subtitle:'Inkommande förfrågningar via behjarta.com (Apps Script)', Component:BookingRequests },
