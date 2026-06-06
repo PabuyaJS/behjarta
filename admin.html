@@ -843,7 +843,7 @@ function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys
   const handleSave = async () => {
     setSaving(true); setErr('');
     try {
-      const formatter = useOffset ? formatRowForSheetOffset : formatRowForSheet;
+      const formatter = formatRowForSheet;
       await onSave(formatter(form));
       setEditMode(false);
     } catch(e) { setErr(e.message); }
