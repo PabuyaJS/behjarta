@@ -38,27 +38,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function calculatePrice() {
     const sqm = parseInt(sqmInput.value, 10) || 0;
-    let pricePerSqm = 0;
-    let startFee = 149;
+    const startFee = 149;
+    let areaPrice = 0;
+    let areaPriceLabel = '';
 
-    if (sqm >= 0 && sqm <= 29) pricePerSqm = 46;
-    else if (sqm >= 30 && sqm <= 49) pricePerSqm = 45;
-    else if (sqm >= 50 && sqm <= 79) pricePerSqm = 44;
-    else if (sqm >= 80 && sqm <= 99) pricePerSqm = 43;
-    else if (sqm >= 100 && sqm <= 125) pricePerSqm = 42;
-    else if (sqm >= 126 && sqm <= 149) pricePerSqm = 41;
-    else if (sqm >= 150) pricePerSqm = 40;
+    if (sqm >= 1 && sqm <= 49) {
+        areaPrice = 2205; // Fast pris upp till 49 m²
+        areaPriceLabel = `${areaPrice} kr (fast pris)`;
+    } else if (sqm >= 50 && sqm <= 79) {
+        areaPrice = sqm * 45;
+        areaPriceLabel = '45 kr';
+    } else if (sqm >= 80 && sqm <= 99) {
+        areaPrice = sqm * 43;
+        areaPriceLabel = '43 kr';
+    } else if (sqm >= 100 && sqm <= 129) {
+        areaPrice = sqm * 41;
+        areaPriceLabel = '41 kr';
+    } else if (sqm >= 130 && sqm <= 149) {
+        areaPrice = sqm * 39;
+        areaPriceLabel = '39 kr';
+    } else if (sqm >= 150) {
+        areaPrice = sqm * 37;
+        areaPriceLabel = '37 kr';
+    }
 
-    const areaPrice = sqm * pricePerSqm;
     const windowsSelected = document.getElementById('windows')?.checked;
-
-    const totalPrice = areaPrice + startFee;
+    const totalPrice = areaPrice ? areaPrice + startFee : 0;
     const asterisk = windowsSelected ? '*' : '';
 
     // Update summary panel
     document.getElementById('summary-area').textContent = sqm ? `${sqm} m²` : 'Inte valt';
-    document.getElementById('area-price').textContent = pricePerSqm ? `${pricePerSqm} kr` : 'Inte valt';
-    document.getElementById('start-fee').textContent = pricePerSqm ? `${startFee} kr` : 'Inte lagt till';
+    document.getElementById('area-price').textContent = areaPrice ? areaPriceLabel : 'Inte valt';
+    document.getElementById('start-fee').textContent = areaPrice ? `${startFee} kr` : 'Inte lagt till';
     document.getElementById('summary-price').innerHTML = totalPrice ? `<strong class="section-title2">${totalPrice} kr${asterisk}</strong>` : 'Inget att kalkylera än';
     windowsNote.style.display = windowsSelected ? 'block' : 'none';
   }

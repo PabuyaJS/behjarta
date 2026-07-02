@@ -70,7 +70,7 @@
 
     <!-- Section boka -->
     <section class="section section-img section-img-fade" id="boka">
-      <div class="row container" style="position: relative; border-radius: 15px; padding: 20px; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <div class="row" style="position: relative; border-radius: 15px; padding: 20px; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <div class="col s12 m12 l7 center-align">
           <!-- Date and Time Selection -->
           <div class="row" style="padding: 3px;">
@@ -135,12 +135,6 @@
               <div class="col s6 m3 l3">
                   <div class="booking-option duration-option" data-duration="6">6 timmar</div>
               </div>
-              <div class="col s6 m3 l3">
-                  <div class="booking-option duration-option" data-duration="7">7 timmar</div>
-              </div>
-              <div class="col s6 m3 l3">
-                  <div class="booking-option duration-option" data-duration="8">8 timmar</div>
-              </div>
           </div>
 
           <div class="row" style="padding: 6px;">
@@ -164,7 +158,7 @@
                   <div class="booking-option frequency-option" data-frequency="biweekly">Varannan vecka <br>255 kr / tim.</div>
               </div>
               <div class="col s6 m3 l3">
-                  <div class="booking-option frequency-option" data-frequency="monthly">En gång i månaden <br>285 kr / tim.</div>
+                  <div class="booking-option frequency-option" data-frequency="monthly">Månadsvis <br>285 kr / tim.</div>
               </div>
               <div class="col s6 m3 l3">
                   <div class="booking-option frequency-option" data-frequency="oneoff">Enstaka städning <br>315 kr / tim.</div>
@@ -204,12 +198,20 @@
             <div class="col s6 m3 l3">
               <p>
                 <label>
+                  <input type="checkbox" id="fridge" data-frequency="285">
+                  <span class="teal-text text-lighten-1">1 tim. Ugn invändig<br>285 kr</span>
+                </label>
+              </p>
+            </div>
+            <div class="col s6 m3 l3">
+              <p>
+                <label>
                   <input type="checkbox" id="windows" data-frequency="true">
                   <span class="teal-text text-lighten-1">Fönsterputs</span>
                 </label>
               </p>
             </div>
-            <div class="col s6 m3 l3">
+            <div class="col s12 m3 l3">
                 <p>
                   <label>
                     <input type="checkbox" id="cleaning_products" data-frequency="200">

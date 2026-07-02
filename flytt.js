@@ -30,23 +30,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
     sqmInput.addEventListener('input', () => {
         const sqm = parseInt(sqmInput.value, 10) || 0;
-        let pricePerSqm = 0;
         const startFee = 149;
+        let areaPrice = 0;
+        let areaPriceLabel = '';
 
-        if (sqm >= 0 && sqm <= 29) pricePerSqm = 57;
-        else if (sqm >= 30 && sqm <= 49) pricePerSqm = 55;
-        else if (sqm >= 50 && sqm <= 79) pricePerSqm = 53;
-        else if (sqm >= 80 && sqm <= 99) pricePerSqm = 51;
-        else if (sqm >= 100 && sqm <= 125) pricePerSqm = 49;
-        else if (sqm >= 126 && sqm <= 149) pricePerSqm = 47;
-        else if (sqm >= 150) pricePerSqm = 45;
+        if (sqm >= 1 && sqm <= 49) {
+            areaPrice = 1900; // Fast pris upp till 49 m²
+            areaPriceLabel = `${areaPrice} kr (fast pris)`;
+        } else if (sqm >= 50 && sqm <= 79) {
+            areaPrice = sqm * 39;
+            areaPriceLabel = '39 kr';
+        } else if (sqm >= 80 && sqm <= 99) {
+            areaPrice = sqm * 37;
+            areaPriceLabel = '37 kr';
+        } else if (sqm >= 100 && sqm <= 129) {
+            areaPrice = sqm * 35;
+            areaPriceLabel = '35 kr';
+        } else if (sqm >= 130 && sqm <= 149) {
+            areaPrice = sqm * 33;
+            areaPriceLabel = '33 kr';
+        } else if (sqm >= 150) {
+            areaPrice = sqm * 31;
+            areaPriceLabel = '31 kr';
+        }
 
-        const areaPrice = sqm * pricePerSqm;
-        const totalPrice = areaPrice + startFee;
+        const totalPrice = areaPrice ? areaPrice + startFee : 0;
 
         document.getElementById('summary-area').textContent = sqm ? `${sqm} m²` : 'Inte valt';
-        document.getElementById('area-price').textContent = pricePerSqm ? `${pricePerSqm} kr` : 'Inte valt';
-        document.getElementById('start-fee').textContent = pricePerSqm ? `${startFee} kr` : 'Inte lagt till';
+        document.getElementById('area-price').textContent = areaPrice ? areaPriceLabel : 'Inte valt';
+        document.getElementById('start-fee').textContent = areaPrice ? `${startFee} kr` : 'Inte lagt till';
         document.getElementById('summary-price').innerHTML = totalPrice ? `<strong class="section-title3">${totalPrice} kr</strong>` : 'Inget att kalkylera än';
     });
 });
@@ -101,23 +113,11 @@ function submitBooking() {
         code: document.getElementById('codeMove').value
     };
 
-    // Fields that are truly optional / auto-filled
-    const optionalFields = ['duration', 'frequency', 'cleaningSuply', 'ironing1', 'fridge', 'windows', 'deepClean', 'comments', 'code'];
-
-    // Check required fields
     for (let key in formValues) {
-        if (optionalFields.includes(key)) continue;
-        if (formValues[key] === '' || formValues[key] === null || formValues[key] === undefined) {
+        if (!formValues[key] && !['duration', 'frequency', 'cleaningSuply', 'ironing1', 'fridge', 'windows', 'deepClean', 'comments'].includes(key)) {
             M.toast({ html: 'Vänligen fyll i alla obligatoriska fält', classes: 'red' });
             return;
         }
-    }
-
-    // Check terms checkbox separately
-    const termsCheckbox = document.querySelector('input[data-frequency="true"]');
-    if (!termsCheckbox || !termsCheckbox.checked) {
-        M.toast({ html: 'Du måste godkänna villkoren för att fortsätta', classes: 'red' });
-        return;
     }
 
     const preloader4 = document.getElementById('preloader4');
@@ -138,9 +138,5 @@ function submitBooking() {
             M.toast({ html: 'Något gick fel med servern. Försök igen senare.', classes: 'red' });
         }
     })
-    .catch(error => {
-        preloader4.style.display = 'none';
-        console.error('Fetch Error:', error);
-        M.toast({ html: 'Nätverksfel. Kontrollera din anslutning.', classes: 'red' });
-    });
+    
 }
