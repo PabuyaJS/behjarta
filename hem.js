@@ -30,13 +30,11 @@ M.Timepicker.init(timepickers, {
 
 // Recommendation text mapping
 const durationRecommendations = {
-'2': 'Gäller städning för 0 - 29 m² (max. 1 RoK)',
-'3': 'Gäller städning för 30 - 49 m² (max. 2 RoK)',
-'4': 'Gäller städning för 50 - 79 m² (max. 3 RoK)',
-'5': 'Gäller städning för 80 - 99 m² (max. 4 RoK)',
-'6': 'Gäller städning för 100 - 125 m² (max. 5 RoK)',
-'7': 'Gäller städning för 126 - 149 m² (max. 5 RoK)',
-'8': 'Gäller städning för 150 m² +'
+'2': 'Passar städning för 0 - 39 m² (ca. 1 RoK)',
+'3': 'Passar städning för 40 - 89 m² (ca. 3 RoK)',
+'4': 'Passar städning för 90 - 159 m² (ca. 4 - 5 RoK)',
+'5': 'Passar städning för 160 - 199 m² (ca. 5 - 6 RoK)',
+'6': 'Passar städning för 200 m² +'
 };
 
 // Frequency pricing mapping
