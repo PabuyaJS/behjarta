@@ -119,8 +119,9 @@ const MOCK = {
 
    Fix: always read the RAW UTC components (getUTC*) – never the local ones.
 
-   Offset variants (+1 day / +1 hour) are used exclusively in Bookings and
-   Shifts views so the displayed value matches what is stored in the Sheet.
+   Offset variants (+1 day / +1 hour) are used across all views (Tickets,
+   Bookings, Customers, Employees, Shifts) so the displayed value matches
+   what is stored in the Sheet.
 ════════════════════════════ */
 
 /** Parse any date/datetime string into a Date object (UTC-safe). */
@@ -171,7 +172,7 @@ function renderDate(val) {
 }
 
 /** Render a date value as yyyy-MM-dd with +1 day offset.
- *  Used in Bookings and Shifts card/overview/edit views. */
+ *  Used across all card/table/edit views so displayed values match the sheet. */
 function renderDateOffset(val) {
   if (val == null || val === '') return '—';
   const s = String(val).trim();
@@ -195,7 +196,7 @@ function renderTime(val) {
 }
 
 /** Render a time value as HH:mm with +1 hour offset.
- *  Used in Bookings and Shifts card/overview/edit views. */
+ *  Used across all card/table/edit views so displayed values match the sheet. */
 function renderTimeOffset(val) {
   if (val == null || val === '') return '—';
   const s = String(val).trim();
@@ -236,7 +237,7 @@ function toYMD(val) {
   return fmtDateUTC(d);
 }
 
-/** toYMD with +1 day — used for filtering in Bookings/Shifts
+/** toYMD with +1 day — used for filtering in date-driven views
  *  so the filter range matches what the user sees on screen. */
 function toYMDOffset(val) {
   if (!val || val === '—') return '';
@@ -261,7 +262,7 @@ function toHHMM(val) {
   return s.slice(0, 5);
 }
 
-/** toHHMM with +1 hour — for pre-filling time inputs in Bookings/Shifts edit modals. */
+/** toHHMM with +1 hour — for pre-filling time inputs in edit modals. */
 function toHHMMOffset(val) {
   if (!val || val === '—') return '';
   const s = String(val).trim();
@@ -279,7 +280,7 @@ function toHHMMOffset(val) {
   return fmtTimeUTC(d);
 }
 
-/** toYMD +1 day for date inputs in Bookings/Shifts edit modals. */
+/** toYMD +1 day for date inputs in edit modals. */
 function toYMDOffsetInput(val) {
   if (!val || val === '—') return '';
   const s = String(val).trim();
@@ -318,7 +319,8 @@ function editValue(key, val) {
   return String(val);
 }
 
-/** editValue with +1 day / +1 hour offsets for Bookings and Shifts modals. */
+/** editValue with +1 day / +1 hour offsets — used everywhere date/time
+ *  fields are shown for editing, so the value matches what's on screen. */
 function editValueOffset(key, val) {
   if (val == null || val === '') return '';
   if (DATE_KEYS.has(key)) return toYMDOffsetInput(val) || String(val);
@@ -948,12 +950,15 @@ function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys
 }
 
 /* ════════════════════════════
-   CLASSIC EDIT MODAL (for other tables — no offset)
+   CLASSIC EDIT MODAL (for other tables — Tickets, Customers, Employees)
+   Uses the same +1 day / +1 hour offset logic as Bookings & Shifts so the
+   value shown for editing matches what's displayed in the table, and gets
+   correctly converted back before saving to the sheet.
 ════════════════════════════ */
 function EditModal({ row, title, onClose, onSave }) {
   const [form, setForm] = useState(() => {
     const out = {};
-    for (const [k, v] of Object.entries(row)) out[k] = editValue(k, v);
+    for (const [k, v] of Object.entries(row)) out[k] = editValueOffset(k, v);
     return out;
   });
   const [saving, setSaving] = useState(false);
@@ -961,7 +966,7 @@ function EditModal({ row, title, onClose, onSave }) {
   const keys = Object.keys(row);
   const handleSave = async () => {
     setSaving(true); setErr('');
-    try { await onSave(formatRowForSheet(form)); onClose(); } catch(e) { setErr(e.message); setSaving(false); }
+    try { await onSave(formatRowForSheetOffset(form)); onClose(); } catch(e) { setErr(e.message); setSaving(false); }
   };
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   return (
@@ -1069,11 +1074,11 @@ function FilterPopover({ colKey, colLabel, allValues, currentFilter, onSort, onS
 }
 
 /* ════════════════════════════
-   DATA TABLE  (Tickets / Customers / Employees — no offset)
+   DATA TABLE  (Tickets / Customers / Employees)
 ════════════════════════════ */
 const PAGE_SIZE = 15;
 
-function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, editTitle }) {
+function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, editTitle, extraControls }) {
   const [q, setQ]               = useState('');
   const [sortCol, setSortCol]   = useState(null);
   const [sortDir, setSortDir]   = useState('asc');
@@ -1126,7 +1131,10 @@ function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, ed
         {activeFilterCount > 0 && <div style={{ display:'flex', alignItems:'center', gap:6, background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:8, padding:'4px 10px', fontSize:12, color:'#92400E', fontWeight:600 }}><span>🔽 {activeFilterCount} filter aktiva</span><button onClick={clearAllFilters} style={{ background:'none', border:'none', color:'#92400E', cursor:'pointer', fontWeight:700, fontSize:13, padding:'0 2px', lineHeight:1 }}>×</button></div>}
         {loading && <span className="spin" style={{ width:14, height:14, border:`2px solid ${T.border}`, borderTopColor:T.primary, borderRadius:'50%' }} />}
         {error && <span style={{ fontSize:12, color:T.danger }}>⚠️ {error}</span>}
-        <button onClick={onRefresh} style={{ marginLeft:'auto', padding:'7px 14px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:8, color:T.primaryDark, fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:5 }} onMouseEnter={e=>{e.currentTarget.style.background=T.primaryMid;e.currentTarget.style.color='#fff';}} onMouseLeave={e=>{e.currentTarget.style.background=T.primaryLight;e.currentTarget.style.color=T.primaryDark;}}>↻ Uppdatera</button>
+        <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:10 }}>
+          {extraControls}
+          <button onClick={onRefresh} style={{ padding:'7px 14px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:8, color:T.primaryDark, fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:5 }} onMouseEnter={e=>{e.currentTarget.style.background=T.primaryMid;e.currentTarget.style.color='#fff';}} onMouseLeave={e=>{e.currentTarget.style.background=T.primaryLight;e.currentTarget.style.color=T.primaryDark;}}>↻ Uppdatera</button>
+        </div>
       </div>
       <div style={{ border:`1px solid ${T.border}`, borderRadius:10, overflow:'hidden' }}>
         <div style={{ overflowX:'auto' }}>
@@ -1456,10 +1464,10 @@ function Customers() {
           { key:'City',         label:'Stad' },
           { key:'PostalCode',   label:'Postnr' },
           { key:'Is_contract_active',        label:'Kontrakt aktivt', render:v=><Badge val={v}/>, noSort:true },
-          { key:'Contract_sent_date',        label:'Kontrakt skickat', render:renderDate },
-          { key:'Contract_start_date',       label:'Kontrakt start',   render:renderDate },
-          { key:'Contract_resignation_date', label:'Uppsägning',       render:renderDate },
-          { key:'Contract_end_date',         label:'Kontrakt slut',    render:renderDate },
+          { key:'Contract_sent_date',        label:'Kontrakt skickat', render:renderDateOffset },
+          { key:'Contract_start_date',       label:'Kontrakt start',   render:renderDateOffset },
+          { key:'Contract_resignation_date', label:'Uppsägning',       render:renderDateOffset },
+          { key:'Contract_end_date',         label:'Kontrakt slut',    render:renderDateOffset },
           { key:'Personnummer', label:'Personnummer' },
           { key:'Signature',    label:'Signatur', render:v=><Badge val={v||'Nej'}/>, noSort:true },
         ]}
@@ -1470,6 +1478,8 @@ function Customers() {
 
 function Employees() {
   const { data, loading, error, refresh, saveRow } = useSheetData('employees', 'cleaner');
+  const [showInactive, setShowInactive] = useState(false);
+  const visibleData = useMemo(() => showInactive ? data : data.filter(r => r.is_active === 'Ja'), [data, showInactive]);
   return (
     <ViewShell stats={[
       { label:'Total personal', value:data.length, emoji:'🧹', color:T.primary },
@@ -1477,7 +1487,13 @@ function Employees() {
       { label:'Inaktiva',       value:data.filter(r=>r.is_active!=='Ja').length, emoji:'🔴', color:T.danger },
       { label:'Utbildade',      value:data.filter(r=>r.Trained==='Ja').length,   emoji:'🎓', color:T.info },
     ]}>
-      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh} idKey="employee_id" onSave={saveRow} editTitle="Personal — cleaner"
+      <DataTable rows={visibleData} loading={loading} error={error} onRefresh={refresh} idKey="employee_id" onSave={saveRow} editTitle="Personal — cleaner"
+        extraControls={
+          <label style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:T.muted, fontWeight:600, cursor:'pointer', whiteSpace:'nowrap', userSelect:'none' }}>
+            <input type="checkbox" checked={showInactive} onChange={e=>setShowInactive(e.target.checked)} style={{ accentColor:T.primary, width:14, height:14 }} />
+            Visa inaktiva
+          </label>
+        }
         columns={[
           { key:'created_at',  label:'Skapad', render: v => renderDatetime(v) },
           { key:'employee_id', label:'ID' },
@@ -1491,9 +1507,9 @@ function Employees() {
           { key:'Trained',     label:'Utbildad',          render:v=><Badge val={v}/>, noSort:true },
           { key:'uploaded_background_check', label:'Bakgrundskontroll', render:v=><Badge val={v}/>, noSort:true },
           { key:'Payment_rule',label:'Löneregel' },
-          { key:'contract_start_date', label:'Kontrakt start', render:renderDate },
-          { key:'6_months_probation',  label:'Provanst. slut', render:renderDate },
-          { key:'contract_end_date',   label:'Kontrakt slut',  render:renderDate },
+          { key:'contract_start_date', label:'Kontrakt start', render:renderDateOffset },
+          { key:'6_months_probation',  label:'Provanst. slut', render:renderDateOffset },
+          { key:'contract_end_date',   label:'Kontrakt slut',  render:renderDateOffset },
           { key:'Reporting_to_name',   label:'Rapporterar till' },
           { key:'Reporting_to_phone',  label:'Chef telefon' },
           { key:'Bank',            label:'Bank' },
@@ -1509,7 +1525,8 @@ function Shifts() {
   const { data, loading, error, refresh, saveRow } = useSheetData('shifts', 'shifts');
   const { data: employeeData }                     = useSheetData('employees', 'cleaner');
   const [dateRange, setDateRange]                  = useState(getMonthRange);
-  const cleaners = useMemo(() => employeeData.filter(e=>e.Name&&e.Name!=='Loading...'&&e.Email&&e.Email!=='Loading...').map(e=>({name:e.Name,email:e.Email})), [employeeData]);
+  // Only active employees are offered in the cleaner dropdown, to keep the list short and unambiguous
+  const cleaners = useMemo(() => employeeData.filter(e=>e.Name&&e.Name!=='Loading...'&&e.Email&&e.Email!=='Loading...'&&e.is_active==='Ja').map(e=>({name:e.Name,email:e.Email})), [employeeData]);
   const today = new Date().toLocaleDateString('sv-SE', { timeZone:'Europe/Stockholm' });
   // Stats count uses offset date for consistency with card display
   const filteredData = useMemo(() => data.filter(r=>{const d=toYMDOffset(r.date);if(!d||!dateRange.from||!dateRange.to)return true;return d>=dateRange.from&&d<=dateRange.to;}), [data, dateRange]);
