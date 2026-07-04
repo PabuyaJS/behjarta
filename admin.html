@@ -119,9 +119,8 @@ const MOCK = {
 
    Fix: always read the RAW UTC components (getUTC*) – never the local ones.
 
-   Offset variants (+1 day / +1 hour) are used across all views (Tickets,
-   Bookings, Customers, Employees, Shifts) so the displayed value matches
-   what is stored in the Sheet.
+   Offset variants (+1 day / +1 hour) are used exclusively in Bookings and
+   Shifts views so the displayed value matches what is stored in the Sheet.
 ════════════════════════════ */
 
 /** Parse any date/datetime string into a Date object (UTC-safe). */
@@ -172,7 +171,7 @@ function renderDate(val) {
 }
 
 /** Render a date value as yyyy-MM-dd with +1 day offset.
- *  Used across all card/table/edit views so displayed values match the sheet. */
+ *  Used in Bookings and Shifts card/overview/edit views. */
 function renderDateOffset(val) {
   if (val == null || val === '') return '—';
   const s = String(val).trim();
@@ -196,7 +195,7 @@ function renderTime(val) {
 }
 
 /** Render a time value as HH:mm with +1 hour offset.
- *  Used across all card/table/edit views so displayed values match the sheet. */
+ *  Used in Bookings and Shifts card/overview/edit views. */
 function renderTimeOffset(val) {
   if (val == null || val === '') return '—';
   const s = String(val).trim();
@@ -237,7 +236,7 @@ function toYMD(val) {
   return fmtDateUTC(d);
 }
 
-/** toYMD with +1 day — used for filtering in date-driven views
+/** toYMD with +1 day — used for filtering in Bookings/Shifts
  *  so the filter range matches what the user sees on screen. */
 function toYMDOffset(val) {
   if (!val || val === '—') return '';
@@ -262,7 +261,7 @@ function toHHMM(val) {
   return s.slice(0, 5);
 }
 
-/** toHHMM with +1 hour — for pre-filling time inputs in edit modals. */
+/** toHHMM with +1 hour — for pre-filling time inputs in Bookings/Shifts edit modals. */
 function toHHMMOffset(val) {
   if (!val || val === '—') return '';
   const s = String(val).trim();
@@ -280,7 +279,7 @@ function toHHMMOffset(val) {
   return fmtTimeUTC(d);
 }
 
-/** toYMD +1 day for date inputs in edit modals. */
+/** toYMD +1 day for date inputs in Bookings/Shifts edit modals. */
 function toYMDOffsetInput(val) {
   if (!val || val === '—') return '';
   const s = String(val).trim();
@@ -319,8 +318,7 @@ function editValue(key, val) {
   return String(val);
 }
 
-/** editValue with +1 day / +1 hour offsets — used everywhere date/time
- *  fields are shown for editing, so the value matches what's on screen. */
+/** editValue with +1 day / +1 hour offsets for Bookings and Shifts modals. */
 function editValueOffset(key, val) {
   if (val == null || val === '') return '';
   if (DATE_KEYS.has(key)) return toYMDOffsetInput(val) || String(val);
@@ -950,15 +948,13 @@ function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys
 }
 
 /* ════════════════════════════
-   CLASSIC EDIT MODAL (for other tables — Tickets, Customers, Employees)
-   Uses the same +1 day / +1 hour offset logic as Bookings & Shifts so the
-   value shown for editing matches what's displayed in the table, and gets
-   correctly converted back before saving to the sheet.
+   CLASSIC EDIT MODAL (for other tables — supports optional offset mode)
 ════════════════════════════ */
-function EditModal({ row, title, onClose, onSave }) {
+function EditModal({ row, title, onClose, onSave, useOffset }) {
+  const evFn = useOffset ? editValueOffset : editValue;
   const [form, setForm] = useState(() => {
     const out = {};
-    for (const [k, v] of Object.entries(row)) out[k] = editValueOffset(k, v);
+    for (const [k, v] of Object.entries(row)) out[k] = evFn(k, v);
     return out;
   });
   const [saving, setSaving] = useState(false);
@@ -966,7 +962,10 @@ function EditModal({ row, title, onClose, onSave }) {
   const keys = Object.keys(row);
   const handleSave = async () => {
     setSaving(true); setErr('');
-    try { await onSave(formatRowForSheetOffset(form)); onClose(); } catch(e) { setErr(e.message); setSaving(false); }
+    try {
+      const formatter = useOffset ? formatRowForSheetOffset : formatRowForSheet;
+      await onSave(formatter(form)); onClose();
+    } catch(e) { setErr(e.message); setSaving(false); }
   };
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   return (
@@ -1075,10 +1074,13 @@ function FilterPopover({ colKey, colLabel, allValues, currentFilter, onSort, onS
 
 /* ════════════════════════════
    DATA TABLE  (Tickets / Customers / Employees)
+   — supports optional `useOffset` prop (Contract_*, contract_* etc. dates)
+   — supports optional `extraControls` node rendered just before the
+     "Uppdatera" refresh button (used by Employees for the inactive filter)
 ════════════════════════════ */
 const PAGE_SIZE = 15;
 
-function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, editTitle, extraControls }) {
+function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, editTitle, useOffset, extraControls }) {
   const [q, setQ]               = useState('');
   const [sortCol, setSortCol]   = useState(null);
   const [sortDir, setSortDir]   = useState('asc');
@@ -1121,7 +1123,7 @@ function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, ed
   return (
     <>
       {openFilter && filterAnchor && <FilterPopover colKey={openFilter} colLabel={columns.find(c=>c.key===openFilter)?.label||openFilter} allValues={columnValues[openFilter]||[]} currentFilter={filters[openFilter]||null} onSort={handlePopoverSort} onSetFilter={handleSetFilter} onClose={()=>{setOpenFilter(null);setFilterAnchor(null);}} anchor={filterAnchor} />}
-      {editRow && <EditModal row={editRow} title={editTitle} onClose={()=>setEditRow(null)} onSave={async updated=>{await onSave(idKey,editRow[idKey],updated);setEditRow(null);}} />}
+      {editRow && <EditModal row={editRow} title={editTitle} useOffset={useOffset} onClose={()=>setEditRow(null)} onSave={async updated=>{await onSave(idKey,editRow[idKey],updated);setEditRow(null);}} />}
       <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14, flexWrap:'wrap' }}>
         <div style={{ position:'relative', flex:'1 1 200px', maxWidth:280 }}>
           <span style={{ position:'absolute', left:9, top:'50%', transform:'translateY(-50%)', color:T.muted, fontSize:12, pointerEvents:'none' }}>🔍</span>
@@ -1411,7 +1413,7 @@ function Tickets() {
       { label:'Obesvarade',       value:data.filter(r=>!r.Answered||r.Answered==='Nej').length, emoji:'❗', color:T.danger, sub:'Kräver svar' },
       { label:'Under behandling', value:data.filter(r=>r.Answered==='Under behandling').length, emoji:'🔄', color:T.warning },
     ]}>
-      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh} idKey="unique_ID" onSave={saveRow} editTitle="Obesvarade ärenden — contact-data"
+      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh} idKey="unique_ID" onSave={saveRow} editTitle="Obesvarade ärenden — contact-data" useOffset={true}
         columns={[
           { key:'created_at', label:'Datum', render: v => renderDatetime(v) },
           { key:'unique_ID',  label:'Ärende-ID' },
@@ -1453,7 +1455,7 @@ function Customers() {
       { label:'Utan aktivt kontrakt', value:data.filter(r=>r.Is_contract_active!=='Ja').length, emoji:'⚠️', color:T.warning },
       { label:'Städer',               value:[...new Set(data.map(r=>r.City).filter(Boolean))].length, emoji:'🏙️', color:T.info },
     ]}>
-      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh} idKey="Customer_ID" onSave={saveRow} editTitle="Kunder — customer_data"
+      <DataTable rows={data} loading={loading} error={error} onRefresh={refresh} idKey="Customer_ID" onSave={saveRow} editTitle="Kunder — customer_data" useOffset={true}
         columns={[
           { key:'created_at',   label:'Skapad', render: v => renderDatetime(v) },
           { key:'Customer_ID',  label:'Kund-ID' },
@@ -1487,11 +1489,11 @@ function Employees() {
       { label:'Inaktiva',       value:data.filter(r=>r.is_active!=='Ja').length, emoji:'🔴', color:T.danger },
       { label:'Utbildade',      value:data.filter(r=>r.Trained==='Ja').length,   emoji:'🎓', color:T.info },
     ]}>
-      <DataTable rows={visibleData} loading={loading} error={error} onRefresh={refresh} idKey="employee_id" onSave={saveRow} editTitle="Personal — cleaner"
+      <DataTable rows={visibleData} loading={loading} error={error} onRefresh={refresh} idKey="employee_id" onSave={saveRow} editTitle="Personal — cleaner" useOffset={true}
         extraControls={
-          <label style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:T.muted, fontWeight:600, cursor:'pointer', whiteSpace:'nowrap', userSelect:'none' }}>
+          <label style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:T.muted, fontWeight:600, cursor:'pointer', whiteSpace:'nowrap' }}>
             <input type="checkbox" checked={showInactive} onChange={e=>setShowInactive(e.target.checked)} style={{ accentColor:T.primary, width:14, height:14 }} />
-            Visa inaktiva
+            Visa inaktiv personal
           </label>
         }
         columns={[
@@ -1525,7 +1527,7 @@ function Shifts() {
   const { data, loading, error, refresh, saveRow } = useSheetData('shifts', 'shifts');
   const { data: employeeData }                     = useSheetData('employees', 'cleaner');
   const [dateRange, setDateRange]                  = useState(getMonthRange);
-  // Only active employees are offered in the cleaner dropdown, to keep the list short and unambiguous
+  // Only active employees are offered in the cleaner dropdown to keep the list uncluttered
   const cleaners = useMemo(() => employeeData.filter(e=>e.Name&&e.Name!=='Loading...'&&e.Email&&e.Email!=='Loading...'&&e.is_active==='Ja').map(e=>({name:e.Name,email:e.Email})), [employeeData]);
   const today = new Date().toLocaleDateString('sv-SE', { timeZone:'Europe/Stockholm' });
   // Stats count uses offset date for consistency with card display
