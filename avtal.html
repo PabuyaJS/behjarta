@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ditt avtal med Behjärta</title>
+<link href="https://fonts.googleapis.com/css2?family=Concert+One&family=Homemade+Apple&family=Lexend:wght@100..900&family=Poetsen+One&display=swap" rel="stylesheet">
+<link rel="shortcut icon" href="https://wallpapers.com/images/hd/document-icon-graphic-ry6hxlmiuy2qzh2g-ry6hxlmiuy2qzh2g.png" type="image/x-icon">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Lexend', Arial, sans-serif; background-color: #f5f5f5; color: #333; line-height: 1.6; }
+
+  .container {
+    max-width: 210mm; min-height: 297mm; margin: 20px auto; background: white;
+    padding: 25mm; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-radius: 8px; position: relative;
+  }
+
+  h1 { font-size: 24px; color: #03a9f4; margin-bottom: 25px; font-weight: 600; text-align: center; border-bottom: 3px solid #03a9f4; padding-bottom: 15px; }
+
+  .company-info, .customer-info { background: #f8fafe; border-left: 4px solid #03a9f4; padding: 15px; margin: 20px 0; border-radius: 4px; }
+  .company-info b, .customer-info b { color: #03a9f4; font-weight: 600; }
+
+  .personnummer-section { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin: 20px 0; border-radius: 4px; }
+  .personnummer-section input {
+    border: 2px solid #03a9f4; padding: 8px 12px; font-size: 16px; border-radius: 4px; width: 200px; margin-left: 10px;
+  }
+  .personnummer-section input:focus { outline: none; border-color: #0288d1; box-shadow: 0 0 5px rgba(3, 169, 244, 0.3); }
+
+  hr { border: none; height: 2px; background: linear-gradient(to right, #03a9f4, #81d4fa); margin: 25px 0; }
+
+  ol { counter-reset: section-counter; list-style: none; margin: 25px 0; }
+  ol > li { counter-increment: section-counter; margin-bottom: 25px; position: relative; padding-left: 40px; }
+  ol > li::before {
+    content: counter(section-counter); position: absolute; left: 0; top: 0; background: #03a9f4; color: white;
+    width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 14px;
+  }
+  ol > li b { color: #03a9f4; font-size: 18px; display: block; margin-bottom: 8px; font-weight: 600; }
+  ul { margin: 10px 0 10px 20px; }
+  ul li { margin-bottom: 5px; position: relative; }
+  ul li::marker { color: #03a9f4; }
+
+  .signature-area { border: 2px solid #03a9f4; padding: 20px; margin-top: 30px; border-radius: 8px; background: #f8fafe; }
+  .signature-area p:first-child { color: #03a9f4; font-weight: 600; font-size: 18px; margin-bottom: 15px; }
+  .signature-area label { display: block; margin: 8px 0; cursor: pointer; font-weight: 500; }
+  .signature-area input[type="radio"] { margin-right: 8px; accent-color: #03a9f4; }
+
+  .italic-signature { font-family: 'Homemade Apple', cursive; font-size: 18px; color: #03a9f4; padding: 10px; background: white; border-radius: 4px; margin: 10px 0; }
+  canvas { border: 2px solid #03a9f4; border-radius: 4px; background: white; touch-action: none; }
+  em { font-style: italic; font-family: 'Homemade Apple', cursive; font-size: 18px; }
+
+  button {
+    background: #03a9f4; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 4px;
+    cursor: pointer; font-weight: 600; transition: background 0.3s ease; margin: 5px;
+  }
+  button:hover { background: #0288d1; }
+  button:disabled { background: #B0BEC5; cursor: not-allowed; }
+
+  .submit-button { background: linear-gradient(45deg, #03a9f4, #00bcd4); padding: 15px 30px; font-size: 18px; margin-top: 20px; box-shadow: 0 4px 15px rgba(3, 169, 244, 0.3); }
+  .submit-button:hover { background: linear-gradient(45deg, #0288d1, #00acc1); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(3, 169, 244, 0.4); }
+
+  .loader {
+    border: 6px solid #f3f3f3; border-top: 6px solid #03a9f4; border-radius: 50%; width: 50px; height: 50px;
+    animation: spin 1s linear infinite; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 999;
+  }
+  @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+  .hidden { display: none; }
+
+  .toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(45deg, #03a9f4, #00bcd4); color: white; padding: 16px 28px; border-radius: 25px;
+    font-size: 16px; font-weight: 500; opacity: 0; transition: all 0.4s ease-in-out; z-index: 1000;
+    box-shadow: 0 4px 20px rgba(3, 169, 244, 0.3);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-10px); }
+
+  .section-text { margin-top: 8px; text-align: justify; }
+  .highlight { background: linear-gradient(120deg, rgba(3, 169, 244, 0.1) 0%, rgba(3, 169, 244, 0.1) 100%); padding: 2px 4px; border-radius: 3px; font-weight: 600; }
+
+  .status-box {
+    max-width: 210mm; margin: 80px auto; background: white; padding: 40px; border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center;
+  }
+  .status-box .icon { font-size: 40px; margin-bottom: 16px; }
+  .status-box p { font-size: 16px; color: #333; line-height: 1.7; }
+
+  @media print { body { background: white; } .container { box-shadow: none; border-radius: 0; margin: 0; padding: 20mm; } }
+</style>
+</head>
+<body>
+
+  <!-- Shown while contract data is loading -->
+  <div id="loadingBox" class="status-box">
+    <div class="icon">⏳</div>
+    <p>Laddar ditt avtal...</p>
+  </div>
+
+  <!-- Shown for expired / already-signed / not-found / error states -->
+  <div id="voidBox" class="status-box hidden">
+    <div class="icon">⚠️</div>
+    <p id="voidMessage"></p>
+  </div>
+
+  <!-- The actual contract -->
+  <div id="contractContent" class="container hidden">
+    <h1>Avtal mellan Behjärta (MS Secure Solutions AB) och <span id="custNameTitle"></span></h1>
+
+    <div class="company-info">
+      <p><b>Behjärta:</b><br>
+      Behjärta (MS Secure Solutions AB)<br>
+      Organisationsnummer: 559189-2806<br>
+      Adress: Dörrvägen 36 122 44, Enskede<br>
+      E-post: hej@behjärta.com<br>
+      Telefon: 0707 89 89 52</p>
+    </div>
+
+    <div class="customer-info">
+      <p><b>Kunden:</b><br>
+      Namn: <span id="custNameInfo"></span><br>
+      Adress: <span id="custAddress"></span>, <span id="custZip"></span> <span id="custCity1"></span><br>
+      E-post: <span id="custEmail"></span><br>
+      Telefon: <span id="custPhone"></span></p>
+    </div>
+
+    <div class="personnummer-section">
+      <strong>Personnummer:</strong>
+      <input type="text" id="personnummer" placeholder="ÅÅÅÅMMDD-XXXX" required>
+    </div>
+
+    <hr>
+
+    <ol>
+      <li>
+        <b>Tjänstens omfattning</b>
+        <div class="section-text">
+          Avtalet gäller regelbunden <span class="highlight">hemstädning</span> enligt något av följande alternativ:
+          <ul><li>Varje vecka</li><li>Två gånger i månaden</li><li>En gång i månaden</li></ul>
+          För övriga tjänster gäller <span class="highlight">Behjärtas allmänna villkor</span>, som finns att läsa på vår hemsida.
+        </div>
+      </li>
+      <li>
+        <b>Avtalets karaktär och uppsägning</b>
+        <div class="section-text">
+          Avtalet är <span class="highlight">icke-bindande</span>, men omfattas av en <span class="highlight">uppsägningstid på en (1) månad</span> från och med det datum kunden meddelar att avtalet sägs upp. Uppsägningen ska ske skriftligt via e-post, telefon eller via vår hemsida.
+        </div>
+      </li>
+      <li>
+        <b>Priser och betalningsvillkor</b>
+        <div class="section-text">
+          <ul>
+            <li>Aktuella priser finns på vår hemsida: https://behjarta.com.</li>
+            <li>Vi förbehåller oss rätten att justera priserna med <span class="highlight">minst 14 dagars förhandsinformation</span> till kunden.</li>
+            <li>Samtliga tjänster faktureras i <span class="highlight">förskott</span> med <span class="highlight">14 dagars betalningsvillkor</span> från fakturadatum.</li>
+            <li>Vid <span class="highlight">försenad betalning</span> skickas en <span class="highlight">påminnelsefaktura</span> med en <span class="highlight">påminnelseavgift på 60 kr</span>.</li>
+            <li>Om betalningen fortfarande uteblir överlämnas fakturan till <span class="highlight">inkasso</span>.</li>
+          </ul>
+        </div>
+      </li>
+      <li>
+        <b>Avbokning och ändringar</b>
+        <div class="section-text">
+          <strong>Ändringar:</strong>
+          <ul>
+            <li>Fri ändring av datum/tid minst <span class="highlight">48 timmar före bokningen</span> (vardagar kl. 09:00–18:00).</li>
+            <li>Ändring mellan <span class="highlight">12–48 timmar före bokningen</span> debiteras <span class="highlight">50% av tjänstens kostnad</span>.</li>
+          </ul>
+          <strong>Avbokningar:</strong>
+          <ul>
+            <li>Fri avbokning upp till <span class="highlight">5 dagar</span> innan bokad tid.</li>
+            <li>Vid avbokning <span class="highlight">mindre än 12 timmar</span> före bokad tid debiteras <span class="highlight">100% av tjänstens kostnad</span>.</li>
+          </ul>
+          Avgifter dras från redan betald faktura eller faktureras separat.
+        </div>
+      </li>
+      <li>
+        <b>Kommunikation</b>
+        <div class="section-text">
+          All kommunikation sker primärt via vår <span class="highlight">hemsida https://behjarta.com</span>:
+          <ul>
+            <li><span class="highlight">Bokning:</span> via sektionen <b>Tjänster</b></li>
+            <li><span class="highlight">Ändringar/Avbokningar:</span> via kundtjänst i sektionen <b>Ändra/Avboka tjänst</b></li>
+            <li>Övriga ärenden: via e-post eller telefon</li>
+          </ul>
+        </div>
+      </li>
+      <li>
+        <b>Ansvarsbegränsning</b>
+        <div class="section-text">
+          Behjärta ansvarar inte för:
+          <ul>
+            <li><span class="highlight">Indirekta skador</span> eller <span class="highlight">förlust av värdesaker</span> om dessa inte tydligt dokumenterats av kunden i förväg.</li>
+            <li>Dock täcks <span class="highlight">skador</span> som kan styrkas via vår kundtjänst inom <span class="highlight">72 timmar</span> från att tjänsten utförts, förutsatt att korrekt dokumentation finns. Vi är <span class="highlight">försäkrade</span>.</li>
+          </ul>
+        </div>
+      </li>
+      <li>
+        <b>Nyckelhantering</b>
+        <div class="section-text">
+          Om kunden inte är hemma vid städtillfället:
+          <ul>
+            <li>Kunden lämnar över <span class="highlight">en reservnyckel vid första städningen</span>. Den ska finnas tillgänglig vid vår ankomst.</li>
+            <li>Behjärta ansvarar för <span class="highlight">säker nyckelhantering</span>, men ersätter inte skador som uppkommer p.g.a. förlorad nyckel som inte hanterats enligt överenskommelse.</li>
+          </ul>
+        </div>
+      </li>
+      <li>
+        <b>Personuppgifter / GDPR</b>
+        <div class="section-text">
+          Kundens uppgifter hanteras i enlighet med <span class="highlight">Dataskyddsförordningen (GDPR)</span>. Uppgifter används enbart för att kunna leverera tjänsten och kommunicera med kunden.
+        </div>
+      </li>
+      <li>
+        <b>Reklamation</b>
+        <div class="section-text">
+          Missnöjd med tjänsten? Kontakta oss via:
+          <ul><li>Hemsidan: sektionen <b>Reklamation</b></li><li>E-post eller telefon</li></ul>
+          Reklamation måste göras <span class="highlight">inom 72 timmar</span> från det att tjänsten har utförts.
+        </div>
+      </li>
+      <li>
+        <b>Tystnadsplikt / Diskretion</b>
+        <div class="section-text">
+          Alla Behjärtas medarbetare arbetar under <span class="highlight">sekretess</span> och följer strikt <span class="highlight">tystnadsplikt</span> gällande allt de ser eller hör i samband med sitt arbete hos kunden.
+        </div>
+      </li>
+      <li>
+        <b>Godkännande</b>
+        <div class="section-text">Genom att boka tjänst hos Behjärta godkänner kunden detta avtal samt våra allmänna villkor.</div>
+      </li>
+    </ol>
+
+    <p style="text-align: center; font-weight: 600; margin: 25px 0; color: #03a9f4;">Härmed godkänner jag avtalet enligt de villkor som angivits.</p>
+
+    <div class="signature-area">
+      <p>Välj signering:</p>
+      <label><input type="radio" name="signmethod" value="text" checked> Använd mitt namn (kursiv stil)</label>
+      <label><input type="radio" name="signmethod" value="draw"> Rita signatur</label><br>
+
+      <p><b>Kundens Namnteckning:</b></p>
+      <div id="signatureText" class="italic-signature"><em id="custNameSig"></em></div>
+      <div id="signatureDraw" style="display: none;">
+        <canvas id="canvas" width="300" height="100"></canvas><br>
+        <button type="button" onclick="clearCanvas()">Rensa</button>
+      </div>
+
+      <p><b>Ort & Datum:</b> <span id="custOrt"></span>, <span id="custDate1"></span></p>
+      <hr>
+      <p><b>För Behjärta / MS Secure Solutions AB:</b><br><br>
+        <span class="italic-signature"><em id="adminName"></em></span><br>
+      </p>
+      <p><b>Ort & Datum:</b> Enskede, <span id="custDate2"></span></p>
+    </div>
+
+    <br>
+    <button class="submit-button" onclick="submitContract()" id="submitButton">Skriv under och skicka</button>
+  </div>
+
+  <div id="loader" class="loader hidden"></div>
+  <div id="toast" class="toast hidden"></div>
+
+<script>
+  // Point this at your Apps Script web app deployment (same one behind admin.html's automation buttons)
+  var AUTOMATION_URL = 'https://script.google.com/macros/s/AKfycbyWqwsD-MHKssTFi_qqoPyIgGXom4LF2vyrsth7X_eRqnQmsoCD5OMqaQBQlk1UgKrM/exec';
+
+  var currentRowIndex = null;
+
+  function jsonp(url, params, timeoutMs) {
+    timeoutMs = timeoutMs || 15000;
+    return new Promise(function(resolve, reject) {
+      var cbName = '__bh_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+      var qs = new URLSearchParams(Object.assign({}, params, { callback: cbName })).toString();
+      var script = document.createElement('script');
+      var timer = setTimeout(function() { cleanup(); reject(new Error('Timeout')); }, timeoutMs);
+      function cleanup() { clearTimeout(timer); delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); }
+      window[cbName] = function(data) { cleanup(); resolve(data); };
+      script.onerror = function() { cleanup(); reject(new Error('Nätverksfel')); };
+      script.src = url + '?' + qs;
+      document.head.appendChild(script);
+    });
+  }
+
+  function showVoid(message) {
+    document.getElementById('loadingBox').classList.add('hidden');
+    document.getElementById('contractContent').classList.add('hidden');
+    document.getElementById('voidMessage').textContent = message;
+    document.getElementById('voidBox').classList.remove('hidden');
+  }
+
+  function populateContract(data) {
+    document.getElementById('loadingBox').classList.add('hidden');
+    var today = new Date().toISOString().slice(0, 10);
+    document.getElementById('custNameTitle').textContent = data.name;
+    document.getElementById('custNameInfo').textContent = data.name;
+    document.getElementById('custAddress').textContent = data.address;
+    document.getElementById('custZip').textContent = data.zip;
+    document.getElementById('custCity1').textContent = data.city;
+    document.getElementById('custEmail').textContent = data.email;
+    document.getElementById('custPhone').textContent = data.phone;
+    document.getElementById('custNameSig').textContent = data.name;
+    document.getElementById('custOrt').textContent = data.city;
+    document.getElementById('custDate1').textContent = today;
+    document.getElementById('custDate2').textContent = today;
+    document.getElementById('adminName').textContent = data.adminName;
+    currentRowIndex = data.rowIndex;
+    document.getElementById('contractContent').classList.remove('hidden');
+  }
+
+  async function init() {
+    var params = new URLSearchParams(window.location.search);
+    var contractId = params.get('id');
+    if (!contractId) { showVoid('Ingen avtals-ID angiven i länken. Vänligen kontakta Behjärta för en ny länk.'); return; }
+    try {
+      var res = await jsonp(AUTOMATION_URL, { action: 'getContract', id: contractId });
+      if (!res.success) {
+        if (res.status === 'expired') {
+          showVoid('Tiden för signering har gått ut (48 timmar). Vänligen kontakta Behjärta-teamet för att få ett nytt avtal.');
+        } else if (res.status === 'already_signed') {
+          showVoid('Detta avtal är redan signerat. Kontakta oss om du har frågor.');
+        } else {
+          showVoid('Kunde inte hitta avtalet. Vänligen kontakta Behjärta-teamet.');
+        }
+        return;
+      }
+      populateContract(res.data);
+    } catch (e) {
+      showVoid('Ett tekniskt fel uppstod när avtalet skulle laddas. Försök igen senare eller kontakta Behjärta.');
+    }
+  }
+
+  document.querySelectorAll('input[name=signmethod]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      var isText = radio.value === 'text' && radio.checked;
+      document.getElementById('signatureText').style.display = radio.checked && radio.value === 'text' ? 'block' : (document.querySelector('input[name=signmethod]:checked').value === 'text' ? 'block' : 'none');
+      document.getElementById('signatureDraw').style.display = document.querySelector('input[name=signmethod]:checked').value === 'draw' ? 'block' : 'none';
+      document.getElementById('signatureText').style.display = document.querySelector('input[name=signmethod]:checked').value === 'text' ? 'block' : 'none';
+    });
+  });
+
+  function clearCanvas() {
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function showLoader() { document.getElementById('loader').classList.remove('hidden'); }
+  function hideLoader() { document.getElementById('loader').classList.add('hidden'); }
+
+  function showToast(message) {
+    var toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.remove('hidden');
+    toast.classList.add('show');
+    setTimeout(function() {
+      toast.classList.remove('show');
+      setTimeout(function() { toast.classList.add('hidden'); }, 400);
+    }, 3500);
+  }
+
+  async function submitContract() {
+    var personnummer = document.getElementById('personnummer').value;
+    var signMethod = document.querySelector('input[name="signmethod"]:checked').value;
+
+    if (!personnummer.trim()) { showToast('Vänligen ange personnummer'); return; }
+    if (!currentRowIndex) { showToast('Avtalet kunde inte identifieras. Ladda om sidan.'); return; }
+
+    var signature;
+    if (signMethod === 'text') {
+      signature = document.getElementById('signatureText').innerText;
+    } else {
+      signature = document.getElementById('canvas').toDataURL();
+    }
+
+    showLoader();
+    document.getElementById('submitButton').disabled = true;
+    try {
+      var res = await jsonp(AUTOMATION_URL, {
+        action: 'submitSignature',
+        rowIndex: currentRowIndex,
+        personnummer: personnummer,
+        signature: signature
+      }, 30000);
+      hideLoader();
+      if (res.success) {
+        showToast('Tack! Ditt avtal är nu signerat och skickat.');
+      } else {
+        showToast('Fel: ' + (res.error || 'Okänt fel'));
+        document.getElementById('submitButton').disabled = false;
+      }
+    } catch (e) {
+      hideLoader();
+      showToast('Fel: ' + e.message);
+      document.getElementById('submitButton').disabled = false;
+    }
+  }
+
+  // Freehand drawing on canvas
+  window.addEventListener('load', function() {
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    var drawing = false;
+
+    canvas.addEventListener('mousedown', function(e) {
+      drawing = true;
+      var rect = canvas.getBoundingClientRect();
+      ctx.beginPath();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    });
+    canvas.addEventListener('mouseup', function() { drawing = false; });
+    canvas.addEventListener('mousemove', function(e) {
+      if (!drawing) return;
+      var rect = canvas.getBoundingClientRect();
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+    });
+
+    canvas.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      drawing = true;
+      var rect = canvas.getBoundingClientRect();
+      var touch = e.touches[0];
+      ctx.beginPath();
+      ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+    });
+    canvas.addEventListener('touchend', function(e) { e.preventDefault(); drawing = false; });
+    canvas.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+      if (!drawing) return;
+      var rect = canvas.getBoundingClientRect();
+      var touch = e.touches[0];
+      ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+      ctx.stroke();
+    });
+
+    init();
+  });
+</script>
+</body>
+</html>
