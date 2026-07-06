@@ -86,7 +86,7 @@ const CONFIG = {
   GOOGLE_CLIENT_ID: '362029715087-a2dm4v9gr0g4tda39cqd9pul87s4sq50.apps.googleusercontent.com',
   APPS_SCRIPT_URL:  'https://script.google.com/a/macros/behjarta.com/s/AKfycbwPbyDXmOD0zXQXjNfh1PElVDfOckufbMN-cAviH6AbpliOF0C_IWLyWWeBc5XYMCQL/exec',
   BOOKING_FORM_URL: 'https://script.google.com/a/macros/behjarta.com/s/AKfycbwR3aZHlcer6iKKnZpEVK7BVlH_qBNvKwAO3VTvaxynNtXVsqr9aOTfy3mrNsQLqaqlKg/exec',
-  AUTOMATION_URL: 'https://script.google.com/macros/s/AKfycbx46I-1rDfyizOhXhSZl6BwsA67JSfTEzgwL82aQsXFcc4ee-FDNkFPzo1YkhPNg8Zomw/exec',
+  AUTOMATION_URL:   'https://script.google.com/macros/s/AKfycbyXsqSSTga1t8qHUVHg02QYZhae5zOx4A6gQj_Zmt6kJBipEblchFZxB6P9114-nzfyCA/exec',
   ALLOWED_DOMAIN:   'behjarta.com',
   DEMO_MODE:        false,
 };
@@ -451,6 +451,12 @@ function jsonp(url, params = {}, timeoutMs = 12000) {
 async function updateSheetRow(sheetName, idKey, idValue, updatedRow) {
   const res = await jsonp(CONFIG.APPS_SCRIPT_URL, { action:'update', sheet:sheetName, idKey, idValue:String(idValue), row:JSON.stringify(updatedRow) });
   if (!res.success) throw new Error(res.error || 'Uppdatering misslyckades');
+}
+
+async function fetchSheet(sheetName) {
+  const res = await jsonp(CONFIG.APPS_SCRIPT_URL, { action: 'read', sheet: sheetName });
+  if (!res.success) throw new Error(res.error || 'Kunde inte hämta data');
+  return res.data;
 }
 function useSheetData(mockKey, sheetName) {
   const [data, setData]       = useState(MOCK[mockKey] || []);
