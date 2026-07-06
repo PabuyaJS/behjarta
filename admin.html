@@ -86,6 +86,7 @@ const CONFIG = {
   GOOGLE_CLIENT_ID: '362029715087-a2dm4v9gr0g4tda39cqd9pul87s4sq50.apps.googleusercontent.com',
   APPS_SCRIPT_URL:  'https://script.google.com/a/macros/behjarta.com/s/AKfycbwPbyDXmOD0zXQXjNfh1PElVDfOckufbMN-cAviH6AbpliOF0C_IWLyWWeBc5XYMCQL/exec',
   BOOKING_FORM_URL: 'https://script.google.com/a/macros/behjarta.com/s/AKfycbwR3aZHlcer6iKKnZpEVK7BVlH_qBNvKwAO3VTvaxynNtXVsqr9aOTfy3mrNsQLqaqlKg/exec',
+  AUTOMATION_URL: 'https://script.google.com/macros/s/AKfycbzN3dtN7scEw6WIs_0BypfCVIfZZGJvVxnjmVcvDgV2h0LUelN4GkBNf3wL6occfN_cjQ/exec',
   ALLOWED_DOMAIN:   'behjarta.com',
   DEMO_MODE:        false,
 };
@@ -420,6 +421,13 @@ async function fetchSheet(sheetName) {
   if (!res.success) throw new Error(res.error || 'Okänt fel');
   return res.data;
 }
+
+ async function triggerAutomation(action) {
+  const res = await jsonp(CONFIG.AUTOMATION_URL, { action }, 60000);
+  if (!res.success) throw new Error(res.error || 'Åtgärden misslyckades');
+  return res;
+}
+ 
 async function updateSheetRow(sheetName, idKey, idValue, updatedRow) {
   const res = await jsonp(CONFIG.APPS_SCRIPT_URL, { action:'update', sheet:sheetName, idKey, idValue:String(idValue), row:JSON.stringify(updatedRow) });
   if (!res.success) throw new Error(res.error || 'Uppdatering misslyckades');
@@ -1217,6 +1225,34 @@ function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, o
   const [q, setQ]           = useState('');
   const [page, setPage]     = useState(0);
   const [viewRow, setViewRow] = useState(null);
+  const [runningAction, setRunningAction] = useState(null); // 'transfer' | 'shifts' | null
+  const [actionMsg, setActionMsg]         = useState(null); // { type:'success'|'error', text }
+
+  const runTransfer = async () => {
+    if (!window.confirm('Skapa kunder för alla nya e-postadresser i bokningarna?')) return;
+    setRunningAction('transfer'); setActionMsg(null);
+    try {
+      const res = await triggerAutomation('transferCustomers');
+      setActionMsg({ type:'success', text: res.message });
+      onRefresh();
+    } catch (e) {
+      setActionMsg({ type:'error', text: e.message });
+    }
+    setRunningAction(null);
+  };
+
+  const runShifts = async () => {
+    if (!window.confirm('Skapa arbetspass för den senaste bokningen?')) return;
+    setRunningAction('shifts'); setActionMsg(null);
+    try {
+      const res = await triggerAutomation('createShifts');
+      setActionMsg({ type:'success', text: res.message });
+      onRefresh();
+    } catch (e) {
+      setActionMsg({ type:'error', text: e.message });
+    }
+    setRunningAction(null);
+  };
   const filtered = useMemo(() => {
     const lq = q.toLowerCase();
     return rows.filter(r => {
@@ -1247,11 +1283,34 @@ function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, o
           <span style={{ position:'absolute', left:9, top:'50%', transform:'translateY(-50%)', color:T.muted, fontSize:12, pointerEvents:'none' }}>🔍</span>
           <input value={q} onChange={e=>{setQ(e.target.value);setPage(0);}} placeholder="Sök bokningar..." style={{ paddingLeft:30, paddingRight:10, paddingTop:8, paddingBottom:8, border:`1px solid ${T.border}`, borderRadius:8, fontSize:13, width:'100%', outline:'none' }} onFocus={e=>e.target.style.borderColor=T.primary} onBlur={e=>e.target.style.borderColor=T.border} />
         </div>
+
+        <button onClick={runTransfer} disabled={runningAction==='transfer'}
+          style={{ padding:'7px 14px', background:'#EDE9FE', border:'1px solid #C4B5FD', borderRadius:8, color:'#5B21B6', fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:6, opacity:runningAction==='transfer'?0.7:1 }}>
+          {runningAction==='transfer'
+            ? <><span className="spin" style={{ width:12, height:12, border:'2px solid rgba(91,33,182,0.3)', borderTopColor:'#5B21B6', borderRadius:'50%' }} />Skapar kunder...</>
+            : '👤 Skapa kunder'}
+        </button>
+
+        <button onClick={runShifts} disabled={runningAction==='shifts'}
+          style={{ padding:'7px 14px', background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:8, color:'#92400E', fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:6, opacity:runningAction==='shifts'?0.7:1 }}>
+          {runningAction==='shifts'
+            ? <><span className="spin" style={{ width:12, height:12, border:'2px solid rgba(146,64,14,0.3)', borderTopColor:'#92400E', borderRadius:'50%' }} />Skapar arbetspass...</>
+            : '🧹 Skapa arbetspass'}
+        </button>
+
         <span style={{ fontSize:12, color:T.muted }}>{filtered.length} bokningar</span>
         {loading && <span className="spin" style={{ width:14, height:14, border:`2px solid ${T.border}`, borderTopColor:T.primary, borderRadius:'50%' }} />}
         {error && <span style={{ fontSize:12, color:T.danger }}>⚠️ {error}</span>}
         <button onClick={onRefresh} style={{ marginLeft:'auto', padding:'7px 14px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:8, color:T.primaryDark, fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:5 }} onMouseEnter={e=>{e.currentTarget.style.background=T.primaryMid;e.currentTarget.style.color='#fff';}} onMouseLeave={e=>{e.currentTarget.style.background=T.primaryLight;e.currentTarget.style.color=T.primaryDark;}}>↻ Uppdatera</button>
       </div>
+
+      {actionMsg && (
+        <div style={{ marginBottom:12, padding:'8px 12px', borderRadius:8, fontSize:12, fontWeight:600,
+          background: actionMsg.type==='success' ? '#D1FAE5' : '#FEE2E2',
+          color: actionMsg.type==='success' ? '#065F46' : '#991B1B' }}>
+          {actionMsg.type==='success' ? '✅ ' : '⚠️ '}{actionMsg.text}
+        </div>
+      )}
       {paged.length === 0
         ? <div style={{ textAlign:'center', padding:48, color:T.muted, fontSize:13 }}>Inga bokningar hittades</div>
         : paged.map((row, i) => {
