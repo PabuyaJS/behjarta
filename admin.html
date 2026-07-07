@@ -66,6 +66,81 @@
     box-shadow: 0 16px 48px rgba(0,0,0,0.18); padding: 18px 20px 14px;
     min-width: 600px; font-family: 'Plus Jakarta Sans', sans-serif;
   }
+
+  /* ════════════════════════════
+     MOBILE RESPONSIVENESS
+     Many components use inline styles (React), which win the specificity
+     war against plain CSS. Rules below use !important where they need to
+     override an inline style coming from JS; rules that target pure CSS
+     classes (.field-grid, .modal-box, etc.) don't need it.
+  ════════════════════════════ */
+
+  /* Stat card grids (top of every view) — stack down as screens narrow */
+  @media (max-width: 860px) {
+    .stat-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+  }
+  @media (max-width: 460px) {
+    .stat-grid { grid-template-columns: 1fr !important; }
+  }
+
+  /* Booking / Shift list cards — stack the price/date block below the
+     content block instead of squeezing them side by side */
+  @media (max-width: 640px) {
+    .card-row { flex-direction: column; }
+    .card-row .card-row-side {
+      border-left: none !important;
+      border-top: 1px solid #E5E7EB;
+      align-items: center !important;
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
+      justify-content: space-between !important;
+      gap: 8px !important;
+      width: 100%;
+      min-width: 0 !important;
+    }
+  }
+
+  /* Modal field grid — one column on mobile */
+  @media (max-width: 600px) {
+    .field-grid { grid-template-columns: 1fr; }
+    .modal-body { padding: 16px; }
+    .modal-overlay { padding: 0; align-items: flex-end; }
+    .modal-box { max-width: 100%; border-radius: 16px 16px 0 0; max-height: 92vh; }
+  }
+
+  /* Sectioned field rows inside booking/shift view-edit modal */
+  @media (max-width: 600px) {
+    .field-row { flex-direction: column !important; align-items: stretch !important; }
+  }
+
+  /* Date range popup — full-width sheet near the top of the screen */
+  @media (max-width: 700px) {
+    .date-picker-popup {
+      min-width: 0 !important;
+      width: calc(100vw - 24px) !important;
+      left: 12px !important;
+      right: 12px !important;
+      top: 64px !important;
+      padding: 16px 14px 12px !important;
+    }
+    .date-picker-calendars { flex-wrap: wrap !important; justify-content: center !important; gap: 18px !important; }
+  }
+
+  /* Sidebar — collapsible icon stripe on mobile */
+  .sidebar-toggle-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; padding: 10px 0; background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;
+    color: rgba(255,255,255,0.55); font-size: 14px; transition: all 0.15s;
+  }
+  .sidebar-toggle-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .sidebar-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    z-index: 29; animation: fadeIn 0.18s ease;
+  }
+  @media (min-width: 769px) {
+    .sidebar-backdrop { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -478,6 +553,24 @@ function useSheetData(mockKey, sheetName) {
 }
 
 /* ════════════════════════════
+   RESPONSIVE HELPER
+════════════════════════════ */
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth <= breakpoint : false
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    const handler = e => setIsMobile(e.matches);
+    if (mq.addEventListener) mq.addEventListener('change', handler);
+    else mq.addListener(handler);
+    setIsMobile(mq.matches);
+    return () => { if (mq.removeEventListener) mq.removeEventListener('change', handler); else mq.removeListener(handler); };
+  }, [breakpoint]);
+  return isMobile;
+}
+
+/* ════════════════════════════
    BADGE
 ════════════════════════════ */
 const BADGE_MAP = {
@@ -602,11 +695,11 @@ function DateRangePicker({ from, to, onChange }) {
             <div style={{ fontSize:12, color:T.muted, fontWeight:600 }}>{selecting?'📌 Välj slutdatum':'📌 Välj startdatum'}</div>
             <button onClick={nextMonth} style={{ background:'none', border:`1px solid ${T.border}`, borderRadius:7, padding:'4px 10px', color:T.muted, fontSize:14, cursor:'pointer' }}>›</button>
           </div>
-          <div style={{ display:'flex', gap:28 }}>
+          <div className="date-picker-calendars" style={{ display:'flex', gap:28 }}>
             <MiniCalendar year={viewYear1} month={viewMonth1} selectedFrom={tempFrom} selectedTo={tempTo} hoverDate={hoverDate} onDateClick={handleDateClick} onDateHover={setHover} />
             <MiniCalendar year={year2} month={month2} selectedFrom={tempFrom} selectedTo={tempTo} hoverDate={hoverDate} onDateClick={handleDateClick} onDateHover={setHover} />
           </div>
-          <div style={{ display:'flex', gap:8, marginTop:14, paddingTop:12, borderTop:`1px solid ${T.border}`, alignItems:'center' }}>
+          <div style={{ display:'flex', gap:8, marginTop:14, paddingTop:12, borderTop:`1px solid ${T.border}`, alignItems:'center', flexWrap:'wrap' }}>
             <span style={{ fontSize:12, color:T.muted, flex:1 }}>{tempFrom&&tempTo?`${tempFrom}  →  ${tempTo}`:tempFrom?`${tempFrom}  →  …`:'Inget intervall valt'}</span>
             <button onClick={reset} style={{ padding:'6px 14px', border:`1px solid ${T.border}`, borderRadius:8, background:'#F9FAFB', color:T.muted, fontSize:12, fontWeight:600, cursor:'pointer' }}>Denna månad</button>
             <button onClick={apply} disabled={!tempFrom||!tempTo} style={{ padding:'6px 16px', border:'none', borderRadius:8, background:(!tempFrom||!tempTo)?T.border:T.primary, color:'#fff', fontSize:12, fontWeight:600, cursor:(!tempFrom||!tempTo)?'not-allowed':'pointer' }}>Använd</button>
@@ -824,7 +917,7 @@ function SectionedFields({ sections, form, set, editMode, cleaners, cleanerField
               // Full-width if single long field
               const isSingleLong = presentKeys.length === 1 && LONG_FIELDS.has(presentKeys[0]);
               return (
-                <div key={ri} style={{ display:'flex', gap:10, marginBottom:10, alignItems:'flex-start', flexWrap: isSingleLong ? 'wrap' : 'nowrap' }}>
+                <div key={ri} className="field-row" style={{ display:'flex', gap:10, marginBottom:10, alignItems:'flex-start', flexWrap: isSingleLong ? 'wrap' : 'nowrap' }}>
                   {presentKeys.map(k => renderField(k))}
                 </div>
               );
@@ -841,7 +934,7 @@ function SectionedFields({ sections, form, set, editMode, cleaners, cleanerField
             <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:10, paddingBottom:7, borderBottom:`2px solid #6B728022` }}>
               <span style={{ fontSize:10, fontWeight:700, color:'#6B7280', textTransform:'uppercase', letterSpacing:'0.1em' }}>Övriga fält</span>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }} className="field-grid">
               {missed.map(k => {
                 const isLong = LONG_FIELDS.has(k);
                 const isRO   = READONLY_FIELDS.has(k) || !editMode;
@@ -1235,7 +1328,7 @@ function StatCard({ label, value, sub, color, emoji }) {
 function ViewShell({ stats, children }) {
   return (
     <div className="fade-in">
-      {stats && <div style={{ display:'grid', gridTemplateColumns:`repeat(${stats.length}, minmax(0,1fr))`, gap:12, marginBottom:20 }}>{stats.map((s,i)=><StatCard key={i} {...s}/>)}</div>}
+      {stats && <div className="stat-grid" style={{ display:'grid', gridTemplateColumns:`repeat(${stats.length}, minmax(0,1fr))`, gap:12, marginBottom:20 }}>{stats.map((s,i)=><StatCard key={i} {...s}/>)}</div>}
       {children}
     </div>
   );
@@ -1344,13 +1437,13 @@ function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, o
             return (
               <div key={row.unique_ID??i} className="card-row" onClick={()=>setViewRow(row)}>
                 <div style={{ width:4, background:T.primary, flexShrink:0 }} />
-                <div style={{ flex:1, padding:'14px 16px' }}>
+                <div style={{ flex:1, padding:'14px 16px', minWidth:0 }}>
                   <div style={{ fontSize:14, fontWeight:700, color:T.text, marginBottom:3 }}>{row.Name||'—'}</div>
                   <div style={{ fontSize:12, color:T.primaryDark, fontWeight:600, marginBottom:6 }}>{row.Type||'—'}</div>
                   <div style={{ fontSize:12, color:T.muted, marginBottom:2 }}>{row.Address||'—'}</div>
                   <div style={{ fontSize:12, color:T.muted, display:'flex', gap:8 }}><span>{row.PostalCode||'—'}</span><span>{row.City||'—'}</span></div>
                 </div>
-                <div style={{ padding:'14px 18px', display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', gap:6, flexShrink:0, borderLeft:`1px solid ${T.border}`, minWidth:130 }}>
+                <div className="card-row-side" style={{ padding:'14px 18px', display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', gap:6, flexShrink:0, borderLeft:`1px solid ${T.border}`, minWidth:130 }}>
                   {/* +1 day on card */}
                   <span style={{ fontSize:11, color:T.muted, fontWeight:600 }}>{renderDateOffset(row.Date)}</span>
                   <span style={{ fontSize:11, fontWeight:700, color:T.muted, background:'#F3F4F6', padding:'2px 9px', borderRadius:999 }}>{row.unique_ID||'—'}</span>
@@ -1445,14 +1538,14 @@ function ShiftCardList({ rows, loading, error, onRefresh, onSave, cleaners, date
         : paged.map((row, i) => (
             <div key={row.shift_id??i} className="card-row" onClick={()=>setViewRow(row)}>
               <div style={{ width:4, background:T.info, flexShrink:0 }} />
-              <div style={{ flex:1, padding:'14px 16px' }}>
+              <div style={{ flex:1, padding:'14px 16px', minWidth:0 }}>
                 <div style={{ fontSize:14, fontWeight:700, color:T.text, marginBottom:3 }}>{row.shift_id||'—'}</div>
                 <div style={{ fontSize:12, color:T.info, fontWeight:600, marginBottom:5 }}>{row.type||'—'}</div>
                 <div style={{ fontSize:12, color:T.muted, marginBottom:2 }}>{row.Address||'—'}</div>
                 <div style={{ fontSize:12, color:T.muted, display:'flex', gap:8 }}><span>{row.PostalCode||'—'}</span><span>{row.City||'—'}</span></div>
                 <ShiftCircles row={row} />
               </div>
-              <div style={{ padding:'14px 18px', display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', gap:5, flexShrink:0, borderLeft:`1px solid ${T.border}`, minWidth:130 }}>
+              <div className="card-row-side" style={{ padding:'14px 18px', display:'flex', flexDirection:'column', alignItems:'flex-end', justifyContent:'center', gap:5, flexShrink:0, borderLeft:`1px solid ${T.border}`, minWidth:130 }}>
                 {/* +1 day and +1 hour on card */}
                 <span style={{ fontSize:13, fontWeight:700, color:T.text }}>{renderDateOffset(row.date)}</span>
                 <span style={{ fontSize:12, color:T.muted, fontWeight:600 }}>{renderTimeOffset(row.start_time)} – {renderTimeOffset(row.end_time)}</span>
@@ -1643,37 +1736,65 @@ const NAV = [
   { id:'shifts',           label:'Arbetspass',           emoji:'⏰', title:'Arbetspass',            subtitle:'Schema — shifts',                  Component:Shifts },
 ];
 
-function Sidebar({ active, setActive, user, onLogout }) {
+function Sidebar({ active, setActive, user, onLogout, isMobile, collapsed, onToggleCollapse }) {
+  // On mobile: collapsed = narrow icon stripe (static, in-flow).
+  // Expanded on mobile = overlay drawer with full labels, floating above content.
+  const isStripe = isMobile && collapsed;
+  const isOverlay = isMobile && !collapsed;
   return (
-    <div style={{ width:236, minWidth:236, background:T.sidebar, display:'flex', flexDirection:'column', height:'100vh', position:'sticky', top:0, zIndex:20 }}>
-      <div style={{ padding:'20px 18px 16px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
-        <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height:30, display:'block' }} onError={e=>{e.target.style.display='none';}} />
-        <div style={{ fontSize:10, color:'rgba(255,255,255,0.27)', letterSpacing:'0.18em', textTransform:'uppercase', fontWeight:700, marginTop:6 }}>Admin Portal</div>
-      </div>
-      {CONFIG.DEMO_MODE && <div style={{ margin:'10px 12px 0', padding:'6px 10px', background:'rgba(251,191,36,0.1)', border:'1px solid rgba(251,191,36,0.2)', borderRadius:7, fontSize:11, color:'#FCD34D', fontWeight:600 }}>⚠️ Demo-läge aktiv</div>}
-      <nav style={{ flex:1, paddingTop:8, overflowY:'auto' }}>
-        {NAV.map(item => {
-          const isActive = active === item.id;
-          return (
-            <button key={item.id} onClick={()=>setActive(item.id)}
-              style={{ display:'flex', alignItems:'center', gap:9, width:'100%', padding:'10px 18px', background:isActive?'rgba(0,150,136,0.18)':'transparent', border:'none', borderLeft:`3px solid ${isActive?T.primary:'transparent'}`, color:isActive?'#fff':'rgba(255,255,255,0.44)', fontSize:13, fontWeight:isActive?600:400, textAlign:'left', fontFamily:'inherit', transition:'all 0.13s', cursor:'pointer' }}
-              onMouseEnter={e=>{if(!isActive){e.currentTarget.style.background='rgba(255,255,255,0.04)';e.currentTarget.style.color='rgba(255,255,255,0.72)';}}}
-              onMouseLeave={e=>{if(!isActive){e.currentTarget.style.background='transparent';e.currentTarget.style.color='rgba(255,255,255,0.44)';}}}><span style={{ fontSize:14, flexShrink:0 }}>{item.emoji}</span><span style={{ flex:1 }}>{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
-      <div style={{ padding:'12px 14px', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:9, marginBottom:10, overflow:'hidden' }}>
-          <div style={{ width:33, height:33, borderRadius:'50%', background:T.primary, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, color:'#fff', flexShrink:0 }}>{user?.avatar}</div>
-          <div style={{ overflow:'hidden' }}>
-            <div style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.88)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user?.name}</div>
-            <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user?.email}</div>
-          </div>
+    <>
+      {isOverlay && <div className="sidebar-backdrop" onClick={onToggleCollapse} />}
+      <div style={{
+        width: isStripe ? 60 : 236, minWidth: isStripe ? 60 : 236,
+        background:T.sidebar, display:'flex', flexDirection:'column',
+        height:'100vh', position: isOverlay ? 'fixed' : 'sticky', top:0, left:0,
+        zIndex: isOverlay ? 30 : 20,
+        boxShadow: isOverlay ? '6px 0 24px rgba(0,0,0,0.28)' : 'none',
+        transition:'width 0.18s ease',
+      }}>
+        <div style={{ padding: isStripe ? '18px 8px 14px' : '20px 18px 16px', borderBottom:'1px solid rgba(255,255,255,0.06)', textAlign: isStripe?'center':'left' }}>
+          {isStripe
+            ? <div style={{ fontSize:20 }}>🧡</div>
+            : <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height:30, display:'block' }} onError={e=>{e.target.style.display='none';}} />}
+          {!isStripe && <div style={{ fontSize:10, color:'rgba(255,255,255,0.27)', letterSpacing:'0.18em', textTransform:'uppercase', fontWeight:700, marginTop:6 }}>Admin Portal</div>}
         </div>
-        <button onClick={onLogout} style={{ width:'100%', padding:'7px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:8, color:'rgba(255,255,255,0.38)', fontSize:12, fontFamily:'inherit', transition:'all 0.14s' }} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.1)';e.currentTarget.style.color='#fff';}} onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.05)';e.currentTarget.style.color='rgba(255,255,255,0.38)';}}>Logga ut</button>
+        {CONFIG.DEMO_MODE && !isStripe && <div style={{ margin:'10px 12px 0', padding:'6px 10px', background:'rgba(251,191,36,0.1)', border:'1px solid rgba(251,191,36,0.2)', borderRadius:7, fontSize:11, color:'#FCD34D', fontWeight:600 }}>⚠️ Demo-läge aktiv</div>}
+        <nav style={{ flex:1, paddingTop:8, overflowY:'auto' }}>
+          {NAV.map(item => {
+            const isActive = active === item.id;
+            return (
+              <button key={item.id} onClick={()=>{ setActive(item.id); if (isOverlay) onToggleCollapse(); }}
+                title={isStripe ? item.label : undefined}
+                style={{ display:'flex', alignItems:'center', gap:9, width:'100%', padding: isStripe ? '12px 0' : '10px 18px', justifyContent: isStripe ? 'center' : 'flex-start', background:isActive?'rgba(0,150,136,0.18)':'transparent', border:'none', borderLeft:`3px solid ${isActive?T.primary:'transparent'}`, color:isActive?'#fff':'rgba(255,255,255,0.44)', fontSize:13, fontWeight:isActive?600:400, textAlign:'left', fontFamily:'inherit', transition:'all 0.13s', cursor:'pointer' }}
+                onMouseEnter={e=>{if(!isActive){e.currentTarget.style.background='rgba(255,255,255,0.04)';e.currentTarget.style.color='rgba(255,255,255,0.72)';}}}
+                onMouseLeave={e=>{if(!isActive){e.currentTarget.style.background='transparent';e.currentTarget.style.color='rgba(255,255,255,0.44)';}}}><span style={{ fontSize:isStripe?18:14, flexShrink:0 }}>{item.emoji}</span>{!isStripe && <span style={{ flex:1 }}>{item.label}</span>}
+              </button>
+            );
+          })}
+        </nav>
+        <div style={{ padding: isStripe ? '10px 8px' : '12px 14px', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
+          {!isStripe && (
+            <div style={{ display:'flex', alignItems:'center', gap:9, marginBottom:10, overflow:'hidden' }}>
+              <div style={{ width:33, height:33, borderRadius:'50%', background:T.primary, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, color:'#fff', flexShrink:0 }}>{user?.avatar}</div>
+              <div style={{ overflow:'hidden' }}>
+                <div style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.88)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user?.name}</div>
+                <div style={{ fontSize:10, color:'rgba(255,255,255,0.3)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user?.email}</div>
+              </div>
+            </div>
+          )}
+          {isStripe && (
+            <div style={{ width:30, height:30, borderRadius:'50%', background:T.primary, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#fff', margin:'0 auto 10px' }}>{user?.avatar}</div>
+          )}
+          {isMobile && (
+            <button onClick={onToggleCollapse} className="sidebar-toggle-btn" style={{ marginBottom:8 }}>
+              {isStripe ? '▸' : '◂ Fäll ihop'}
+            </button>
+          )}
+          {!isStripe && <button onClick={onLogout} style={{ width:'100%', padding:'7px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:8, color:'rgba(255,255,255,0.38)', fontSize:12, fontFamily:'inherit', transition:'all 0.14s' }} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.1)';e.currentTarget.style.color='#fff';}} onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.05)';e.currentTarget.style.color='rgba(255,255,255,0.38)';}}>Logga ut</button>}
+          {isStripe && <button onClick={onLogout} title="Logga ut" style={{ width:'100%', padding:'7px 0', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:8, color:'rgba(255,255,255,0.38)', fontSize:14 }}>⎋</button>}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -1688,7 +1809,7 @@ function LoginPage({ onLogin }) {
   }, []);
   const demoLogin = () => { setLoading(true); setTimeout(()=>onLogin({name:'Admin Behjärta',email:'admin@behjarta.com',avatar:'AB'}),900); };
   return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(140deg,#003D35 0%,#00695C 40%,#009688 70%,#26A69A 100%)', position:'relative', overflow:'hidden' }}>
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(140deg,#003D35 0%,#00695C 40%,#009688 70%,#26A69A 100%)', position:'relative', overflow:'hidden', padding:16 }}>
       {[350,550,750].map((s,i)=><div key={i} style={{ position:'absolute', width:s, height:s, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.05)', top:'50%', left:'50%', transform:`translate(-${30+i*10}%,-${50+i*5}%)`, pointerEvents:'none' }}/>)}
       <div style={{ background:T.white, borderRadius:20, padding:'44px 40px', width:'100%', maxWidth:420, boxShadow:'0 30px 80px rgba(0,0,0,0.35)', textAlign:'center', position:'relative', zIndex:1 }}>
         <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height:42, marginBottom:8 }} onError={e=>e.target.style.display='none'}/>
@@ -1707,25 +1828,29 @@ function LoginPage({ onLogin }) {
 function App() {
   const [user, setUser]     = useState(null);
   const [active, setActive] = useState('booking-requests');
+  const isMobile = useIsMobile(768);
+  const [collapsed, setCollapsed] = useState(true);
+  // Desktop always shows the full sidebar; mobile starts as a collapsed icon stripe.
+  const effectiveCollapsed = isMobile ? collapsed : false;
   const activeNav = NAV.find(n => n.id === active);
   const { Component } = activeNav;
   if (!user) return <LoginPage onLogin={setUser} />;
   return (
     <div style={{ display:'flex', height:'100vh' }}>
-      <Sidebar active={active} setActive={setActive} user={user} onLogout={()=>setUser(null)} />
-      <main style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
-        <div style={{ background:T.white, borderBottom:`1px solid ${T.border}`, padding:'13px 26px', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
-          <div>
-            <h1 style={{ fontSize:16, fontWeight:700, color:T.text, margin:0 }}>{activeNav.title}</h1>
-            <p style={{ fontSize:11, color:T.muted, marginTop:1 }}>{activeNav.subtitle}</p>
+      <Sidebar active={active} setActive={setActive} user={user} onLogout={()=>setUser(null)} isMobile={isMobile} collapsed={effectiveCollapsed} onToggleCollapse={()=>setCollapsed(c=>!c)} />
+      <main style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
+        <div style={{ background:T.white, borderBottom:`1px solid ${T.border}`, padding: isMobile ? '11px 14px' : '13px 26px', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0, gap:10 }}>
+          <div style={{ minWidth:0, overflow:'hidden' }}>
+            <h1 style={{ fontSize:isMobile?15:16, fontWeight:700, color:T.text, margin:0, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{activeNav.title}</h1>
+            {!isMobile && <p style={{ fontSize:11, color:T.muted, marginTop:1 }}>{activeNav.subtitle}</p>}
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <span style={{ fontSize:11, color:T.muted }}>{new Date().toLocaleDateString('sv-SE',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Stockholm'})}</span>
+          <div style={{ display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
+            {!isMobile && <span style={{ fontSize:11, color:T.muted }}>{new Date().toLocaleDateString('sv-SE',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Stockholm'})}</span>}
             <div style={{ width:32, height:32, borderRadius:'50%', background:T.primaryLight, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:T.primaryDark, border:`2px solid ${T.primary}` }}>{user.avatar}</div>
           </div>
         </div>
-        <div style={{ flex:1, overflowY:'auto', padding:24, background:T.bg }}>
-          <div style={{ background:T.white, borderRadius:14, padding:'20px 22px', border:`1px solid ${T.border}`, minHeight:300 }}>
+        <div style={{ flex:1, overflowY:'auto', padding: isMobile ? 12 : 24, background:T.bg }}>
+          <div style={{ background:T.white, borderRadius:14, padding: isMobile ? '16px 14px' : '20px 22px', border:`1px solid ${T.border}`, minHeight:300 }}>
             <Component />
           </div>
           <div style={{ textAlign:'center', marginTop:16, fontSize:11, color:T.muted }}>
