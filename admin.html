@@ -489,8 +489,7 @@ function jsonp(url, params = {}, timeoutMs = 12000) {
       if (settled) return;
       settled = true;
       // Don't delete the callback — a slow response may still arrive later.
-      // Swallow it instead of leaving a dangling reference (that's what caused
-      // the "ReferenceError: __bh_... is not defined" in your console).
+      // Swallow it instead of leaving a dangling reference.
       window[cbName] = function() {};
       if (script.parentNode) script.parentNode.removeChild(script);
       reject(new Error('Timeout'));
@@ -517,12 +516,12 @@ function jsonp(url, params = {}, timeoutMs = 12000) {
   });
 }
 
- async function triggerAutomation(action) {
-  const res = await jsonp(CONFIG.AUTOMATION_URL, { action }, 5 * 60 * 1000);
+async function triggerAutomation(action, extraParams = {}) {
+  const res = await jsonp(CONFIG.AUTOMATION_URL, { action, ...extraParams }, 5 * 60 * 1000);
   if (!res.success) throw new Error(res.error || 'Åtgärden misslyckades');
   return res;
 }
- 
+
 async function updateSheetRow(sheetName, idKey, idValue, updatedRow) {
   const res = await jsonp(CONFIG.APPS_SCRIPT_URL, { action:'update', sheet:sheetName, idKey, idValue:String(idValue), row:JSON.stringify(updatedRow) });
   if (!res.success) throw new Error(res.error || 'Uppdatering misslyckades');
@@ -1076,8 +1075,11 @@ function ViewEditModal({ row, title, onClose, onSave, cleaners, cleanerFieldKeys
 
 /* ════════════════════════════
    CLASSIC EDIT MODAL (for other tables — supports optional offset mode)
+   — supports optional "Skicka avtal" trigger (used by Customers), shown
+     in the header next to the close (×) button, only when
+     showSendContract is true for the currently open row.
 ════════════════════════════ */
-function EditModal({ row, title, onClose, onSave, useOffset }) {
+function EditModal({ row, title, onClose, onSave, useOffset, showSendContract, sendingContract, sendMsg, onSendContract }) {
   const evFn = useOffset ? editValueOffset : editValue;
   const [form, setForm] = useState(() => {
     const out = {};
@@ -1098,14 +1100,31 @@ function EditModal({ row, title, onClose, onSave, useOffset }) {
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-box">
-        <div style={{ padding:'18px 24px 15px', borderBottom:`1px solid ${T.border}`, display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
-          <div>
+        <div style={{ padding:'18px 24px 15px', borderBottom:`1px solid ${T.border}`, display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0, gap:10 }}>
+          <div style={{ minWidth:0 }}>
             <div style={{ fontSize:15, fontWeight:700, color:T.text }}>Redigera rad</div>
             <div style={{ fontSize:11, color:T.muted, marginTop:2 }}>{title}</div>
           </div>
-          <button onClick={onClose} style={{ border:'none', background:'none', fontSize:22, color:T.muted, padding:'0 4px', lineHeight:1 }}>×</button>
+          <div style={{ display:'flex', gap:8, alignItems:'center', flexShrink:0 }}>
+            {showSendContract && (
+              <button onClick={onSendContract} disabled={sendingContract}
+                style={{ padding:'7px 14px', border:'1px solid #C4B5FD', borderRadius:8, background:'#EDE9FE', color:'#5B21B6', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:6, opacity:sendingContract?0.7:1, whiteSpace:'nowrap' }}>
+                {sendingContract
+                  ? <><span className="spin" style={{ width:12, height:12, border:'2px solid rgba(91,33,182,0.3)', borderTopColor:'#5B21B6', borderRadius:'50%' }} />Skickar...</>
+                  : '📧 Skicka avtal'}
+              </button>
+            )}
+            <button onClick={onClose} style={{ border:'none', background:'none', fontSize:22, color:T.muted, padding:'0 4px', lineHeight:1 }}>×</button>
+          </div>
         </div>
         <div className="modal-body">
+          {sendMsg && (
+            <div style={{ marginBottom:14, padding:'8px 12px', borderRadius:8, fontSize:13, fontWeight:600,
+              background: sendMsg.type==='success' ? '#D1FAE5' : '#FEE2E2',
+              color: sendMsg.type==='success' ? '#065F46' : '#991B1B' }}>
+              {sendMsg.type==='success' ? '✅ ' : '⚠️ '}{sendMsg.text}
+            </div>
+          )}
           {err && <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', color:T.danger, padding:'8px 12px', borderRadius:8, fontSize:13, marginBottom:14 }}>⚠️ {err}</div>}
           <div className="field-grid">
             {keys.map(k => {
@@ -1204,10 +1223,14 @@ function FilterPopover({ colKey, colLabel, allValues, currentFilter, onSort, onS
    — supports optional `useOffset` prop (Contract_*, contract_* etc. dates)
    — supports optional `extraControls` node rendered just before the
      "Uppdatera" refresh button (used by Employees for the inactive filter)
+   — supports optional `enableSendContract` (used by Customers): shows a
+     "Skicka avtal" button inside the row's EditModal, only when that
+     row's Contract_sent_date is empty. Sends the contract for that ONE
+     customer only — no bulk-send from here.
 ════════════════════════════ */
 const PAGE_SIZE = 15;
 
-function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, editTitle, useOffset, extraControls }) {
+function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, editTitle, useOffset, extraControls, enableSendContract }) {
   const [q, setQ]               = useState('');
   const [sortCol, setSortCol]   = useState(null);
   const [sortDir, setSortDir]   = useState('asc');
@@ -1216,6 +1239,8 @@ function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, ed
   const [filters, setFilters]   = useState({});
   const [openFilter, setOpenFilter]     = useState(null);
   const [filterAnchor, setFilterAnchor] = useState(null);
+  const [sendingContract, setSendingContract] = useState(false);
+  const [sendMsg, setSendMsg]                 = useState(null); // { type:'success'|'error', text }
   const columnValues = useMemo(() => {
     const result = {};
     columns.forEach(col => { result[col.key] = [...new Set(rows.map(r => { const v=r[col.key]; return (v==null||v==='')?'(tom)':String(v); }))].sort((a,b)=>a.localeCompare(b,'sv')); });
@@ -1247,10 +1272,39 @@ function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, ed
   const openFilterPopover = (e, colKey) => { e.stopPropagation(); if(openFilter===colKey){setOpenFilter(null);setFilterAnchor(null);return;} setFilterAnchor(e.currentTarget.getBoundingClientRect()); setOpenFilter(colKey); };
   const activeFilterCount = Object.values(filters).filter(v=>v!==null).length;
   const TH_BASE = { padding:'0', textAlign:'left', fontSize:11, fontWeight:700, color:T.primaryDark, textTransform:'uppercase', letterSpacing:'0.06em', whiteSpace:'nowrap', background:T.primaryLight, borderBottom:`1px solid ${T.primaryMid}` };
+
+  const handleSendContract = async () => {
+    if (!editRow) return;
+    const label = editRow.Name || editRow[idKey];
+    if (!window.confirm(`Skicka avtal till ${label}?`)) return;
+    setSendingContract(true); setSendMsg(null);
+    try {
+      const res = await triggerAutomation('sendContract', { id: editRow[idKey] });
+      setSendMsg({ type:'success', text: res.message });
+      // Reflect locally right away so the button hides immediately,
+      // without waiting for onRefresh() to land.
+      setEditRow(prev => prev ? { ...prev, Contract_sent_date: new Date().toISOString() } : prev);
+      onRefresh();
+    } catch (e) {
+      setSendMsg({ type:'error', text: e.message });
+    }
+    setSendingContract(false);
+  };
+
   return (
     <>
       {openFilter && filterAnchor && <FilterPopover colKey={openFilter} colLabel={columns.find(c=>c.key===openFilter)?.label||openFilter} allValues={columnValues[openFilter]||[]} currentFilter={filters[openFilter]||null} onSort={handlePopoverSort} onSetFilter={handleSetFilter} onClose={()=>{setOpenFilter(null);setFilterAnchor(null);}} anchor={filterAnchor} />}
-      {editRow && <EditModal row={editRow} title={editTitle} useOffset={useOffset} onClose={()=>setEditRow(null)} onSave={async updated=>{await onSave(idKey,editRow[idKey],updated);setEditRow(null);}} />}
+      {editRow && <EditModal
+        row={editRow}
+        title={editTitle}
+        useOffset={useOffset}
+        onClose={()=>{ setEditRow(null); setSendMsg(null); }}
+        onSave={async updated=>{await onSave(idKey,editRow[idKey],updated);setEditRow(null);}}
+        showSendContract={!!enableSendContract && !editRow.Contract_sent_date}
+        sendingContract={sendingContract}
+        sendMsg={sendMsg}
+        onSendContract={handleSendContract}
+      />}
       <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:14, flexWrap:'wrap' }}>
         <div style={{ position:'relative', flex:'1 1 200px', maxWidth:280 }}>
           <span style={{ position:'absolute', left:9, top:'50%', transform:'translateY(-50%)', color:T.muted, fontSize:12, pointerEvents:'none' }}>🔍</span>
@@ -1291,7 +1345,7 @@ function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, ed
                       <tr key={row[idKey]??i} style={{ backgroundColor:bg, borderTop:`1px solid ${T.border}` }} onMouseEnter={e=>e.currentTarget.style.backgroundColor='#ECFDF5'} onMouseLeave={e=>e.currentTarget.style.backgroundColor=bg}>
                         {columns.map(col => <td key={col.key} style={{ padding:'9px 14px', whiteSpace:'nowrap', maxWidth:col.maxW||260, overflow:'hidden', textOverflow:'ellipsis', color:T.text }}>{col.render?col.render(row[col.key],row):(row[col.key]!=null&&row[col.key]!==''?String(row[col.key]):'—')}</td>)}
                         <td className="sticky-edit" style={{ right:0, backgroundColor:bg, borderLeft:`2px solid ${T.border}`, padding:'7px 10px', textAlign:'center', width:94, minWidth:94, boxShadow:'-3px 0 8px rgba(0,0,0,0.05)' }} onMouseEnter={e=>e.currentTarget.style.backgroundColor='#ECFDF5'} onMouseLeave={e=>e.currentTarget.style.backgroundColor=bg}>
-                          <button onClick={()=>setEditRow(row)} style={{ padding:'5px 11px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:7, color:T.primaryDark, fontSize:12, fontWeight:600, whiteSpace:'nowrap' }} onMouseEnter={e=>{e.currentTarget.style.background=T.primary;e.currentTarget.style.color='#fff';e.currentTarget.style.borderColor=T.primary;}} onMouseLeave={e=>{e.currentTarget.style.background=T.primaryLight;e.currentTarget.style.color=T.primaryDark;e.currentTarget.style.borderColor=T.primaryMid;}}>✎ Redigera</button>
+                          <button onClick={()=>{ setEditRow(row); setSendMsg(null); }} style={{ padding:'5px 11px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:7, color:T.primaryDark, fontSize:12, fontWeight:600, whiteSpace:'nowrap' }} onMouseEnter={e=>{e.currentTarget.style.background=T.primary;e.currentTarget.style.color='#fff';e.currentTarget.style.borderColor=T.primary;}} onMouseLeave={e=>{e.currentTarget.style.background=T.primaryLight;e.currentTarget.style.color=T.primaryDark;e.currentTarget.style.borderColor=T.primaryMid;}}>✎ Redigera</button>
                         </td>
                       </tr>
                     );
@@ -1464,8 +1518,6 @@ function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, o
   );
 }
 
- 
-
 /* ════════════════════════════
    SHIFT STATUS CIRCLES
 ════════════════════════════ */
@@ -1636,6 +1688,7 @@ function Customers() {
       { label:'Städer',               value:[...new Set(data.map(r=>r.City).filter(Boolean))].length, emoji:'🏙️', color:T.info },
     ]}>
       <DataTable rows={data} loading={loading} error={error} onRefresh={refresh} idKey="Customer_ID" onSave={saveRow} editTitle="Kunder — customer_data" useOffset={true}
+        enableSendContract={true}
         columns={[
           { key:'created_at',   label:'Skapad', render: v => renderDatetime(v) },
           { key:'Customer_ID',  label:'Kund-ID' },
