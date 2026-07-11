@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avsluta prenumeration - Behjärta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poetsen+One&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:#01579b; --sky:#03a9f4; --teal:#26a69a; --mint:#e0f2f1;
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    font-family:'Noto Sans', Arial, sans-serif;
+    background: linear-gradient(180deg, var(--mint) 0%, #ffffff 55%);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    color:#2b3236;
+  }
+  .card {
+    background:#fff;
+    max-width:480px;
+    width:100%;
+    border-radius:20px;
+    box-shadow:0 10px 40px rgba(1,87,155,0.12);
+    padding:40px 32px;
+    text-align:center;
+    border-top:6px solid var(--teal);
+  }
+  .logo { max-width:180px; height:auto; margin-bottom:24px; }
+  h1 {
+    font-family:'Poetsen One', Arial, sans-serif;
+    font-weight:400;
+    font-size:22px;
+    color:var(--navy);
+    margin:0 0 14px 0;
+  }
+  p { font-size:15px; line-height:1.6; color:#4a5257; margin:0 0 10px 0; }
+  .spinner {
+    width:34px; height:34px;
+    border:4px solid var(--mint);
+    border-top-color:var(--sky);
+    border-radius:50%;
+    margin:10px auto 20px auto;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .state { display:none; }
+  .state.visible { display:block; }
+  .footnote { margin-top:18px; font-size:12px; color:#9aa5a9; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <img class="logo" src="https://www.behjarta.com/assets/behjarta-logo.png" alt="Behjärta">
+
+    <div id="state-loading" class="state visible">
+      <div class="spinner"></div>
+      <p>Vi behandlar din förfrågan...</p>
+    </div>
+
+    <div id="state-success" class="state">
+      <h1>Vi är ledsna att se dig gå 💙</h1>
+      <p>Men vi förstår och respekterar ditt val. Vi kommer inte att skicka fler nyhetsbrev till dig från och med nu.</p>
+      <p>Nu kan du stänga den här sidan.</p>
+    </div>
+
+    <div id="state-error" class="state">
+      <h1>Något gick fel</h1>
+      <p>Vi kunde tyvärr inte behandla din avanmälan just nu.</p>
+      <p>Försök gärna igen senare, eller kontakta oss så hjälper vi dig manuellt.</p>
+    </div>
+
+    <div class="footnote">Behjärta / MS Secure Solutions AB</div>
+  </div>
+
+<script>
+(function () {
+  // TODO: Byt ut mot er publicerade Apps Script Web app-URL (samma som i code.gs).
+  var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzEQKpJOw7FybzDpsEcwlxrD9BwUxz7RW_ducwV0RtnAiC2jBAODYVevtsFK3bmk_UH/exec';
+
+  var params = new URLSearchParams(window.location.search);
+  var email = params.get('email'); // redan base64+URL-kodad av nyhetsbrevet
+  var id = params.get('id');
+
+  function showState(name) {
+    ['loading', 'success', 'error'].forEach(function (s) {
+      document.getElementById('state-' + s).classList.toggle('visible', s === name);
+    });
+  }
+
+  function jsonp(url) {
+    return new Promise(function (resolve, reject) {
+      var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+      var script = document.createElement('script');
+      var timeout = setTimeout(function () {
+        cleanup();
+        reject(new Error('Timeout'));
+      }, 15000);
+
+      function cleanup() {
+        clearTimeout(timeout);
+        delete window[cbName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+
+      window[cbName] = function (data) {
+        cleanup();
+        resolve(data);
+      };
+
+      script.src = url + (url.indexOf('?') > -1 ? '&' : '?') + 'callback=' + cbName;
+      script.onerror = function () {
+        cleanup();
+        reject(new Error('Nätverksfel'));
+      };
+      document.body.appendChild(script);
+    });
+  }
+
+  if (!email) {
+    showState('error');
+  } else {
+    showState('loading');
+    var url = WEBAPP_URL + '?action=unsubscribeRequest&email=' + encodeURIComponent(email) +
+      (id ? '&id=' + encodeURIComponent(id) : '');
+    jsonp(url)
+      .then(function (res) {
+        if (res && res.success) showState('success');
+        else showState('error');
+      })
+      .catch(function () { showState('error'); });
+  }
+})();
+</script>
+</body>
+</html>
