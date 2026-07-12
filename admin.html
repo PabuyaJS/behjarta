@@ -160,7 +160,6 @@ const { useState, useEffect, useMemo, useRef, useCallback } = React;
 const CONFIG = {
   GOOGLE_CLIENT_ID: '362029715087-a2dm4v9gr0g4tda39cqd9pul87s4sq50.apps.googleusercontent.com',
   APPS_SCRIPT_URL:  'https://script.google.com/a/macros/behjarta.com/s/AKfycbwPbyDXmOD0zXQXjNfh1PElVDfOckufbMN-cAviH6AbpliOF0C_IWLyWWeBc5XYMCQL/exec',
-  BOOKING_FORM_URL: 'https://script.google.com/a/macros/behjarta.com/s/AKfycbwR3aZHlcer6iKKnZpEVK7BVlH_qBNvKwAO3VTvaxynNtXVsqr9aOTfy3mrNsQLqaqlKg/exec',
   AUTOMATION_URL:   'https://script.google.com/macros/s/AKfycbwGpqds1rmHSdNjaJMNmTjJO0ix7-HC5-fj6KBG5d3pKA4upjIqXBP_m63PeElMyJT6CA/exec',
   ALLOWED_DOMAIN:   'behjarta.com',
   DEMO_MODE:        false,
@@ -1619,23 +1618,6 @@ function ShiftCardList({ rows, loading, error, onRefresh, onSave, cleaners, date
 /* ════════════════════════════
    VIEWS
 ════════════════════════════ */
-function BookingRequests() {
-  const [iframeH, setIframeH] = useState(700);
-  return (
-    <div className="fade-in">
-      <div style={{ display:'flex', alignItems:'center', gap:0, marginBottom:14, flexWrap:'wrap' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:0, flexShrink:0 }}>
-          <span style={{ fontSize:12, color:T.muted }}>Höjd:</span>
-          <input type="range" min={400} max={1400} step={50} value={iframeH} onChange={e=>setIframeH(+e.target.value)} style={{ width:90 }} />
-          <span style={{ fontSize:12, color:T.muted, minWidth:38 }}>{iframeH}px</span>
-        </div>
-      </div>
-      <div style={{ border:`1px solid ${T.border}`, borderRadius:10, overflow:'hidden' }}>
-        <iframe src={CONFIG.BOOKING_FORM_URL} width="100%" height={iframeH} style={{ display:'block', border:'none' }} title="Bokningsförfrågningar — Apps Script" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" />
-      </div>
-    </div>
-  );
-}
 
 function Tickets() {
   const { data, loading, error, refresh, saveRow } = useSheetData('tickets', 'contact-data');
@@ -1781,7 +1763,6 @@ function Shifts() {
    NAV + SIDEBAR + LOGIN + APP
 ════════════════════════════ */
 const NAV = [
-  { id:'booking-requests', label:'Bokningsförfrågningar', emoji:'📋', title:'Bokningsförfrågningar', subtitle:'Inkommande förfrågningar via behjarta.com (Apps Script)', Component:BookingRequests },
   { id:'tickets',          label:'Obesvarade ärenden',   emoji:'🎫', title:'Obesvarade ärenden',   subtitle:'Kontaktformulär — contact-data',   Component:Tickets },
   { id:'booked-data',      label:'Bokningar',            emoji:'📅', title:'Bokningar',             subtitle:'Alla bokningar — booking_data',    Component:BookedData },
   { id:'customers',        label:'Kunder',               emoji:'👥', title:'Kunder',                subtitle:'Kundregister — customer_data',     Component:Customers },
@@ -1807,8 +1788,8 @@ function Sidebar({ active, setActive, user, onLogout, isMobile, collapsed, onTog
       }}>
         <div style={{ padding: isStripe ? '18px 8px 14px' : '20px 18px 16px', borderBottom:'1px solid rgba(255,255,255,0.06)', textAlign: isStripe?'center':'left' }}>
           {isStripe
-            ? <div style={{ fontSize:20 }}>🧡</div>
-            : <img src="https://behjarta.com/g22.png" alt="Behjärta" style={{ height:30, display:'block' }} onError={e=>{e.target.style.display='none';}} />}
+            ? <div style={{ fontSize:20 }}>🫧</div>
+            : <img src="https://github.com/PabuyaJS/behjarta/blob/main/fav.png?raw=true" alt="Behjärta" style={{ height:30, display:'block' }} onError={e=>{e.target.style.display='none';}} />}
           {!isStripe && <div style={{ fontSize:10, color:'rgba(255,255,255,0.27)', letterSpacing:'0.18em', textTransform:'uppercase', fontWeight:700, marginTop:6 }}>Admin Portal</div>}
         </div>
         {CONFIG.DEMO_MODE && !isStripe && <div style={{ margin:'10px 12px 0', padding:'6px 10px', background:'rgba(251,191,36,0.1)', border:'1px solid rgba(251,191,36,0.2)', borderRadius:7, fontSize:11, color:'#FCD34D', fontWeight:600 }}>⚠️ Demo-läge aktiv</div>}
