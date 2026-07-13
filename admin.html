@@ -160,7 +160,7 @@ const { useState, useEffect, useMemo, useRef, useCallback } = React;
 const CONFIG = {
   GOOGLE_CLIENT_ID: '362029715087-a2dm4v9gr0g4tda39cqd9pul87s4sq50.apps.googleusercontent.com',
   APPS_SCRIPT_URL:  'https://script.google.com/a/macros/behjarta.com/s/AKfycbwPbyDXmOD0zXQXjNfh1PElVDfOckufbMN-cAviH6AbpliOF0C_IWLyWWeBc5XYMCQL/exec',
-  AUTOMATION_URL:   'https://script.google.com/macros/s/AKfycbzVdW0Nz6CG0hTMH3x6W406bEQiJCjHt2gMaYQew-KeEdPLs2_py6C2-bgY6MMJqVOIbA/exec',
+  AUTOMATION_URL:   'https://script.google.com/macros/s/AKfycbwGpqds1rmHSdNjaJMNmTjJO0ix7-HC5-fj6KBG5d3pKA4upjIqXBP_m63PeElMyJT6CA/exec',
   ALLOWED_DOMAIN:   'behjarta.com',
   DEMO_MODE:        false,
 };
@@ -1161,6 +1161,30 @@ function EditModal({ row, title, onClose, onSave, useOffset, showSendContract, s
 }
 
 /* ════════════════════════════
+   CONFIRM MODAL
+   Replaces window.confirm(). Browsers routinely block/no-op native
+   confirm()/alert()/prompt() dialogs when the page runs inside a
+   cross-origin iframe (e.g. embedded in Google Sites) — this modal isn't
+   affected since it's just regular DOM/React, not a browser-chrome dialog.
+════════════════════════════ */
+function ConfirmModal({ message, confirmLabel, danger, onConfirm, onCancel }) {
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onCancel()}>
+      <div className="modal-box" style={{ maxWidth:420 }}>
+        <div style={{ padding:'26px 26px 20px' }}>
+          <div style={{ fontSize:15, fontWeight:700, color:T.text, marginBottom:10 }}>Bekräfta åtgärd</div>
+          <div style={{ fontSize:13.5, color:T.muted, lineHeight:1.6 }}>{message}</div>
+        </div>
+        <div style={{ padding:'14px 26px 22px', display:'flex', gap:10, justifyContent:'flex-end' }}>
+          <button onClick={onCancel} style={{ padding:'9px 20px', border:`1px solid ${T.border}`, borderRadius:8, background:T.white, color:T.muted, fontSize:13, fontWeight:600 }}>Avbryt</button>
+          <button onClick={onConfirm} style={{ padding:'9px 22px', border:'none', borderRadius:8, background:danger?T.danger:T.primary, color:'#fff', fontSize:13, fontWeight:600 }}>{confirmLabel || 'Bekräfta'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════
    FILTER POPOVER
 ════════════════════════════ */
 function FilterPopover({ colKey, colLabel, allValues, currentFilter, onSort, onSetFilter, onClose, anchor }) {
@@ -1240,6 +1264,7 @@ function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, ed
   const [filterAnchor, setFilterAnchor] = useState(null);
   const [sendingContract, setSendingContract] = useState(false);
   const [sendMsg, setSendMsg]                 = useState(null); // { type:'success'|'error', text }
+  const [confirmSend, setConfirmSend]         = useState(false);
   const columnValues = useMemo(() => {
     const result = {};
     columns.forEach(col => { result[col.key] = [...new Set(rows.map(r => { const v=r[col.key]; return (v==null||v==='')?'(tom)':String(v); }))].sort((a,b)=>a.localeCompare(b,'sv')); });
@@ -1272,10 +1297,14 @@ function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, ed
   const activeFilterCount = Object.values(filters).filter(v=>v!==null).length;
   const TH_BASE = { padding:'0', textAlign:'left', fontSize:11, fontWeight:700, color:T.primaryDark, textTransform:'uppercase', letterSpacing:'0.06em', whiteSpace:'nowrap', background:T.primaryLight, borderBottom:`1px solid ${T.primaryMid}` };
 
-  const handleSendContract = async () => {
+  const handleSendContract = () => {
     if (!editRow) return;
-    const label = editRow.Name || editRow[idKey];
-    if (!window.confirm(`Skicka avtal till ${label}?`)) return;
+    setConfirmSend(true);
+  };
+
+  const doSendContract = async () => {
+    setConfirmSend(false);
+    if (!editRow) return;
     setSendingContract(true); setSendMsg(null);
     try {
       const res = await triggerAutomation('sendContract', { id: editRow[idKey] });
@@ -1292,6 +1321,12 @@ function DataTable({ columns, rows, onRefresh, loading, error, idKey, onSave, ed
 
   return (
     <>
+      {confirmSend && <ConfirmModal
+        message={`Skicka avtal till ${editRow?.Name || editRow?.[idKey]}?`}
+        confirmLabel="📧 Skicka avtal"
+        onConfirm={doSendContract}
+        onCancel={()=>setConfirmSend(false)}
+      />}
       {openFilter && filterAnchor && <FilterPopover colKey={openFilter} colLabel={columns.find(c=>c.key===openFilter)?.label||openFilter} allValues={columnValues[openFilter]||[]} currentFilter={filters[openFilter]||null} onSort={handlePopoverSort} onSetFilter={handleSetFilter} onClose={()=>{setOpenFilter(null);setFilterAnchor(null);}} anchor={filterAnchor} />}
       {editRow && <EditModal
         row={editRow}
@@ -1399,9 +1434,10 @@ function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, o
   const [viewRow, setViewRow] = useState(null);
   const [runningAction, setRunningAction] = useState(null); // 'transfer' | 'shifts' | null
   const [actionMsg, setActionMsg]         = useState(null); // { type:'success'|'error', text }
+  const [confirmAction, setConfirmAction] = useState(null); // 'transfer' | 'shifts' | null
 
-  const runTransfer = async () => {
-    if (!window.confirm('Skapa kunder för alla nya e-postadresser i bokningarna?')) return;
+  const doTransfer = async () => {
+    setConfirmAction(null);
     setRunningAction('transfer'); setActionMsg(null);
     try {
       const res = await triggerAutomation('transferCustomers');
@@ -1412,9 +1448,10 @@ function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, o
     }
     setRunningAction(null);
   };
+  const runTransfer = () => setConfirmAction('transfer');
 
-  const runShifts = async () => {
-    if (!window.confirm('Skapa arbetspass för den senaste bokningen?')) return;
+  const doShifts = async () => {
+    setConfirmAction(null);
     setRunningAction('shifts'); setActionMsg(null);
     try {
       const res = await triggerAutomation('createShifts');
@@ -1425,6 +1462,7 @@ function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, o
     }
     setRunningAction(null);
   };
+  const runShifts = () => setConfirmAction('shifts');
   const filtered = useMemo(() => {
     const lq = q.toLowerCase();
     return rows.filter(r => {
@@ -1440,6 +1478,18 @@ function BookingCardList({ rows, loading, error, onRefresh, onSave, dateRange, o
   const paged  = filtered.slice(safePg * PAGE_SIZE, (safePg + 1) * PAGE_SIZE);
   return (
     <>
+      {confirmAction === 'transfer' && <ConfirmModal
+        message="Skapa kunder för alla nya e-postadresser i bokningarna?"
+        confirmLabel="👤 Skapa kunder"
+        onConfirm={doTransfer}
+        onCancel={()=>setConfirmAction(null)}
+      />}
+      {confirmAction === 'shifts' && <ConfirmModal
+        message="Skapa arbetspass för den senaste bokningen?"
+        confirmLabel="🧹 Skapa arbetspass"
+        onConfirm={doShifts}
+        onCancel={()=>setConfirmAction(null)}
+      />}
       {viewRow && <ViewEditModal
         row={viewRow}
         title={`Bokning — ${viewRow.unique_ID}`}
