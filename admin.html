@@ -24,12 +24,12 @@
   input, button, select, textarea { font-family: 'Plus Jakarta Sans', sans-serif; }
   button { cursor: pointer; }
   .sticky-edit { position: sticky; right: 0; z-index: 2; }
-  .modal-overlay-top { z-index: 10000; }
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.46);
     display: flex; align-items: center; justify-content: center;
     z-index: 9999; padding: 20px;
   }
+ .modal-overlay-top { z-index: 10000 !important; }
   .modal-box {
     background: #fff; border-radius: 16px; width: 100%; max-width: 700px;
     max-height: 90vh; display: flex; flex-direction: column;
