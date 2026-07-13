@@ -24,6 +24,7 @@
   input, button, select, textarea { font-family: 'Plus Jakarta Sans', sans-serif; }
   button { cursor: pointer; }
   .sticky-edit { position: sticky; right: 0; z-index: 2; }
+  .modal-overlay-top { z-index: 10000; }
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.46);
     display: flex; align-items: center; justify-content: center;
@@ -1169,7 +1170,7 @@ function EditModal({ row, title, onClose, onSave, useOffset, showSendContract, s
 ════════════════════════════ */
 function ConfirmModal({ message, confirmLabel, danger, onConfirm, onCancel }) {
   return (
-    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onCancel()}>
+    <div className="modal-overlay modal-overlay-top" onClick={e => e.target === e.currentTarget && onCancel()}>
       <div className="modal-box" style={{ maxWidth:420 }}>
         <div style={{ padding:'26px 26px 20px' }}>
           <div style={{ fontSize:15, fontWeight:700, color:T.text, marginBottom:10 }}>Bekräfta åtgärd</div>
