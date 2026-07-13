@@ -1833,15 +1833,101 @@ function Sidebar({ active, setActive, user, onLogout, isMobile, collapsed, onTog
 }
 
 function LoginPage({ onLogin }) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
-  const btnRef = useRef(null);
-  useEffect(() => {
-    if (!window.google?.accounts?.id) return;
-    window.google.accounts.id.initialize({ client_id:CONFIG.GOOGLE_CLIENT_ID, hosted_domain:CONFIG.ALLOWED_DOMAIN, callback:(resp)=>{ try { const pl=JSON.parse(atob(resp.credential.split('.')[1])); if(!pl.email.endsWith('@'+CONFIG.ALLOWED_DOMAIN)){setError('Åtkomst nekad. Endast @'+CONFIG.ALLOWED_DOMAIN+'-konton tillåts.');return;} onLogin({name:pl.name,email:pl.email,avatar:(pl.name||'?').split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase()}); } catch { setError('Inloggning misslyckades.'); } } });
-    if (btnRef.current) window.google.accounts.id.renderButton(btnRef.current, { theme:'outline', size:'large', width:340, locale:'sv' });
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState('');
+  const [gsiReady, setGsiReady] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const btnRef          = useRef(null);
+  const initializedRef  = useRef(false);
+  // Detect whether this page is embedded (e.g. inside a Google Sites iframe).
+  // Google Sites can throttle/delay the async GSI <script>, or block it
+  // outright in some third-party-iframe configurations — that's the root
+  // cause of "works in a normal tab, needs reloads inside the site".
+  const isEmbedded = (() => { try { return window.self !== window.top; } catch { return true; } })();
+
+  const handleCredential = (resp) => {
+    try {
+      const pl = JSON.parse(atob(resp.credential.split('.')[1]));
+      if (!pl.email.endsWith('@' + CONFIG.ALLOWED_DOMAIN)) {
+        setError('Åtkomst nekad. Endast @' + CONFIG.ALLOWED_DOMAIN + '-konton tillåts.');
+        return;
+      }
+      const user = { name: pl.name, email: pl.email, avatar: (pl.name || '?').split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase() };
+      try { localStorage.setItem('behjarta_admin_user', JSON.stringify(user)); } catch {}
+      onLogin(user);
+    } catch {
+      setError('Inloggning misslyckades.');
+    }
+  };
+
+  // Attempts to initialize + render the Google button. Returns true on
+  // success so callers (the poll loop, the manual retry button) know
+  // whether to keep trying.
+  const tryInit = useCallback(() => {
+    if (!window.google?.accounts?.id || !btnRef.current) return false;
+    try {
+      if (!initializedRef.current) {
+        window.google.accounts.id.initialize({
+          client_id: CONFIG.GOOGLE_CLIENT_ID,
+          hosted_domain: CONFIG.ALLOWED_DOMAIN,
+          callback: handleCredential,
+        });
+        initializedRef.current = true;
+      }
+      btnRef.current.innerHTML = '';
+      window.google.accounts.id.renderButton(btnRef.current, { theme: 'outline', size: 'large', width: 340, locale: 'sv' });
+      setGsiReady(true);
+      return true;
+    } catch {
+      return false;
+    }
   }, []);
+
+  // Poll for the Google script to become available. The <script> tag is
+  // injected asynchronously at the top of the file, so on first mount it's
+  // very often not ready yet — this is what previously required a manual
+  // page reload. Polling removes that need automatically.
+  useEffect(() => {
+    if (tryInit()) return;
+    let attempts = 0;
+    const id = setInterval(() => {
+      attempts += 1;
+      if (tryInit() || attempts > 25) clearInterval(id); // ~10s of polling
+    }, 400);
+    return () => clearInterval(id);
+  }, [tryInit]);
+
+  // Manual fallback: re-injects the GSI script (in case it never loaded at
+  // all — common when the page sits inside a Google Sites iframe) and
+  // retries initialization, all without a page reload.
+  const manualRetry = () => {
+    setError('');
+    setRetrying(true);
+    initializedRef.current = false;
+    if (!window.google?.accounts?.id) {
+      const s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.async = true;
+      s.defer = true;
+      document.head.appendChild(s);
+    }
+    let attempts = 0;
+    const id = setInterval(() => {
+      attempts += 1;
+      if (tryInit() || attempts > 15) { clearInterval(id); setRetrying(false); }
+    }, 400);
+  };
+
+  // Opens the actual hosted page (not the Google Sites wrapper) in a new
+  // tab. window.location.href inside this document is already the direct
+  // GitHub Pages URL even when embedded, so this reliably escapes any
+  // iframe restrictions Google Sites might be imposing on GSI.
+  const openInNewWindow = () => {
+    window.open(window.location.href, '_blank', 'noopener');
+  };
+
   const demoLogin = () => { setLoading(true); setTimeout(()=>onLogin({name:'Admin Behjärta',email:'admin@behjarta.com',avatar:'AB'}),900); };
+
   return (
     <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(140deg,#003D35 0%,#00695C 40%,#009688 70%,#26A69A 100%)', position:'relative', overflow:'hidden', padding:16 }}>
       {[350,550,750].map((s,i)=><div key={i} style={{ position:'absolute', width:s, height:s, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.05)', top:'50%', left:'50%', transform:`translate(-${30+i*10}%,-${50+i*5}%)`, pointerEvents:'none' }}/>)}
@@ -1851,7 +1937,32 @@ function LoginPage({ onLogin }) {
         <h1 style={{ fontSize:22, fontWeight:700, color:T.text, marginBottom:8 }}>Välkommen tillbaka</h1>
         <p style={{ fontSize:13, color:T.muted, marginBottom:28, lineHeight:1.65 }}>Logga in med ditt <strong style={{ color:T.primaryDark }}>@behjarta.com</strong>-konto.</p>
         {error && <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', color:T.danger, padding:'10px 14px', borderRadius:10, fontSize:13, marginBottom:18, textAlign:'left' }}>⚠️ {error}</div>}
-        <div ref={btnRef} style={{ display:'flex', justifyContent:'center', marginBottom:10 }} />
+
+        <div ref={btnRef} style={{ display:'flex', justifyContent:'center', minHeight:44, marginBottom:10 }} />
+
+        {!gsiReady && (
+          <div style={{ fontSize:12, color:T.muted, marginBottom:14, display:'flex', alignItems:'center', justifyContent:'center', gap:7 }}>
+            <span className="spin" style={{ width:12, height:12, border:`2px solid ${T.border}`, borderTopColor:T.primary, borderRadius:'50%' }} />
+            Laddar Google-inloggning...
+          </div>
+        )}
+
+        <button onClick={manualRetry} disabled={retrying}
+          style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, width:'100%', padding:'10px', background:T.white, border:`1.5px solid ${T.border}`, borderRadius:10, cursor:retrying?'not-allowed':'pointer', fontSize:12.5, fontWeight:600, color:T.muted, fontFamily:'inherit', marginBottom:10, opacity:retrying?0.7:1 }}
+          onMouseEnter={e=>{if(!retrying){e.currentTarget.style.borderColor=T.primaryMid;e.currentTarget.style.color=T.primaryDark;}}}
+          onMouseLeave={e=>{if(!retrying){e.currentTarget.style.borderColor=T.border;e.currentTarget.style.color=T.muted;}}}>
+          {retrying ? <><span className="spin" style={{ width:12, height:12, border:`2px solid ${T.border}`, borderTopColor:T.primary, borderRadius:'50%' }} />Försöker igen...</> : '🔄 Ser du ingen inloggningsknapp? Klicka här'}
+        </button>
+
+        {isEmbedded && (
+          <button onClick={openInNewWindow}
+            style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, width:'100%', padding:'10px', background:T.primaryLight, border:`1px solid ${T.primaryMid}`, borderRadius:10, cursor:'pointer', fontSize:12.5, fontWeight:700, color:T.primaryDark, fontFamily:'inherit', marginBottom:10 }}
+            onMouseEnter={e=>{e.currentTarget.style.background=T.primary;e.currentTarget.style.color='#fff';}}
+            onMouseLeave={e=>{e.currentTarget.style.background=T.primaryLight;e.currentTarget.style.color=T.primaryDark;}}>
+            ↗ Öppna inloggning i nytt fönster
+          </button>
+        )}
+
         {CONFIG.DEMO_MODE && <button onClick={demoLogin} disabled={loading} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', padding:'12px', background:T.white, border:`1.5px dashed ${T.primaryMid}`, borderRadius:10, cursor:loading?'not-allowed':'pointer', fontSize:13, fontWeight:600, color:T.primaryDark, fontFamily:'inherit', opacity:loading?0.7:1 }} onMouseEnter={e=>{if(!loading)e.currentTarget.style.background=T.primaryLight;}} onMouseLeave={e=>{if(!loading)e.currentTarget.style.background=T.white;}}>{loading?<><span className="spin" style={{ width:14,height:14,border:`2px solid ${T.border}`,borderTopColor:T.primary,borderRadius:'50%'}}/>Loggar in...</>:'🧪 Demo-inloggning'}</button>}
         <div style={{ marginTop:22, padding:'11px', background:'#F8FAFC', borderRadius:10, fontSize:11, color:T.muted }}>🔒 Åtkomst begränsad till <strong>@{CONFIG.ALLOWED_DOMAIN}</strong></div>
       </div>
@@ -1860,7 +1971,14 @@ function LoginPage({ onLogin }) {
 }
 
 function App() {
-  const [user, setUser]     = useState(null);
+  // Restore a previous session if present. This also means: if the person
+  // uses the "Öppna i nytt fönster" fallback to log in from a real browser
+  // tab (bypassing an iframe embed), the login stored to localStorage there
+  // is picked up here automatically via the 'storage' event below — no
+  // second manual login needed inside the embed.
+  const [user, setUser] = useState(() => {
+    try { const raw = localStorage.getItem('behjarta_admin_user'); return raw ? JSON.parse(raw) : null; } catch { return null; }
+  });
   const [active, setActive] = useState('tickets');
   const isMobile = useIsMobile(768);
   const [collapsed, setCollapsed] = useState(true);
@@ -1868,10 +1986,31 @@ function App() {
   const effectiveCollapsed = isMobile ? collapsed : false;
   const activeNav = NAV.find(n => n.id === active);
   const { Component } = activeNav;
-  if (!user) return <LoginPage onLogin={setUser} />;
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'behjarta_admin_user' && e.newValue) {
+        try { setUser(JSON.parse(e.newValue)); } catch {}
+      }
+      if (e.key === 'behjarta_admin_user' && !e.newValue) setUser(null);
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
+
+  const handleLogin = (u) => {
+    try { localStorage.setItem('behjarta_admin_user', JSON.stringify(u)); } catch {}
+    setUser(u);
+  };
+  const handleLogout = () => {
+    try { localStorage.removeItem('behjarta_admin_user'); } catch {}
+    setUser(null);
+  };
+
+  if (!user) return <LoginPage onLogin={handleLogin} />;
   return (
     <div style={{ display:'flex', height:'100vh' }}>
-      <Sidebar active={active} setActive={setActive} user={user} onLogout={()=>setUser(null)} isMobile={isMobile} collapsed={effectiveCollapsed} onToggleCollapse={()=>setCollapsed(c=>!c)} />
+      <Sidebar active={active} setActive={setActive} user={user} onLogout={handleLogout} isMobile={isMobile} collapsed={effectiveCollapsed} onToggleCollapse={()=>setCollapsed(c=>!c)} />
       <main style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
         <div style={{ background:T.white, borderBottom:`1px solid ${T.border}`, padding: isMobile ? '11px 14px' : '13px 26px', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0, gap:10 }}>
           <div style={{ minWidth:0, overflow:'hidden' }}>
