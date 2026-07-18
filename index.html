@@ -87,11 +87,424 @@
         </div>
       </div>
       <div class="container">
-        <h1 style="font-family: Poetsen One;" class="teal-text text-lighten-5">Städtjänster on demand!</h1>
+        <h1 style="font-family: Poetsen One;" class="teal-text text-lighten-5">Städtjänster med hjärta 💙!</h1>
         <p>Boka städning snabbt och enkelt när du behöver det.<br><strong>Vi erbjuder våra tjänster i Stockholm och närliggande områden.</strong></p>
         <a class="waves-effect waves-light btn-large light-blue" style="width: 36%; margin-top: 30px;" href="hemstädning.html">Boka nu</a>
         <p class="white-text"><i>*Erbjudandet gäller endast nya kunder och kan inte kombineras med andra rabatter.</i></p>
       </div>
+      <!--
+        Behjärta – Google Reviews Widget
+        =================================
+        Drop this into your homepage (or embed via an HTML block) to show live
+        Google reviews for MS Secure Solutions AB / Behjärta.
+      
+        SETUP — read before publishing:
+        1. In Google Cloud Console, restrict this API key (Credentials → your key →
+           "Application restrictions" → HTTP referrers) to https://www.behjarta.com/*
+           and https://behjarta.com/*. The key below is unrestricted right now,
+           which means anyone could copy it and rack up usage on your billing
+           account. Restrict it before this goes live.
+        2. Make sure "Maps JavaScript API" and "Places API (New)" are enabled on
+           the project that owns this key.
+        3. Google's API only returns up to 5 reviews per place, and you can't pick
+           which ones — sort is either "most relevant" or "newest" (set below).
+           There's no API way to show all your reviews; for that you'd need a
+           third-party tool that scrapes/caches them, which is against Google's
+           ToS for straightforward reuse. This widget shows exactly what the API
+           legally allows.
+        4. If this site is embedded inside a Google Sites "Embed HTML" block, the
+           script runs inside a sandboxed iframe on googleusercontent.com, not on
+           behjarta.com. That's fine for this widget (reviews are public data, no
+           login required) — but if you ever add referrer restrictions and reviews
+           stop loading, that sandboxed origin is why. Same root cause as the
+           admin.html sign-in issue.
+      -->
+      
+      <div id="behjarta-reviews-widget">
+        <style>
+          #behjarta-reviews-widget {
+            --navy: #01579b;
+            --sky: #03a9f4;
+            --teal: #00897b;
+            --teal-light: #26a69a;
+            --mint: #e0f2f1;
+            --ink: #10242e;
+            --paper: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--ink);
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 48px 20px;
+            box-sizing: border-box;
+          }
+          #behjarta-reviews-widget * { box-sizing: border-box; }
+      
+          .brw-head {
+            text-align: center;
+            margin-bottom: 32px;
+          }
+          .brw-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--teal);
+            background: var(--mint);
+            padding: 6px 14px;
+            border-radius: 999px;
+            margin-bottom: 14px;
+          }
+          .brw-title {
+            font-size: clamp(24px, 3.2vw, 32px);
+            font-weight: 700;
+            color: var(--navy);
+            margin: 0 0 10px;
+          }
+          .brw-summary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            color: #4b5b63;
+            font-size: 15px;
+          }
+          .brw-summary .brw-score {
+            font-weight: 700;
+            color: var(--ink);
+            font-size: 17px;
+          }
+          .brw-stars { display: inline-flex; gap: 2px; }
+          .brw-stars svg { width: 16px; height: 16px; }
+      
+          .brw-track-wrap {
+            position: relative;
+          }
+          .brw-track {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding: 4px 4px 16px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--teal-light) var(--mint);
+          }
+          .brw-track::-webkit-scrollbar { height: 8px; }
+          .brw-track::-webkit-scrollbar-track { background: var(--mint); border-radius: 8px; }
+          .brw-track::-webkit-scrollbar-thumb { background: var(--teal-light); border-radius: 8px; }
+      
+          .brw-card {
+            scroll-snap-align: start;
+            flex: 0 0 300px;
+            background: var(--paper);
+            border: 1px solid #e4edf1;
+            border-radius: 16px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 1px 2px rgba(1, 87, 155, 0.05);
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+          }
+          .brw-card:hover {
+            box-shadow: 0 10px 24px rgba(1, 87, 155, 0.10);
+            transform: translateY(-2px);
+          }
+          .brw-author-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          }
+          .brw-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--mint);
+            flex-shrink: 0;
+          }
+          .brw-avatar-fallback {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--sky), var(--teal-light));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 15px;
+            flex-shrink: 0;
+          }
+          .brw-author-name {
+            font-weight: 600;
+            font-size: 14.5px;
+            color: var(--ink);
+            line-height: 1.2;
+          }
+          .brw-author-date {
+            font-size: 12.5px;
+            color: #7b8b92;
+            margin-top: 2px;
+          }
+          .brw-card .brw-stars svg { width: 15px; height: 15px; }
+          .brw-text {
+            font-size: 14px;
+            line-height: 1.55;
+            color: #33454d;
+            display: -webkit-box;
+            -webkit-line-clamp: 6;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+          .brw-google-mark {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #9aa7ac;
+          }
+          .brw-google-mark svg { width: 14px; height: 14px; }
+      
+          .brw-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 4px;
+          }
+          .brw-nav button {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid #dbe7ea;
+            background: var(--paper);
+            color: var(--navy);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease, border-color 0.15s ease;
+          }
+          .brw-nav button:hover { background: var(--mint); border-color: var(--teal-light); }
+          .brw-nav button:disabled { opacity: 0.35; cursor: default; }
+          .brw-nav svg { width: 18px; height: 18px; }
+      
+          .brw-cta {
+            text-align: center;
+            margin-top: 28px;
+          }
+          .brw-cta a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--navy);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14.5px;
+            padding: 12px 24px;
+            border-radius: 999px;
+            transition: background 0.15s ease;
+          }
+          .brw-cta a:hover { background: #014377; }
+      
+          .brw-state {
+            text-align: center;
+            color: #7b8b92;
+            font-size: 14px;
+            padding: 40px 0;
+          }
+      
+          @media (max-width: 560px) {
+            .brw-card { flex-basis: 260px; }
+          }
+        </style>
+      
+        <div class="brw-head">
+          <span class="brw-eyebrow">Recensioner från Google</span>
+          <h2 class="brw-title">Vad våra kunder säger</h2>
+          <div class="brw-summary" id="brw-summary">
+            <span class="brw-state">Laddar recensioner …</span>
+          </div>
+        </div>
+      
+        <div class="brw-track-wrap">
+          <div class="brw-track" id="brw-track"></div>
+        </div>
+      
+        <div class="brw-nav" id="brw-nav" style="display:none;">
+          <button id="brw-prev" aria-label="Föregående">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button id="brw-next" aria-label="Nästa">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+      
+        <div class="brw-cta" id="brw-cta" style="display:none;">
+          <a id="brw-cta-link" href="#" target="_blank" rel="noopener">
+            Se alla recensioner på Google
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+        </div>
+      </div>
+      
+      <script>
+      (function () {
+        // ── Configuration ─────────────────────────────────────────────
+        var CONFIG = {
+          apiKey: "AIzaSyA6qlFAoV4RpA2xspZ8nJNdEI0jteHQshY",
+          placeId: "ChIJv5yPBph5X0YRZ-pMErGJEiI",
+          sort: "newest" // "newest" or "most_relevant"
+        };
+        // ──────────────────────────────────────────────────────────────
+      
+        function starSVG(filled) {
+          return '<svg viewBox="0 0 24 24" fill="' + (filled ? "#03a9f4" : "#dbe7ea") + '">' +
+            '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>';
+        }
+      
+        function starsHTML(rating) {
+          var out = '<span class="brw-stars">';
+          var rounded = Math.round(rating);
+          for (var i = 1; i <= 5; i++) out += starSVG(i <= rounded);
+          out += '</span>';
+          return out;
+        }
+      
+        function initials(name) {
+          if (!name) return "?";
+          var parts = name.trim().split(/\s+/);
+          return (parts[0][0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
+        }
+      
+        function formatDate(publishTime) {
+          try {
+            var d = new Date(publishTime);
+            return d.toLocaleDateString("sv-SE", { year: "numeric", month: "long" });
+          } catch (e) {
+            return "";
+          }
+        }
+      
+        function googleLogoSVG() {
+          return '<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.85A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 010-4.2V7.05H2.18a11 11 0 000 9.9l3.66-2.85z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 00-9.82 6.05l3.66 2.85C6.71 7.31 9.14 5.38 12 5.38z"/></svg>';
+        }
+      
+        function renderError(message) {
+          document.getElementById("brw-summary").innerHTML =
+            '<span class="brw-state">' + message + '</span>';
+        }
+      
+        function render(place) {
+          var summaryEl = document.getElementById("brw-summary");
+          var trackEl = document.getElementById("brw-track");
+          var navEl = document.getElementById("brw-nav");
+          var ctaEl = document.getElementById("brw-cta");
+          var ctaLink = document.getElementById("brw-cta-link");
+      
+          if (place.googleMapsURI) ctaLink.href = place.googleMapsURI;
+      
+          summaryEl.innerHTML =
+            '<span class="brw-score">' + (place.rating ? place.rating.toFixed(1) : "–") + '</span>' +
+            starsHTML(place.rating || 0) +
+            '<span>baserat på ' + (place.userRatingCount || 0) + ' recensioner</span>';
+      
+          var reviews = place.reviews || [];
+          if (reviews.length === 0) {
+            trackEl.innerHTML = '<div class="brw-state">Inga recensioner att visa just nu.</div>';
+            ctaEl.style.display = "block";
+            return;
+          }
+      
+          trackEl.innerHTML = reviews.map(function (r) {
+            var author = r.authorAttribution || {};
+            var avatar = author.photoURI
+              ? '<img class="brw-avatar" src="' + author.photoURI + '" alt="" referrerpolicy="no-referrer">'
+              : '<div class="brw-avatar-fallback">' + initials(author.displayName) + '</div>';
+            var text = (r.text && r.text.text) ? r.text.text : "";
+      
+            return (
+              '<article class="brw-card">' +
+                '<div class="brw-author-row">' +
+                  avatar +
+                  '<div>' +
+                    '<div class="brw-author-name">' + (author.displayName || "Google-användare") + '</div>' +
+                    '<div class="brw-author-date">' + formatDate(r.publishTime) + '</div>' +
+                  '</div>' +
+                '</div>' +
+                starsHTML(r.rating || 0) +
+                '<p class="brw-text">' + text + '</p>' +
+                '<div class="brw-google-mark">' + googleLogoSVG() + '<span>Google-recension</span></div>' +
+              '</article>'
+            );
+          }).join("");
+      
+          navEl.style.display = "flex";
+          ctaEl.style.display = "block";
+      
+          var prevBtn = document.getElementById("brw-prev");
+          var nextBtn = document.getElementById("brw-next");
+          function scrollByCard(dir) {
+            var card = trackEl.querySelector(".brw-card");
+            var step = card ? card.offsetWidth + 20 : 300;
+            trackEl.scrollBy({ left: dir * step, behavior: "smooth" });
+          }
+          prevBtn.addEventListener("click", function () { scrollByCard(-1); });
+          nextBtn.addEventListener("click", function () { scrollByCard(1); });
+        }
+      
+        function loadGoogleMaps(callback) {
+          if (window.google && window.google.maps && window.google.maps.places) {
+            callback();
+            return;
+          }
+          window.__brwCallback = callback;
+          var script = document.createElement("script");
+          script.src =
+            "https://maps.googleapis.com/maps/api/js?key=" + CONFIG.apiKey +
+            "&libraries=places&callback=__brwCallback&loading=async";
+          script.async = true;
+          script.onerror = function () {
+            renderError("Kunde inte ladda Google Maps. Kontrollera API-nyckeln.");
+          };
+          document.head.appendChild(script);
+        }
+      
+        loadGoogleMaps(async function () {
+          try {
+            var Place = google.maps.places.Place;
+            var place = new Place({ id: CONFIG.placeId });
+      
+            await place.fetchFields({
+              fields: ["displayName", "rating", "userRatingCount", "reviews", "googleMapsURI"]
+            });
+      
+            // Optionally re-sort reviews by newest (API default is "most relevant")
+            var reviews = place.reviews || [];
+            if (CONFIG.sort === "newest") {
+              reviews = reviews.slice().sort(function (a, b) {
+                return new Date(b.publishTime) - new Date(a.publishTime);
+              });
+            }
+      
+            render({
+              rating: place.rating,
+              userRatingCount: place.userRatingCount,
+              reviews: reviews,
+              googleMapsURI: place.googleMapsURI
+            });
+          } catch (err) {
+            console.error("Behjärta reviews widget error:", err);
+            renderError("Kunde inte hämta recensioner just nu. Försök igen senare.");
+          }
+        });
+      })();
+      </script>
     </header>
 
     <!-- Section Services-mobile -->
