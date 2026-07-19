@@ -87,39 +87,11 @@
         </div>
       </div>
       <div class="container">
-        <h1 style="font-family: Poetsen One;" class="teal-text text-lighten-5">Städtjänster med hjärta 💙!</h1>
+        <h1 style="font-family: Poetsen One;" class="teal-text text-lighten-5">Städtjänster med hjärta!</h1>
         <p>Boka städning snabbt och enkelt när du behöver det.<br><strong>Vi erbjuder våra tjänster i Stockholm och närliggande områden.</strong></p>
         <a class="waves-effect waves-light btn-large light-blue" style="width: 36%; margin-top: 30px;" href="hemstädning.html">Boka nu</a>
         <p class="white-text"><i>*Erbjudandet gäller endast nya kunder och kan inte kombineras med andra rabatter.</i></p>
       </div>
-      <!--
-        Behjärta – Google Reviews Widget
-        =================================
-        Drop this into your homepage (or embed via an HTML block) to show live
-        Google reviews for MS Secure Solutions AB / Behjärta.
-      
-        SETUP — read before publishing:
-        1. In Google Cloud Console, restrict this API key (Credentials → your key →
-           "Application restrictions" → HTTP referrers) to https://www.behjarta.com/*
-           and https://behjarta.com/*. The key below is unrestricted right now,
-           which means anyone could copy it and rack up usage on your billing
-           account. Restrict it before this goes live.
-        2. Make sure "Maps JavaScript API" and "Places API (New)" are enabled on
-           the project that owns this key.
-        3. Google's API only returns up to 5 reviews per place, and you can't pick
-           which ones — sort is either "most relevant" or "newest" (set below).
-           There's no API way to show all your reviews; for that you'd need a
-           third-party tool that scrapes/caches them, which is against Google's
-           ToS for straightforward reuse. This widget shows exactly what the API
-           legally allows.
-        4. If this site is embedded inside a Google Sites "Embed HTML" block, the
-           script runs inside a sandboxed iframe on googleusercontent.com, not on
-           behjarta.com. That's fine for this widget (reviews are public data, no
-           login required) — but if you ever add referrer restrictions and reviews
-           stop loading, that sandboxed origin is why. Same root cause as the
-           admin.html sign-in issue.
-      -->
-      
       <div id="behjarta-reviews-widget">
         <style>
           #behjarta-reviews-widget {
@@ -458,21 +430,19 @@
           nextBtn.addEventListener("click", function () { scrollByCard(1); });
         }
       
-        function loadGoogleMaps(callback) {
-          if (window.google && window.google.maps && window.google.maps.places) {
+        // Google's official inline bootstrap loader (sets up google.maps.importLibrary).
+        // This is the pattern Google's own docs ship — it safely no-ops if the Maps
+        // script is already present elsewhere on the page instead of colliding with it.
+        (g => { var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window; b = b[c] || (b[c] = {}); var d = b.maps || (b.maps = {}), r = new Set, e = new URLSearchParams, u = () => h || (h = new Promise(async (f, n) => { await (a = m.createElement("script")); e.set("libraries", [...r] + ""); for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k]); e.set("callback", c + ".maps." + q); a.src = `https://maps.${c}apis.com/maps/api/js?` + e; d[q] = f; a.onerror = () => h = n(Error(p + " could not load.")); a.nonce = m.querySelector("script[nonce]")?.nonce || ""; m.head.append(a); })); d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)) })({ key: CONFIG.apiKey, v: "weekly" });
+      
+        async function loadGoogleMaps(callback) {
+          try {
+            await google.maps.importLibrary("places");
             callback();
-            return;
-          }
-          window.__brwCallback = callback;
-          var script = document.createElement("script");
-          script.src =
-            "https://maps.googleapis.com/maps/api/js?key=" + CONFIG.apiKey +
-            "&libraries=places&callback=__brwCallback&loading=async";
-          script.async = true;
-          script.onerror = function () {
+          } catch (err) {
+            console.error("Behjärta reviews widget — Maps failed to load:", err);
             renderError("Kunde inte ladda Google Maps. Kontrollera API-nyckeln.");
-          };
-          document.head.appendChild(script);
+          }
         }
       
         loadGoogleMaps(async function () {
