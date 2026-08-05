@@ -478,7 +478,7 @@ function formatRowForSheetOffset(row) {
 /* ════════════════════════════
    API HELPERS — JSONP
 ════════════════════════════ */
-function jsonp(url, params = {}, timeoutMs = 12000) {
+function jsonp(url, params = {}, timeoutMs = 120000) {
   return new Promise((resolve, reject) => {
     const cbName = '__bh_' + Date.now() + '_' + Math.random().toString(36).slice(2);
     const qs = new URLSearchParams({ ...params, callback: cbName }).toString();
