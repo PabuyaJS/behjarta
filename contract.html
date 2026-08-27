@@ -512,7 +512,7 @@ body {
         www.behjarta.com &nbsp;|&nbsp; hej@behjarta.com
       </div>
       <div class="doc-title">ANSTÄLLNINGSAVTAL / EMPLOYMENT AGREEMENT</div>
-      <div class="doc-subtitle">Tidsbegränsad anställning – Lokalvårdare / Fixed-Term Employment – Cleaner</div>
+      <div class="doc-subtitle" id="doc-subtitle">Tidsbegränsad anställning – Lokalvårdare / Fixed-Term Employment – Cleaner</div>
     </div>
 
     <div class="doc-body">
@@ -544,8 +544,11 @@ body {
       <!-- § 3 -->
       <div class="section">
         <div class="section-title">3. Anställningens form och period / Employment Type and Period</div>
-        <p class="prose-sv">Anställningsform: Tidsbegränsad anställning vid behov (timanställning), i enlighet med Lag (1982:80) om anställningsskydd (LAS) och dess bestämmelser om allmän visstidsanställning (ALVA).</p>
-        <p class="prose-en">Employment type: Fixed-term employment on demand (hourly), in accordance with the Employment Protection Act (LAS) and its provisions on general fixed-term employment (ALVA).</p>
+        <div id="section3-type">
+          <!-- Populated dynamically by populateContract() based on contractType (PT/FT) -->
+          <p class="prose-sv">Anställningsform: Tidsbegränsad anställning vid behov (timanställning), i enlighet med Lag (1982:80) om anställningsskydd (LAS) och dess bestämmelser om allmän visstidsanställning (ALVA).</p>
+          <p class="prose-en">Employment type: Fixed-term employment on demand (hourly), in accordance with the Employment Protection Act (LAS) and its provisions on general fixed-term employment (ALVA).</p>
+        </div>
         <p class="prose-sv mt8">Anställningen gäller initialt i tre (3) månader från tillträdesdatum. Anställningen förnyas automatiskt med ytterligare tremånadersperioder, under förutsättning att båda parter är överens och arbete kan erbjudas.</p>
         <p class="prose-en">The employment is initially valid for three (3) months from the start date. The employment is renewed automatically for additional three-month periods, provided both parties agree and work is available.</p>
         <div class="notice mt8">
@@ -581,10 +584,13 @@ body {
       <!-- § 5 -->
       <div class="section">
         <div class="section-title">5. Arbetstid / Working Hours</div>
-        <p class="prose-sv">Inga garanterade minimitimmar. Arbete erbjuds vid behov och arbetstagaren kallas in när uppdrag finns tillgängliga. Arbetstagaren har rätt att tacka nej till erbjudet arbete, utan att detta påverkar framtida erbjudanden negativt, förutsatt att avböjandet sker i god tid.</p>
-        <p class="prose-en">No guaranteed minimum hours. Work is offered as needed and the employee is called in when assignments are available. The employee has the right to decline offered work without this negatively affecting future offers, provided that the refusal is given with reasonable notice.</p>
-        <p class="prose-sv mt8">Arbetsgivaren åtar sig att, i den mån det är möjligt, meddela arbetstagaren om kommande uppdrag minst 48 timmar i förväg.</p>
-        <p class="prose-en">The employer undertakes to, where possible, notify the employee of upcoming assignments at least 48 hours in advance.</p>
+        <div id="section5-content">
+          <!-- Populated dynamically by populateContract() based on contractType (PT/FT) -->
+          <p class="prose-sv">Inga garanterade minimitimmar. Arbete erbjuds vid behov och arbetstagaren kallas in när uppdrag finns tillgängliga. Arbetstagaren har rätt att tacka nej till erbjudet arbete, utan att detta påverkar framtida erbjudanden negativt, förutsatt att avböjandet sker i god tid.</p>
+          <p class="prose-en">No guaranteed minimum hours. Work is offered as needed and the employee is called in when assignments are available. The employee has the right to decline offered work without this negatively affecting future offers, provided that the refusal is given with reasonable notice.</p>
+          <p class="prose-sv mt8">Arbetsgivaren åtar sig att, i den mån det är möjligt, meddela arbetstagaren om kommande uppdrag minst 48 timmar i förväg.</p>
+          <p class="prose-en">The employer undertakes to, where possible, notify the employee of upcoming assignments at least 48 hours in advance.</p>
+        </div>
       </div>
 
       <!-- § 6 – dynamically filled -->
@@ -849,7 +855,7 @@ body {
 <script>
 // ── Config ──────────────────────────────────────────────────
 // Replace with your deployed Apps Script Web App URL:
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzolZ0hTUpIpsN8ZUS9HXRP19H9kBPIOBbiDoxAy8eBagHz86gb1EgIN7Wz-xpFB885/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx4wPd-LDe1JxEOdosZPpIaOswHVa6wdhtcdiEFviXfVPmuVwn6xEqBrOYg2iArSSHM/exec';
 
 // ── State ───────────────────────────────────────────────────
 const state = {
@@ -864,6 +870,36 @@ const state = {
 const canvases = { 1: null, 2: null };
 const ctxs     = { 1: null, 2: null };
 let drawing    = { active: false, id: null };
+
+// ── Contract-type text blocks (PT = deltid/timanställning, FT = heltid 160h/mån) ──
+const CONTRACT_TYPE_TEXT = {
+  PT: {
+    subtitle: 'Tidsbegränsad anställning – Lokalvårdare / Fixed-Term Employment – Cleaner',
+    section3: `
+      <p class="prose-sv">Anställningsform: Tidsbegränsad anställning vid behov (timanställning), i enlighet med Lag (1982:80) om anställningsskydd (LAS) och dess bestämmelser om allmän visstidsanställning (ALVA).</p>
+      <p class="prose-en">Employment type: Fixed-term employment on demand (hourly), in accordance with the Employment Protection Act (LAS) and its provisions on general fixed-term employment (ALVA).</p>
+    `,
+    section5: `
+      <p class="prose-sv">Inga garanterade minimitimmar. Arbete erbjuds vid behov och arbetstagaren kallas in när uppdrag finns tillgängliga. Arbetstagaren har rätt att tacka nej till erbjudet arbete, utan att detta påverkar framtida erbjudanden negativt, förutsatt att avböjandet sker i god tid.</p>
+      <p class="prose-en">No guaranteed minimum hours. Work is offered as needed and the employee is called in when assignments are available. The employee has the right to decline offered work without this negatively affecting future offers, provided that the refusal is given with reasonable notice.</p>
+      <p class="prose-sv mt8">Arbetsgivaren åtar sig att, i den mån det är möjligt, meddela arbetstagaren om kommande uppdrag minst 48 timmar i förväg.</p>
+      <p class="prose-en">The employer undertakes to, where possible, notify the employee of upcoming assignments at least 48 hours in advance.</p>
+    `
+  },
+  FT: {
+    subtitle: 'Tidsbegränsad heltidsanställning – Lokalvårdare / Fixed-Term Full-Time Employment – Cleaner',
+    section3: `
+      <p class="prose-sv">Anställningsform: Tidsbegränsad heltidsanställning om 160 timmar per månad, i enlighet med Lag (1982:80) om anställningsskydd (LAS) och dess bestämmelser om allmän visstidsanställning (ALVA).</p>
+      <p class="prose-en">Employment type: Fixed-term full-time employment of 160 hours per month, in accordance with the Employment Protection Act (LAS) and its provisions on general fixed-term employment (ALVA).</p>
+    `,
+    section5: `
+      <p class="prose-sv">Arbetstagaren garanteras 160 arbetstimmar per månad. Arbetsgivaren fördelar arbetstiden utifrån verksamhetens behov och meddelar schema i god tid, dock minst 48 timmar innan ett uppdrags start.</p>
+      <p class="prose-en">The employee is guaranteed 160 working hours per month. The employer allocates working hours according to operational needs and communicates the schedule with reasonable notice, at least 48 hours before an assignment starts.</p>
+      <p class="prose-sv mt8">Timmar som arbetas utöver 160 timmar per kalendermånad räknas som övertid och ersätts enligt samma timlön som anges i § 6, baserat på arbetstagarens lönenivå enligt payment_rule.</p>
+      <p class="prose-en">Hours worked beyond 160 hours per calendar month are considered overtime and are compensated at the same hourly rate specified in § 6, based on the employee's pay level per payment_rule.</p>
+    `
+  }
+};
 
 // ── Boot ────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
@@ -913,10 +949,21 @@ function populateContract(d) {
   const placeDate = `Stockholm, ${d.date}`;
   setText('f-placedate1', `Ort och datum / Place and Date: ${placeDate}`);
   setText('f-placedate2', `Ort och datum / Place and Date: ${placeDate}`);
+
+  // Contract type: 'FT' (heltid) or default 'PT' (deltid/timanställning)
+  const type = (d.contractType === 'FT') ? 'FT' : 'PT';
+  const txt  = CONTRACT_TYPE_TEXT[type];
+  setHTML('doc-subtitle',    txt.subtitle);
+  setHTML('section3-type',   txt.section3);
+  setHTML('section5-content', txt.section5);
 }
 function setText(id, val) {
   const el = document.getElementById(id);
   if (el) el.textContent = val || '–';
+}
+function setHTML(id, html) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
 }
 
 // ── Canvas init ──────────────────────────────────────────────
