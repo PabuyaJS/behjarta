@@ -984,11 +984,6 @@ function populateContract(d) {
 
   // f-startdate is inside the dynamic §3 HTML, so set it AFTER injection
   setText('f-startdate', d.startDate);
-  
-}function setHTML(id, html) {
-  const el = document.getElementById(id);
-  if (el) el.innerHTML = html;
-}
 
 // ── Canvas init ──────────────────────────────────────────────
 function initCanvases() {
