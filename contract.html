@@ -983,6 +983,8 @@ function populateContract(d) {
   setHTML('section3-content', txt.section3);
   setHTML('section5-content', txt.section5);
   setHTML('section9-content', txt.section9);
+
+  setText('f-startdate', d.startDate);
 }
 function setText(id, val) {
   const el = document.getElementById(id);
