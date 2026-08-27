@@ -541,26 +541,12 @@ body {
         </table>
       </div>
 
-      <!-- § 3 -->
+           <!-- § 3 – dynamically filled -->
       <div class="section">
         <div class="section-title">3. Anställningens form och period / Employment Type and Period</div>
-        <div id="section3-type">
+        <div id="section3-content">
           <!-- Populated dynamically by populateContract() based on contractType (PT/FT) -->
-          <p class="prose-sv">Anställningsform: Tidsbegränsad anställning vid behov (timanställning), i enlighet med Lag (1982:80) om anställningsskydd (LAS) och dess bestämmelser om allmän visstidsanställning (ALVA).</p>
-          <p class="prose-en">Employment type: Fixed-term employment on demand (hourly), in accordance with the Employment Protection Act (LAS) and its provisions on general fixed-term employment (ALVA).</p>
         </div>
-        <p class="prose-sv mt8">Anställningen gäller initialt i tre (3) månader från tillträdesdatum. Anställningen förnyas automatiskt med ytterligare tremånadersperioder, under förutsättning att båda parter är överens och arbete kan erbjudas.</p>
-        <p class="prose-en">The employment is initially valid for three (3) months from the start date. The employment is renewed automatically for additional three-month periods, provided both parties agree and work is available.</p>
-        <div class="notice mt8">
-          <strong>Viktigt / Important:</strong> I enlighet med LAS § 5a omvandlas anställningen till en tillsvidareanställning om arbetstagaren har haft tidsbegränsad anställning (ALVA) hos samma arbetsgivare i sammanlagt mer än tolv (12) månader under en femårsperiod. Arbetsgivaren åtar sig att erbjuda tillsvidareanställning vid uppnådd kvalifikationstid.<br>
-          <em>In accordance with LAS § 5a, the employment converts to a permanent contract if the employee has held ALVA with the same employer for more than twelve (12) months within five years. The employer undertakes to offer permanent employment upon reaching the qualifying period.</em>
-        </div>
-        <table class="info-table compact mt16">
-          <tr><td>Tillträdesdatum / Start Date</td><td id="f-startdate">–</td></tr>
-          <tr><td>Anställningsperiod / Initial Period</td><td>3 månader / 3 months from start date</td></tr>
-          <tr><td>Förnyelse / Renewal</td><td>Var 3:e månad / Every 3 months</td></tr>
-          <tr><td>Omvandling / Conversion to Permanent</td><td>Efter 12 månaders kvalificerad tid / After 12 months qualifying time</td></tr>
-        </table>
       </div>
 
       <!-- § 4 -->
@@ -623,17 +609,12 @@ body {
         <p class="prose-en">Sick pay is governed by the Sick Pay Act (SjLL, 1991:1047). A qualifying day (karensdag) applies as required by law. A medical certificate may be required from the 8th day of illness.</p>
       </div>
 
-      <!-- § 9 -->
+            <!-- § 9 – dynamically filled -->
       <div class="section">
         <div class="section-title">9. Uppsägningstid / Notice Period</div>
-        <p class="prose-sv mt8">För tidsbegränsad anställning upphör anställningen normalt vid periodens slut. Om part önskar avsluta anställningen i förtid gäller följande uppsägningstider:</p>
-        <p class="prose-en">For fixed-term employment, the employment normally ends at the expiry of the period. If a party wishes to terminate early, the following notice periods apply:</p>
-        <table class="info-table compact mt8">
-          <tr><td>Under 2 år / Less than 2 years</td><td>1 månads uppsägningstid / 1 month notice</td></tr>
-          <tr><td>2–4 år / 2–4 years</td><td>2 månaders / 2 months notice</td></tr>
-          <tr><td>4–6 år / 4–6 years</td><td>3 månaders / 3 months notice</td></tr>
-          <tr><td>6 år eller mer / 6+ years</td><td>4–6 månader beroende på ålder / 4–6 months depending on age</td></tr>
-        </table>
+        <div id="section9-content">
+          <!-- Populated dynamically by populateContract() based on contractType (PT/FT) -->
+        </div>
       </div>
 
       <!-- § 10 -->
@@ -878,25 +859,70 @@ const CONTRACT_TYPE_TEXT = {
     section3: `
       <p class="prose-sv">Anställningsform: Tidsbegränsad anställning vid behov (timanställning), i enlighet med Lag (1982:80) om anställningsskydd (LAS) och dess bestämmelser om allmän visstidsanställning (ALVA).</p>
       <p class="prose-en">Employment type: Fixed-term employment on demand (hourly), in accordance with the Employment Protection Act (LAS) and its provisions on general fixed-term employment (ALVA).</p>
+      <p class="prose-sv mt8">Anställningen gäller initialt i tre (3) månader från tillträdesdatum. Anställningen förnyas automatiskt med ytterligare tremånadersperioder, under förutsättning att båda parter är överens och arbete kan erbjudas.</p>
+      <p class="prose-en">The employment is initially valid for three (3) months from the start date. The employment is renewed automatically for additional three-month periods, provided both parties agree and work is available.</p>
+      <div class="notice mt8">
+        <strong>Viktigt / Important:</strong> I enlighet med LAS § 5a omvandlas anställningen till en tillsvidareanställning om arbetstagaren har haft tidsbegränsad anställning (ALVA) hos samma arbetsgivare i sammanlagt mer än tolv (12) månader under en femårsperiod. Arbetsgivaren åtar sig att erbjuda tillsvidareanställning vid uppnådd kvalifikationstid.<br>
+        <em>In accordance with LAS § 5a, the employment converts to a permanent contract if the employee has held ALVA with the same employer for more than twelve (12) months within five years. The employer undertakes to offer permanent employment upon reaching the qualifying period.</em>
+      </div>
+      <table class="info-table compact mt16">
+        <tr><td>Tillträdesdatum / Start Date</td><td id="f-startdate">–</td></tr>
+        <tr><td>Anställningsperiod / Initial Period</td><td>3 månader / 3 months from start date</td></tr>
+        <tr><td>Förnyelse / Renewal</td><td>Var 3:e månad / Every 3 months</td></tr>
+        <tr><td>Omvandling / Conversion to Permanent</td><td>Efter 12 månaders kvalificerad tid / After 12 months qualifying time</td></tr>
+      </table>
     `,
     section5: `
       <p class="prose-sv">Inga garanterade minimitimmar. Arbete erbjuds vid behov och arbetstagaren kallas in när uppdrag finns tillgängliga. Arbetstagaren har rätt att tacka nej till erbjudet arbete, utan att detta påverkar framtida erbjudanden negativt, förutsatt att avböjandet sker i god tid.</p>
       <p class="prose-en">No guaranteed minimum hours. Work is offered as needed and the employee is called in when assignments are available. The employee has the right to decline offered work without this negatively affecting future offers, provided that the refusal is given with reasonable notice.</p>
       <p class="prose-sv mt8">Arbetsgivaren åtar sig att, i den mån det är möjligt, meddela arbetstagaren om kommande uppdrag minst 48 timmar i förväg.</p>
       <p class="prose-en">The employer undertakes to, where possible, notify the employee of upcoming assignments at least 48 hours in advance.</p>
+    `,
+    section9: `
+      <p class="prose-sv mt8">För tidsbegränsad anställning upphör anställningen normalt vid periodens slut. Om part önskar avsluta anställningen i förtid gäller följande uppsägningstider:</p>
+      <p class="prose-en">For fixed-term employment, the employment normally ends at the expiry of the period. If a party wishes to terminate early, the following notice periods apply:</p>
+      <table class="info-table compact mt8">
+        <tr><td>Under 2 år / Less than 2 years</td><td>1 månads uppsägningstid / 1 month notice</td></tr>
+        <tr><td>2–4 år / 2–4 years</td><td>2 månaders / 2 months notice</td></tr>
+        <tr><td>4–6 år / 4–6 years</td><td>3 månaders / 3 months notice</td></tr>
+        <tr><td>6 år eller mer / 6+ years</td><td>4–6 månader beroende på ålder / 4–6 months depending on age</td></tr>
+      </table>
     `
   },
   FT: {
-    subtitle: 'Tidsbegränsad heltidsanställning – Lokalvårdare / Fixed-Term Full-Time Employment – Cleaner',
+    subtitle: 'Tillsvidareanställning med provanställning – Lokalvårdare / Permanent Employment with Probation – Cleaner',
     section3: `
-      <p class="prose-sv">Anställningsform: Tidsbegränsad heltidsanställning om 160 timmar per månad, i enlighet med Lag (1982:80) om anställningsskydd (LAS) och dess bestämmelser om allmän visstidsanställning (ALVA).</p>
-      <p class="prose-en">Employment type: Fixed-term full-time employment of 160 hours per month, in accordance with the Employment Protection Act (LAS) and its provisions on general fixed-term employment (ALVA).</p>
+      <p class="prose-sv">Anställningsform: Tillsvidareanställning med inledande provanställning om sex (6) månader, i enlighet med Lag (1982:80) om anställningsskydd (LAS) kapitel 4 §§ 1–3.</p>
+      <p class="prose-en">Employment type: Permanent employment with an initial probationary period of six (6) months, in accordance with the Employment Protection Act (LAS) chapter 4 §§ 1–3.</p>
+      <p class="prose-sv mt8">Efter fullföljd provanställning om sex (6) månader övergår anställningen automatiskt till en tillsvidareanställning utan tidsbegränsning.</p>
+      <p class="prose-en">Upon completion of the six (6)-month probationary period, the employment automatically converts to permanent employment without time limitation.</p>
+      <div class="notice mt8">
+        <strong>Viktigt / Important:</strong> Under provanställningsperioden om sex (6) månader förbehåller sig arbetsgivaren rätten att avsluta anställningen med två (2) veckors uppsägningstid om (a) arbete inte kan erbjudas, eller (b) arbetstagaren visar sig olämplig för rollen som lokalvårdare. Efter provanställningstidens utgång gäller ordinarie uppsägningstider enligt LAS.<br>
+        <em>During the six (6)-month probationary period, the employer reserves the right to terminate the employment with two (2) weeks' notice if (a) work cannot be offered, or (b) the employee proves unsuitable for the role as cleaner. After the probationary period, standard notice periods under LAS apply.</em>
+      </div>
+      <table class="info-table compact mt16">
+        <tr><td>Tillträdesdatum / Start Date</td><td id="f-startdate">–</td></tr>
+        <tr><td>Provanställning / Probation Period</td><td>6 månader / 6 months from start date</td></tr>
+        <tr><td>Efter provanställning / After Probation</td><td>Tillsvidareanställning / Permanent employment</td></tr>
+        <tr><td>Uppsägning under provanställning / Notice during Probation</td><td>2 veckor / 2 weeks</td></tr>
+      </table>
     `,
     section5: `
       <p class="prose-sv">Arbetstagaren garanteras 160 arbetstimmar per månad. Arbetsgivaren fördelar arbetstiden utifrån verksamhetens behov och meddelar schema i god tid, dock minst 48 timmar innan ett uppdrags start.</p>
       <p class="prose-en">The employee is guaranteed 160 working hours per month. The employer allocates working hours according to operational needs and communicates the schedule with reasonable notice, at least 48 hours before an assignment starts.</p>
       <p class="prose-sv mt8">Timmar som arbetas utöver 160 timmar per kalendermånad räknas som övertid och ersätts enligt samma timlön som anges i § 6, baserat på arbetstagarens lönenivå enligt payment_rule.</p>
       <p class="prose-en">Hours worked beyond 160 hours per calendar month are considered overtime and are compensated at the same hourly rate specified in § 6, based on the employee's pay level per payment_rule.</p>
+    `,
+    section9: `
+      <p class="prose-sv mt8">Anställningen är en tillsvidareanställning. Under provanställningsperioden om sex (6) månader gäller särskilda uppsägningstider. Efter provanställningstidens utgång gäller följande uppsägningstider enligt LAS:</p>
+      <p class="prose-en">The employment is a permanent contract. During the six (6)-month probationary period, special notice periods apply. After the probationary period, the following notice periods under LAS apply:</p>
+      <table class="info-table compact mt8">
+        <tr><td>Under provanställning / During probation (6 mån)</td><td>2 veckor / 2 weeks</td></tr>
+        <tr><td>Under 2 år / Less than 2 years</td><td>1 månads uppsägningstid / 1 month notice</td></tr>
+        <tr><td>2–4 år / 2–4 years</td><td>2 månaders / 2 months notice</td></tr>
+        <tr><td>4–6 år / 4–6 years</td><td>3 månaders / 3 months notice</td></tr>
+        <tr><td>6 år eller mer / 6+ years</td><td>4–6 månader beroende på ålder / 4–6 months depending on age</td></tr>
+      </table>
     `
   }
 };
@@ -942,7 +968,6 @@ function populateContract(d) {
   setText('f-address',   `${d.street}, ${d.zip} ${d.city}`);
   setText('f-phone',     d.phone);
   setText('f-email',     d.email);
-  setText('f-startdate', d.startDate);
   setText('f-rate',      d.hourlyRate);
   setText('f-total',     d.totalRate);
 
@@ -950,18 +975,17 @@ function populateContract(d) {
   setText('f-placedate1', `Ort och datum / Place and Date: ${placeDate}`);
   setText('f-placedate2', `Ort och datum / Place and Date: ${placeDate}`);
 
-  // Contract type: 'FT' (heltid) or default 'PT' (deltid/timanställning)
   const type = (d.contractType === 'FT') ? 'FT' : 'PT';
   const txt  = CONTRACT_TYPE_TEXT[type];
-  setHTML('doc-subtitle',    txt.subtitle);
-  setHTML('section3-type',   txt.section3);
+  setHTML('doc-subtitle',     txt.subtitle);
+  setHTML('section3-content', txt.section3);
   setHTML('section5-content', txt.section5);
-}
-function setText(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val || '–';
-}
-function setHTML(id, html) {
+  setHTML('section9-content', txt.section9);
+
+  // f-startdate is inside the dynamic §3 HTML, so set it AFTER injection
+  setText('f-startdate', d.startDate);
+  
+}function setHTML(id, html) {
   const el = document.getElementById(id);
   if (el) el.innerHTML = html;
 }
