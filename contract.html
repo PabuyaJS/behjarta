@@ -541,7 +541,7 @@ body {
         </table>
       </div>
 
-           <!-- § 3 – dynamically filled -->
+      <!-- § 3 – dynamically filled -->
       <div class="section">
         <div class="section-title">3. Anställningens form och period / Employment Type and Period</div>
         <div id="section3-content">
@@ -968,6 +968,7 @@ function populateContract(d) {
   setText('f-address',   `${d.street}, ${d.zip} ${d.city}`);
   setText('f-phone',     d.phone);
   setText('f-email',     d.email);
+  setText('f-startdate', d.startDate);
   setText('f-rate',      d.hourlyRate);
   setText('f-total',     d.totalRate);
 
@@ -975,15 +976,22 @@ function populateContract(d) {
   setText('f-placedate1', `Ort och datum / Place and Date: ${placeDate}`);
   setText('f-placedate2', `Ort och datum / Place and Date: ${placeDate}`);
 
+  // Contract type: 'FT' (heltid) or default 'PT' (deltid/timanställning)
   const type = (d.contractType === 'FT') ? 'FT' : 'PT';
   const txt  = CONTRACT_TYPE_TEXT[type];
   setHTML('doc-subtitle',     txt.subtitle);
   setHTML('section3-content', txt.section3);
   setHTML('section5-content', txt.section5);
   setHTML('section9-content', txt.section9);
-
-  // f-startdate is inside the dynamic §3 HTML, so set it AFTER injection
-  setText('f-startdate', d.startDate);
+}
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val || '–';
+}
+function setHTML(id, html) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}
 
 // ── Canvas init ──────────────────────────────────────────────
 function initCanvases() {
