@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QVQ81ZT71B"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+    
+      gtag('config', 'G-QVQ81ZT71B');
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Behjärta - Professionell hemstädning i Botkyrka med 50% rabatt för nya kunder. RUT-avdrag, försäkrade städare och nöjd-kund-garanti. Boka enkelt online idag!">
+    <title>behjärta - Hemstädning med hjärta! 💙</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poetsen+One:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=calendar_add_on" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="shortcut icon" href="fav.png" type="image/x-icon">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.css" />
+  </head>
+  <body>
+    <!-- Navbar Menu -->
+    <nav>
+      <div class="nav-wrapper container">
+        <a href="index.html" class="brand-logo"
+          ><img src="g22.png" alt="Behjärta logo" class="logo-img"/>
+        </a>
+        <a href="#" data-target="mobile-menu" class="sidenav-trigger"><i class="fa fa-bars teal-text text-lighten-5"></i></a>
+            <ul class="right hide-on-med-and-down">
+              <li><!-- Dropdown Trigger -->
+                <a class='light-blue darken-4 dropdown-trigger' href='#' data-target='dropdown1'>Våra Tjänster</a>
+                <!-- Dropdown Structure -->
+                <ul id='dropdown1' class='dropdown-content'>
+                  <li><a class="teal-text text-lighten-1" href="hemstädning.html"><i class="large material-icons teal-text text-lighten-1">home</i>Hemstädning</a></li>
+                  <li><a class="light-blue-text" href="storstädning.html"><i class="large material-icons light-blue-text">cleaning_services</i>Storstädning</a></li>
+                  <li><a class="light-blue-text text-darken-4" href="flyttstädning.html"><i class="large material-icons light-blue-text text-darken-4">inventory</i>Flyttstädning</a></li>
+                </ul>
+              </li>
+              <li><a href="omoss.html">Om oss</a></li>
+              <li><a href="jobb.html">Jobba hos oss</a></li>
+              <li><a href="#kontakt">Kundtjänst</a></li>
+          </ul>
+      </div>
+    </nav>
+
+    <!-- Mobile Sidebar Menu -->
+    <ul class="sidenav grey lighten-5" id="mobile-menu" style="padding-top: 100px;">
+      <li><a href="index.html#tjanster">Tjänster</a></li>
+      <li><a href="omoss.html">Om oss</a></li>
+      <li><a href="jobb.html">Jobba hos oss</a></li>
+      <li><a href="#kontakt">Kundtjänst</a></li>
+    </ul>
+      
+    <!-- Hero -->
+    <header class="hero row" style="position: relative;">
+      <div class="container col s12 m12 l12 center-align">
+         <iframe src="https://widget.reco.se/v2/venues/5127324/horizontal/large?inverted=false&border=true&lang=sv" title="Behjärta - Städtjänster - Omdömen på Reco" height="60" style="width:100%;border:0;display:block;overflow:hidden;" data-reactroot></iframe>
+        <h2 class="teal-text text-lighten-1" style="font-family: Poetsen One;">Hemstädning i Botkyrka med 50% rabatt för nya kunder! 🙌</h2>
+        <p class="black-text">Boka din första hemstädning idag och upplev skillnaden med professionell städservice. Vi erbjuder RUT-avdrag, försäkrade städare och nöjd-kund-garanti. 👍</p>
+        <p class="black-text">🥳 Som ny kund får du automatiskt 50% rabatt på din första städning - rabatten appliceras direkt efter vårt bekräftelsesamtal.</p>
+      </div>
+    </header>
+
+    <!-- Section boka -->
+    <section class="section section-img section-img-fade" id="boka">
+      <div class="row" style="position: relative; border-radius: 15px; padding: 20px; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div class="col s12 m12 l7 center-align">
+          <!-- Date and Time Selection -->
+          <div class="row" style="padding: 3px;">
+            <div class="col s12 m12 l6 center-align">
+              <h4 class="left-align section-title" style="margin-bottom: 45px;">Välj start datum</h4>
+              <div class="date-picker-container">
+                <i class="medium material-icons teal-text text-lighten-1">date_range</i>
+                <div class="input-field">
+                  <input type="text" class="datepicker teal-text text-lighten-1" id="booking-date">
+                  <label for="booking-date">Välj datum</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="col s12 m12 l6 center-align">
+              <h4 class="left-align section-title" style="margin-bottom: 45px;">Välj start tid</h4>
+              <div class="time-picker-container">
+                <i class="medium material-icons teal-text text-lighten-1">access_time</i>
+                <select id="booking-time" class="browser-default"  style="padding: 10px; color: #26a69a; border: solid 1px #999; border-radius: 15px; margin-top: 39px;">
+                  <option value="" disabled selected>Välj tid</option>
+                  <option value="08:00">08:00</option>
+                  <option value="08:30">08:30</option>
+                  <option value="09:00">09:00</option>
+                  <option value="09:30">09:30</option>
+                  <option value="10:00">10:00</option>
+                  <option value="10:30">10:30</option>
+                  <option value="11:00">11:00</option>
+                  <option value="11:30">11:30</option>
+                  <option value="12:00">12:00</option>
+                  <option value="12:30">12:30</option>
+                  <option value="13:00">13:00</option>
+                  <option value="13:30">13:30</option>
+                  <option value="14:00">14:00</option>
+                  <option value="14:30">14:30</option>
+                  <option value="15:00">15:00</option>
+                  <option value="15:30">15:30</option>
+                  <option value="16:00">16:00</option>
+                  <option value="16:30">16:30</option>
+                  <option value="17:00">17:00</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Duration Selection -->
+          <div class="row">
+              <h4 class="col s12 left-align section-title">Städtid</h4>
+          </div>
+          <div class="row" style="padding: 6px;">
+              <div class="col s6 m3 l3">
+                  <div class="booking-option duration-option" data-duration="2">2 timmar</div>
+              </div>
+              <div class="col s6 m3 l3">
+                  <div class="booking-option duration-option" data-duration="3">3 timmar</div>
+              </div>
+              <div class="col s6 m3 l3">
+                  <div class="booking-option duration-option" data-duration="4">4 timmar</div>
+              </div>
+              <div class="col s6 m3 l3">
+                  <div class="booking-option duration-option" data-duration="5">5 timmar</div>
+              </div>
+              <div class="col s6 m3 l3">
+                  <div class="booking-option duration-option" data-duration="6">6 timmar</div>
+              </div>
+          </div>
+
+          <div class="row" style="padding: 6px;">
+            <div class="col s12 m12 l12 left-align">
+              <div style="display: flex; align-items: center;">
+                <i class="small material-icons teal-text text-lighten-1">info</i>
+                <span class="recommendation-text " id="duration-recommendation">Välj städtid för att se vilken yta passar den.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Frequency Selection -->
+          <div class="row">
+              <h4 class="col s12 left-align section-title">Städfrekvensen</h4>
+          </div>
+          <div class="row" style="padding: 3px;">
+              <div class="col s6 m3 l3">
+                  <div class="booking-option frequency-option" data-frequency="weekly">Veckovis <br>225 kr / tim.</div>
+              </div>
+              <div class="col s6 m3 l3">
+                  <div class="booking-option frequency-option" data-frequency="biweekly">Varannan vecka <br>255 kr / tim.</div>
+              </div>
+              <div class="col s6 m3 l3">
+                  <div class="booking-option frequency-option" data-frequency="monthly">Månadsvis <br>285 kr / tim.</div>
+              </div>
+              <div class="col s6 m3 l3">
+                  <div class="booking-option frequency-option" data-frequency="oneoff">Enstaka städning <br>315 kr / tim.</div>
+              </div>
+          </div>
+
+          <div class="row" style="padding: 6px;">
+            <div class="col s12 m12 l12 left-align">
+              <div style="display: flex; align-items: center;">
+                <i class="small material-icons teal-text text-lighten-1">info</i>
+                <span class="recommendation-text ">Priserna som presenteras är efter RUT-avdrag.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Additional Services Selection -->
+          <div class="row">
+            <h4 class="col s12 left-align section-title">Tilläggstjänster (valfri)</h4>
+          </div>
+          <div class="row" style="padding: 3px;">
+            <div class="col s6 m3 l3">
+              <p>
+                <label>
+                  <input type="checkbox" id="ironing_1" data-frequency="285">
+                  <span class="teal-text text-lighten-1">1 tim. Strykning<br>285 kr</span>
+                </label>
+              </p>
+            </div>
+            <div class="col s6 m3 l3">
+              <p>
+                <label>
+                  <input type="checkbox" id="fridge" data-frequency="285">
+                  <span class="teal-text text-lighten-1">1 tim. Kylskåp invändig<br>285 kr</span>
+                </label>
+              </p>
+            </div>
+            <div class="col s6 m3 l3">
+              <p>
+                <label>
+                  <input type="checkbox" id="fridge" data-frequency="285">
+                  <span class="teal-text text-lighten-1">1 tim. Ugn invändig<br>285 kr</span>
+                </label>
+              </p>
+            </div>
+            <div class="col s6 m3 l3">
+              <p>
+                <label>
+                  <input type="checkbox" id="windows" data-frequency="true">
+                  <span class="teal-text text-lighten-1">Fönsterputs</span>
+                </label>
+              </p>
+            </div>
+            <div class="col s12 m3 l3">
+                <p>
+                  <label>
+                    <input type="checkbox" id="cleaning_products" data-frequency="200">
+                    <span class="teal-text text-lighten-1">Rengöringsmedel<br>200 kr</span>
+                  </label>
+                </p>
+            </div>
+          </div>
+
+          <!-- Contact info Section -->
+          <div class="row">
+            <h4 class="col s12 left-align section-title">Kontaktuppgifter</h4>
+          </div>
+          <form class="row" style="padding: 3px;" id="contact-form">
+            <div class="row">
+              <div class="input-field col s12 m12 l12"><i class="material-icons teal-text text-lighten-1 prefix">account_circle</i>
+                <input required placeholder="Skriv ditt namn och efternamn" id="name" type="text" class="validate">
+                <label for="name">Namn</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="input-field col s12 m12 l6 "><i class="material-icons teal-text text-lighten-1 prefix">phone</i>
+                <input required id="phone" type="text" class="validate">
+                <label for="phone">Telefonnummer</label>
+              </div>
+              <div class="input-field col s12 m12 l6"><i class="material-icons teal-text text-lighten-1 prefix">mail_outline</i>
+                <input required id="email" type="email" class="validate">
+                <label for="email">E-post adress</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="input-field col s12 m12 l12"><i class="material-icons teal-text text-lighten-1 prefix">place</i>
+                <input required id="address1" type="text" class="validate">
+                <label for="address1">Adress</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="input-field col s12 m12 l6"><i class="material-icons teal-text text-lighten-1 prefix">location_city</i>
+                <input required id="city" type="text" class="validate">
+                <label for="city">Ort</label>
+              </div>
+              <div class="input-field col s12 m12 l6"><i class="material-icons teal-text text-lighten-1 prefix">123</i>
+                <input required id="postal-code" type="text" class="validate">
+                <label for="postal-code">Postnummer</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="input-field col s12 m12 l12"><i class="material-icons teal-text text-lighten-1 prefix">text_fields</i>
+                <textarea id="comments" class="materialize-textarea"></textarea>
+                <label for="comments">Övriga kommentarer och instruktioner</label>
+                <span class="helper-text left">Du kan skriva in portkod, vilken våning om tillämplig, eller viktiga instuktioner för våra städare.</span>
+              </div>
+            </div>
+          </form>
+
+          <!-- Summary Panel -->
+          <div class="row center-align">
+            <div class="col s12 m12 l12" style="bottom: 45px; right: 10%;"> 
+              <div class="card">
+                <div class="card-content">
+                  <span class="card-title section-title">Bokningssammanfattning</span><br>
+                  <div id="booking-summary">
+                    <p style="display: flex; margin-bottom: 10px;"><i class="material-icons teal-text text-lighten-1" style=" margin-right: 10px;">event_available</i><strong style=" margin-right: 10px;">Datum:</strong> <span id="summary-date">Inte valt</span></p>
+                    <p style="display: flex; margin-bottom: 10px;"><i class="material-icons teal-text text-lighten-1" style=" margin-right: 10px;">access_alarm</i><strong style=" margin-right: 10px;">Tid:</strong> <span id="summary-time">Inte valt</span></p>
+                    <p style="display: flex; margin-bottom: 10px;"><i class="material-icons teal-text text-lighten-1" style=" margin-right: 10px;">cleaning_services</i><strong style=" margin-right: 10px;">Städtid:</strong> <span id="summary-duration">Inte valt</span></p>
+                    <p style="display: flex; margin-bottom: 10px;"><i class="material-icons teal-text text-lighten-1" style=" margin-right: 10px;">123</i><strong style=" margin-right: 10px;">Frekvens:</strong> <span id="summary-frequency">Inte valt</span></p>
+                    <br>
+                    <p style="display: flex; margin-bottom: 10px;"><i class="material-icons teal-text text-lighten-1" style=" margin-right: 10px;">payment</i><strong style=" margin-right: 10px;">Pris per städning:</strong> <span id="summary-price">Inget att kalkylera än</span></p><br>
+                    <div class="input-field"><i class="material-icons teal-text text-lighten-1 prefix">redeem</i>
+                      <input id="code" type="text" class="validate">
+                      <label for="code">Rabattkod</label>
+                    </div><br>
+                    <p id="windows-note" style="display: none;" class="teal-text text-lighten-1" style="display: flex; margin-bottom: 10px;">
+                      <i class="material-icons teal-text text-lighten-1" style=" margin-right: 10px;">check_box</i>Priset för fönsterputs varierar beroende på antal och storlek.<br><a class="light-blue-text text-darken-4" href="prislista.html#fönsterputs" style="font-style: italic;">Se vår prislista för mer information.</a><br>Vi bekräftar den slutliga kostnaden i vårt samtal. 😊
+                    </p>
+                  </div>
+                  <!-- Preloader -->
+                  <div id="preloader" class="progress" style="display: none;">
+                    <div class="indeterminate"></div>
+                  </div>
+                </div>
+              </div>
+              <p>
+                <label>
+                  <input required type="checkbox" data-frequency="true">
+                  <span class="teal-text text-lighten-1">Jag har läst och godkänner <a href="allmänna-villkor.html">villkoren</a> och <a href="Integritetspolicy.html">integritetspolicyn</a></span>
+                </label>
+              </p>
+              <!-- Submit Button -->
+              <div class="row center-align">
+                <button class="btn waves-effect waves-light submit-btn" type="submit" onclick="submitBooking()">
+                    Boka nu
+                    <i class="material-icons right">send</i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Info -->
+        <div class="col s12 m12 offset-l1 l4">
+          <div class="row">
+            <h4 class="col s12 left-align section-title">Det här ingår i hemstädningen</h4>
+          </div>
+          <div class="row" style="padding: 3px;">
+            <div class="col s12 m12 l12">
+              <p>Våra städproffs tar med mikrofiber-putsdukar för speglar och fönster och städdukar till dammtorkning för att göra ditt hem skinande rent. Mikrofiberdukarna lämnar vi hos dig efter första städningen.<br>Du behöver ha dammsugare, mopp och hink hemma.<br><br><strong>Se vad som ingår i grundpaketet och välj enkelt extra tjänster efter dina behov.</strong></p>
+            </div>
+          </div>
+          <div class="row" style="padding: 3px;">
+            <div class="col s12 m12 l12">
+              <ul class="collapsible">
+                <li>
+                  <div class="collapsible-header"><i class="material-icons teal-text text-lighten-1">weekend</i>Vardagsrummet</div>
+                  <div class="collapsible-body">
+                    <ul class="collection">
+                      <li class="collection-item">✅ Dammar av alla tillgängliga ytor på bekväm höjd</li>
+                      <li class="collection-item">✅ Dammsugning av golv och textilier i hela hemmet</li>
+                      <li class="collection-item">✅ Fuktmoppning av alla golv (👍 där golvtypen tillåter det)</li>
+                      <li class="collection-item">✅ Rengöring av möbler som soffor och fåtöljer</li>                     
+                      <li class="collection-item">✅ Borttagning av smuts från dörrpartier, handtag och kontakter</li>
+                      <li class="collection-item">✅ Putsning av speglar och glaspartier (❌ fönster ej inkluderat)</li>
+                      <li class="collection-item">✅ Tömning av papperskorgar (👉🚮 förutsatt att du visat var avfallet ska)</li>
+                    </ul>
+                  </div>
+                </li>
+                <li>
+                  <div class="collapsible-header"><i class="material-icons teal-text text-lighten-1">bed</i>Sovrummen</div>
+                  <div class="collapsible-body">
+                    <ul class="collection">
+                      <li class="collection-item">✅ Dammar av alla tillgängliga ytor på bekväm höjd</li>
+                      <li class="collection-item">✅ Dammsugning av golv och textilier i hela hemmet</li>
+                      <li class="collection-item">✅ Fuktmoppning av alla golv (👍 där golvtypen tillåter det)</li>                     
+                      <li class="collection-item">✅ Borttagning av smuts från dörrpartier, handtag och kontakter</li>
+                      <li class="collection-item">✅ Plockar upp och viker kläder som ligger framme</li>
+                      <li class="collection-item">✅ Bäddar sängar och ordnar sovrum</li>
+                    </ul>
+                  </div>
+                </li>
+                <li>
+                  <div class="collapsible-header"><i class="material-icons teal-text text-lighten-1">countertops</i>Köket</div>
+                  <div class="collapsible-body">
+                    <ul class="collection">
+                      <li class="collection-item">✅ Tvättar av diskbänk, spishäll, mikro och köksfläktens utsida</li>
+                      <li class="collection-item">✅ Rengör utsidan av kyl och diskmaskin från fläckar</li>
+                      <li class="collection-item">✅ Avtorkning av småapparater som kaffemaskin, brödrost och mixer</li>
+                      <li class="collection-item">✅ Tömning av sopkorgen (👉🚮 förutsatt att du visat var avfallet ska)</li>
+                      <li class="collection-item">✅ Rengör sopskåpet invändigt</li>                     
+                      <li class="collection-item">✅ Dammtorkning av alla nåbara ytor i köket</li>
+                      <li class="collection-item">✅ Dammsugning av golv och eventuella mattor</li>
+                      <li class="collection-item">✅ Fuktmoppning av golv (👍 där golvtypen tillåter det)</li>
+                      <li class="collection-item">✅ Putsning av speglar och glaspartier (❌ fönster ej inkluderat)</li>
+                    </ul>
+                  </div>
+                </li>
+                <li>
+                  <div class="collapsible-header"><i class="material-icons teal-text text-lighten-1">shower</i>Badrummet</div>
+                  <div class="collapsible-body">
+                    <ul class="collection">
+                      <li class="collection-item">✅ Grundlig rengöring av badkar, toalett och handfat från smuts och fläckar</li>
+                      <li class="collection-item">✅ Skrubbning av duschkabin inklusive glasväggar och dörrar</li>
+                      <li class="collection-item">✅ Avtorkning av alla tillgängliga ytor och bänkskivor</li>
+                      <li class="collection-item">✅ Dammsugning av golv och textilier i badrummet</li>                     
+                      <li class="collection-item">✅ Fuktmoppning av golv (👍 anpassas efter golvmaterial)</li>
+                      <li class="collection-item">✅ Putsning av speglar och glaspartier (❌ fönster ej inkluderat)</li>
+                    </ul>
+                  </div>
+                </li>
+                <li>
+                  <div class="collapsible-header"><i class="material-icons teal-text text-lighten-1">single_bed</i>Övriga rummen</div>
+                  <div class="collapsible-body">
+                    <ul class="collection">
+                      <li class="collection-item">✅ Dammar av alla tillgängliga ytor på bekväm höjd</li>
+                      <li class="collection-item">✅ Dammsugning av golv och textilier i hela hemmet</li>
+                      <li class="collection-item">✅ Fuktmoppning av alla golv (👍 där golvtypen tillåter det)</li>
+                      <li class="collection-item">✅ Rengöring av möbler som soffor och fåtöljer</li>                     
+                      <li class="collection-item">✅ Borttagning av smuts från dörrpartier, handtag och kontakter</li>
+                      <li class="collection-item">✅ Putsning av speglar och glaspartier (❌ fönster ej inkluderat)</li>
+                      <li class="collection-item">✅ Tömning av papperskorgar (👉🚮 förutsatt att du visat var avfallet ska)</li>
+                    </ul>
+                  </div>
+                </li>
+
+                <li>
+                  <div class="collapsible-header"><i class="material-icons teal-text text-lighten-1">kitchen</i>Tjänster som bokas separat</div>
+                  <div class="collapsible-body">
+                    <ul class="collection">
+                      <li class="collection-item">🧴 Rengöringsmedel om ni inte har hemma (diskmedel, grönsåpa, allrengöringskräm och glasrengöringsmedel) - 200 kr</li>
+                      <li class="collection-item">👕 Strykning av kläder 60 minuter - 285 kr</li>
+                      <li class="collection-item">❄️ Kylskåps invändig rengöring 60 minuter - 285 kr</li>
+                      <li class="collection-item">🪟 Fönsterputs - Pris varierar beroende på antal och storlek av fönstren. Se prislista <a href="prislista.html#fönsterputs">här</a></li>                     
+                    </ul>
+                  </div>
+                </li>
+
+                <li>
+                  <div class="collapsible-header"><i class="material-icons teal-text text-lighten-1">sentiment_very_dissatisfied</i>Dessa tjänster kan vi tyvärr inte erbjuda</div>
+                  <div class="collapsible-body">
+                    <ul class="collection">
+                      <li class="collection-item">❌ Väggtvättning och avtorkning av tavlor och konstverk</li>
+                      <li class="collection-item">❌ Rengöring av högt placerade ytor som kräver stegar eller specialverktyg</li>
+                      <li class="collection-item">❌ Behandling av mycket envisa fläckar och missfärgningar</li>
+                      <li class="collection-item">❌ Rengöring av golvavlopp och brunnar</li> 
+                      <li class="collection-item">❌ Underhåll av vattenlås och avloppsrör</li> 
+                      <li class="collection-item">❌ Rengöring av ventilationsgaller och friskluftsintag</li> 
+                      <li class="collection-item">❌ Förflyttning av tunga apparater och större möbler</li> 
+                      <li class="collection-item">❌ Efterstädning vid byggarbeten och renoveringar</li>                     
+                      <li class="collection-item">❌ Djuprengöring av stoppade möbler och textilier</li> 
+                    </ul>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="row">
+            <h4 class="col s12 left-align section-title">Vanliga frågor</h4>
+          </div>
+          <div class="row" style="padding: 3px;">
+            <div class="col s12 m12 l12">
+              <ul class="collapsible">
+                <li>
+                  <div class="collapsible-header">Vad händer efter jag skickar in intresseanmälan via "BOKA NU"?</div>
+                  <div class="collapsible-body"><span>Efter att du fyllt i och skickat formuläret kontaktar en av våra kundtjänstmedarbetare dig per telefon inom 30 minuter.<br><br>Vi går tillsammans igenom din bokning för att bekräfta att allt stämmer. Därefter skickar vi ett serviceavtal till dig via e-post.<br><br>Du har upp till 24 timmar innan din bokade städning att läsa igenom och signera avtalet. Signeras inte avtalet i tid avbryts bokningen automatiskt och du behöver göra en ny bokning. Ingen debitering sker förrän avtalet är signerat. Signeringen sker digitalt.<br><br><strong>Avtalet är inte bindande - du kan säga upp det när som helst med en månads uppsägningstid från uppsägningsdatumet.</strong></strong></span></div>
+                </li>
+                <li>
+                  <div class="collapsible-header">Vad händer om jag avbokar städningen efter att jag bokat den?</div>
+                  <div class="collapsible-body"><span>Våra städproffs planerar sitt arbete efter ditt schema. Därför kan du ändra datum och tid för din bokning inom vissa tidsramar. Om det är 48 timmar eller mer kvar till din bokade städning kan du ändra tid och datum helt kostnadsfritt!<br><br>- Avbokningar kan göras helt kostnadsfritt fram till 5 dagar innan din bokade städning.<br>- Ändringar är tillåtna utan avgift vardagar mellan 09:00-18:00 minst 48 timmar före städningen.<br><br>Om du vill ändra tiden 12-48 timmar i förväg debiteras 50% av städningens kostnad från din förbetalda faktura. Vid avbokning av städningen mindre än 12 timmar innan debiteras 100% av kostnaden från din faktura.</span></div>
+                </li>
+                <li>
+                  <div class="collapsible-header">Vilken betalningsmetod använder ni?</div>
+                  <div class="collapsible-body"><span>Vi skickar en förskottsfaktura via e-post efter att du har signerat serviceavtalet. Fakturan har 14 dagars förfallodatum från den dag du mottar den.<br><br>För regelbundna städningar (veckovis, varannan vecka eller månadsvis) omfattar fakturan alla tjänster för aktuell månad fram till månadens slut. Du får sedan en ny månadsfaktura för kommande period.<br><br>För engångsstädningar skickas en separat faktura endast för den specifika tjänsten.<br><br><strong>Vi använder säkra betalningslösningar eftersom betalningssäkerhet är mycket viktigt för oss.</strong></span></div>
+                </li>
+                <li>
+                  <div class="collapsible-header">Vad är vår 100% Nöjd-Kund-Garanti?</div>
+                  <div class="collapsible-body"><span>Om du har några klagomål på städningen inom 72 timmar efter utförd service, hör gärna av dig till oss! Vid kvalitetsproblem kan vi boka in en ny städning som åtgärdar de områden du inte är nöjd med, utan extra kostnad.<br><br><strong>Det är vad vi kallar vår 100% Nöjd-Kund-Garanti - vi står bakom vårt arbete och ser till att du blir helt tillfreds!</strong></span></div>
+                </li>
+                <li>
+                  <div class="collapsible-header">Vad gör jag om jag behöver extra timmar under pågående städning?</div>
+                  <div class="collapsible-body"><span>Ibland kan det vara svårt att beräkna exakt hur många timmar ditt hem behöver städas. Om städningen pågår och du märker att du behöver lägga till en eller flera timmar, säg bara till din städare. Han eller hon kontaktar då oss direkt för att ordna de extra timmarna.<br><br><strong>De extra timmarna debiteras på din nästa månadsfaktura enligt våra ordinarie timpriser.</strong></span></div>
+                </li>
+                <li>
+                  <div class="collapsible-header">Kan jag lita på era städproffs?</div>
+                  <div class="collapsible-body"><span>Ja! Alla städproffs som är registrerade i Behjärta-systemet genomgår noggrann bakgrundskontroll och referensverifiering. De får även regelbunden utbildning för att säkerställa högsta kvalitetsstandard.<br><br><strong>Du kan känna dig trygg med att släppa in våra professionella städare i ditt hem.</strong></span></div>
+                </li>
+                <li>
+                  <div class="collapsible-header">Kan jag begära samma städproffs?</div>
+                  <div class="collapsible-body"><span>Om du tidigare använt våra tjänster kan du begära att få samma städare för din nya bokning. Du kan enkelt ange detta i kommentarsfältet när du skapar din beställning eller när du betygsätter utfört arbete.<br><br><strong>Vi gör vårt bästa för att tillmötesgå dina önskemål, men ibland kan det påverkas av schemaläggning och tillgänglighet.</strong></span></div>
+                </li>
+                <li>
+                  <div class="collapsible-header">Städar ni fönster utvändigt?</div>
+                  <div class="collapsible-body"><span>Vi utför fönsterputs både invändigt och utvändigt när det kan göras säkert. Våra städares säkerhet är dock det viktigaste för oss. Vi utför aldrig utvändig fönsterputs om det innebär någon risk eller fara för våra medarbetare.<br><br><strong>För fönster på högre våningsplan eller svåråtkomliga platser städar vi endast insidan.</strong></span></div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Section RUT -->
+    <section class="section container" style="position: relative;">
+      <h2 class="center-align teal-text text-lighten-1" style="font-family: Poetsen One; margin-bottom: 60px;">RUT-avdrag för städning</h2>
+      <div class="hide-on-med-and-down">
+        <img src="thumbsUp.webp" style="position: absolute; bottom: 0px; right: 3%;" alt="Tummen upp"/>
+      </div>
+      <div class="row">
+        <div class="col s12 m12 l12 center-align">
+          <img src="path42.png" style="width: 300px; max-width: 100%;" alt="RUT 50%"/>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col s12 m12 l6">
+          <div class="card teal lighten-1" style="border-radius: 15px; margin-top: 3rem;">
+            <div class="card-content teal-text text-lighten-5"> 
+              <p>Som privatperson får du 50% rabatt när du bokar städning genom Behjärta tack vare Sveriges skattereduktion för hushållsnära tjänster. Staten betalar hälften av kostnaden medan du endast betalar resten. Vi på Behjärta hanterar hela RUT-processen åt dig - ingen krånglig administration från din sida.</p>
+              <p>Du kan utnyttja upp till 75.000 kronor per år i RUT-avdrag, och alla priser du ser på vår hemsida visar redan det slutliga priset efter avdraget. Enkelt och smidigt för dig som kund.</p>
+            </div>  
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="section white" id="kontakt">
+      <div class="container">
+        <h2 class="center-align light-blue-text text-darken-4" style="font-family: Poetsen One;">Kontakta Oss</h2><br>
+        <p class="center-align"><strong>Kontakt & Öppettider:</strong> Måndag till Fredag 08:00-17:00 (förutom röda dagar och helger)</p><br>
+        <div class="divider"></div><br>
+        <div class="row" style="position: relative; padding: 10px;">
+          <div class="col s12 m12 l6 center-align" style="padding: 10px;">
+            <p class="left-align">Tveka inte att höra av dig om du har frågor inför din första städning, om hur vi kan hjälpa dig med våra tjänster eller om du vill lära dig mer om oss! Fyll i formuläret nedan så återkommer vi till dig inom 24 timmar.</p><br>
+            <p class="left-align">Du kan också ringa oss direkt på</p><h4 class="left-align"><a href="tel:+46707898952" class="light-blue-text text-darken-4">0707 89 89 52</a></h4><br><p class="left-align">eller skicka ett mail till</p><h4 class="left-align"><a href="mailto:hej@behjarta.com" class="light-blue-text text-darken-4">hej@behjarta.com</a></h4><br>
+            <p class="left-align">Vi ser fram emot att höra från dig!</p>
+            <p class="left-align">Med vänliga hälsningar,<br><br><strong><i class="light-blue-text text-darken-4">Behjärta Teamet 🤗</i></strong></p>
+          </div>
+          <div class="col s12 m12 offset-l1 l5 center-align" style="padding: 30px; border: solid 1px #01579b; border-radius: 15px; margin-top: 20px;">
+            <form id="contact-form">
+              <div class="input-field left-align"><i class="material-icons light-blue-text text-darken-4 prefix">account_circle</i>
+                <input type="text" id="contactName" required />
+                <label for="contactName">Namn</label>
+              </div>
+              <div class="input-field left-align"><i class="material-icons light-blue-text text-darken-4 prefix">phone</i>
+                <input type="text" id="contactPhone" required />
+                <label for="contactPhone">Telefonnummer</label>
+              </div>
+              <div class="input-field left-align"><i class="material-icons light-blue-text text-darken-4 prefix">mail_outlined</i>
+                <input type="email" id="contactEmail" required />
+                <label for="contactEmail">Email</label>
+              </div>
+              <div class="input-field left-align"><i class="material-icons light-blue-text text-darken-4 prefix">text_fields</i>
+                <textarea class="materialize-textarea" id="contactMessage"></textarea>
+                <label for="contactMessage">Meddelande</label>
+              </div>
+              <button class="btn light-blue darken-4" type="button" onclick="submitContact()">Skicka</button>
+            </form>
+            <!-- Preloader -->
+            <div id="preloader2" class="light-blue lighten-4 progress" style="display: none;">
+              <div class="light-blue darken-4 indeterminate"></div>
+            </div>
+          </div>
+        </div>
+        <div class="divider"></div><br>
+        <div class="row" style="padding: 3px;">
+          <div class="col s12 m12 l12">
+            <ul class="collapsible">
+              <li>
+                <div class="collapsible-header center-align light-blue-text text-darken-4"><h5><strong>Inte nöjd? Klicka här för att lämna klagomål</strong></h5></div>
+                <div class="collapsible-body"><span>Vi är mycket ledsna om din upplevelse inte levde upp till våra höga standarder och tjänsten inte utfördes som utlovat.<br><br>Vår 100% Nöjd-Kund-Garanti betyder att vi står bakom vårt arbete helt och hållet. Om du inte är helt tillfreds med städningen, fyll i formuläret nedan så går vi noggrant igenom ditt ärende och ordnar en ny städning som åtgärdar de områden du inte är nöjd med, utan extra kostnad.<br><br>Din tillfredsställelse är vårt viktigaste mål, och vi kommer att göra allt för att rätta till situationen.</span></div>
+                <div class="collapsible-body">
+                 <form id="complaint-form" style="padding: 10px;">
+                    <div class="input-field left-align"><i class="material-icons light-blue-text text-darken-4 prefix">account_circle</i>
+                      <input type="text" id="customerNumber" required>
+                      <label for="customerNumber">Kundnummer</label>
+                    </div>
+                    <div class="input-field left-align"><i class="material-icons light-blue-text text-darken-4 prefix">123</i>
+                      <input type="text" id="serviceNumber" required>
+                      <label for="serviceNumber">Tjänstenummer</label>
+                    </div>
+                    <div class="input-field left-align"><i class="material-icons light-blue-text text-darken-4 prefix">add_date</i>
+                      <input type="date" class="light-blue-text text-darken-4" id="cleaningDate">
+                      <label for="cleaningDate">Välj datum när tjänsten utfördes</label>
+                    </div>
+                    <div class="input-field left-align"><i class="material-icons light-blue-text text-darken-4 prefix">text_fields</i>
+                      <textarea class="materialize-textarea" id="complainMessage"></textarea>
+                      <label for="complainMessage">Meddelande</label>
+                    </div>
+                    <button class="btn light-blue darken-4" type="button" onclick="submitComplain()">Skicka</button>
+                  </form> 
+                  <!-- Preloader -->
+                  <div id="preloader3" class="light-blue lighten-4 progress" style="display: none;">
+                    <div class="light-blue darken-4 indeterminate"></div>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="page-footer teal lighten-1">
+      <div class="container">
+        <div class="row">
+          <div class="col l2 s6">
+            <div class="white-text"><a href="index.html" class="brand-logo"><img src="g22.png" alt="Behjärta logo" class="logo-img" style="width: 100%; height: auto;"/></a></div>
+          </div>
+
+          <div class="col s12" style="width: 100%; height: 1px; border-bottom: 1px solid #e0f2f1; margin-top: 15px; margin-bottom: 15px;"></div>
+          
+          <div class="col l2 offset-l1 s12">
+            <h6 class="teal-text text-lighten-5">MS Secure solutions AB<br>O/N: 559189-2806</h6>
+            <br>
+            <a class="teal-text text-lighten-5 flex-container" style="display: flex; margin-bottom: 10px;" href="tel: +4670789895"><i class="small material-icons teal-text text-lighten-5" style="margin-right: 6px;">call</i> +4670 789 89 52</a>
+            <br>
+            <a class="teal-text text-lighten-5 flex-container" style="display: flex; margin-bottom: 10px;" href="mailto: hej@behjarta.com"><i class="small material-icons teal-text text-lighten-5" style="margin-right: 6px;">email</i> hej@behjarta.com</a>
+          </div>
+
+          <div class="col l2 offset-l1 s12">
+            <h5 class="teal-text text-lighten-5">Navigering</h5>
+            <ul>
+              <li><a href="omoss.html" class="teal-text text-lighten-5">Om oss</a></li>
+              <br>
+              <li><a href="#kontakt" class="teal-text text-lighten-5">Kundtjänst</a></li>
+              <br>
+              <li><a href="jobb.html" class="teal-text text-lighten-5">Jobba hos oss</a></li>
+              <br>
+              <li><a href="prislista.html#faq" class="teal-text text-lighten-5">Frågor och svar</a></li>
+              <br>
+              <li><a href="affiliate.html" class="teal-text text-lighten-5">Affiliate program</a></li>
+            </ul>
+          </div>
+
+          <div class="col l2 offset-l1 s12">
+            <h5 class="teal-text text-lighten-5">Våra tjänster</h5>
+            <ul>
+                <li><a href="hemstädning.html" class="teal-text text-lighten-5">Hemstädning</a></li>
+                <br>
+                <li><a href="storstädning.html" class="teal-text text-lighten-5">Storstädning</a></li>
+                <br>
+                <li><a href="flyttstädning.html" class="teal-text text-lighten-5">Flyttstädning</a></li>
+                <br>
+                <li><a href="prislista.html" class="teal-text text-lighten-5">Prislistan</a></li>
+            </ul>
+          </div>
+
+          <div class="col l2 offset-l1 s12">
+            <h5 class="teal-text text-lighten-5">Följ oss på:</h5>
+            <br><br>
+            <a href="https://www.facebook.com/profile.php?id=61578349353245" class="teal-text text-lighten-5"><i class="small fab fa-facebook-square" style="margin-right: 10px;"></i></a>
+            <a href="https://www.instagram.com/behjarta" class="teal-text text-lighten-5"><i class="small fab fa-instagram" style="margin-right: 10px;"></i></a>
+            <a href="https://www.linkedin.com/company/behjarta" class="teal-text text-lighten-5"><i class="small fab fa-linkedin" style="margin-right: 10px;"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-copyright">
+        <div class="row container">
+          <div class="col s12 m4 l4 left-align">
+            <span class="teal-text text-lighten-5">© 2025 MS Secure solutions AB all rights reserved</span>
+          </div>
+          <div class="col s12 m3 l3 right-align">
+            <span class="teal-text text-lighten-5"><a href="allmänna-villkor.html" class="teal-text text-lighten-5">Allmänna villkor</a></span>
+          </div>
+          <div class="col s12 m3 l3 right-align">
+            <span class="teal-text text-lighten-5"><a href="Integritetspolicy.html" class="teal-text text-lighten-5">Integritetspolicy</a></span>
+          </div>
+          <div class="col s12 m3 l2 right-align">
+            <span class="teal-text text-lighten-5"><a href="cookiepolicy.html" class="teal-text text-lighten-5">Cookies</a></span>
+          </div> 
+        </div>
+      </div>
+    </footer>
+
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script defer src="script.js"></script>
+    <script defer src="hem.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.js" data-cfasync="false"></script>
+
+    <script>
+      window.cookieconsent.initialise({
+          "palette": {
+              "popup": {
+                  "background": "#2c3e50",
+                  "text": "#e0f2f1"
+              },
+              "button": {
+                  "background": "#26a69a",
+                  "text": "#ffffff"
+              }
+          },
+          "theme": "classic",
+          "position": "bottom",
+          "type": "opt-in",
+          "content": {
+              "message": "🍪 Vi använder cookies för att förbättra din upplevelse på vår webbplats och för att visa relevanta annonser.",
+              "allow": "Acceptera alla",
+              "deny": "Avböj",
+              "link": "Läs mer",
+              "href": "cookiepolicy.html",
+              "policy": "Cookie Policy"
+          },
+          "cookie": {
+              "name": "behjarta_cookie_consent",
+              "expiryDays": 365
+          },
+          "onStatusChange": function(status, chosenBefore) {
+              var type = this.options.type;
+              var didConsent = this.hasConsented();
+              
+              if (didConsent) {
+                  // User accepted cookies
+                  console.log('Cookies accepterade');
+                  
+                  // Enable Google Analytics
+                  if (typeof gtag !== 'undefined') {
+                      gtag('consent', 'update', {
+                          'analytics_storage': 'granted',
+                          'ad_storage': 'granted'
+                      });
+                  }
+              } else {
+                  // User declined cookies
+                  console.log('Cookies avböjda');
+                  
+                  // Disable tracking
+                  if (typeof gtag !== 'undefined') {
+                      gtag('consent', 'update', {
+                          'analytics_storage': 'denied',
+                          'ad_storage': 'denied'
+                      });
+                  }
+              }
+          },
+          "onInitialise": function (status) {
+              var type = this.options.type;
+              var didConsent = this.hasConsented();
+              
+              if (didConsent) {
+                  // Enable cookies that were previously consented to
+                  if (typeof gtag !== 'undefined') {
+                      gtag('consent', 'update', {
+                          'analytics_storage': 'granted',
+                          'ad_storage': 'granted'
+                      });
+                  }
+              }
+          }
+      });
+    </script>
+  </body>
+</html>
+      
